@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { prisma } from "@asaplocal/db";
-import { Button, Card } from "@asaplocal/ui";
+import { Card } from "@asaplocal/ui";
 import { ProviderCard } from "@/components/provider-card";
+import { AiJobRequest } from "@/components/ai-job-request";
 
 export default async function HomePage() {
   const [categories, featured] = await Promise.all([
@@ -15,17 +16,19 @@ export default async function HomePage() {
 
   return (
     <div>
-      <section className="bg-gradient-to-b from-brand-50 to-white px-4 py-16 sm:px-6">
-        <div className="mx-auto max-w-4xl text-center">
-          <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">Find trusted local pros, fast</h1>
-          <p className="mt-4 text-lg text-muted-foreground">
-            Post a job and let vetted cleaners, plumbers, electricians and more come to you — or browse and book directly.
+      <section className="bg-gradient-to-b from-brand-50 to-white px-4 py-12 sm:px-6 sm:py-16">
+        <div className="mx-auto max-w-2xl text-center">
+          <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">What do you need done?</h1>
+          <p className="mt-3 text-lg text-muted-foreground">
+            Describe the job in your own words — we'll match you with vetted local pros.
           </p>
-          <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
-            <Link href="/jobs/new"><Button size="lg">Post a job for free</Button></Link>
-            <Link href="/search"><Button size="lg" variant="outline">Browse providers</Button></Link>
-          </div>
         </div>
+        <div className="mt-8">
+          <AiJobRequest categories={categories.map((c) => ({ id: c.id, name: c.name }))} />
+        </div>
+        <p className="mt-4 text-center text-sm text-muted-foreground">
+          Prefer to look yourself? <Link href="/search" className="font-medium text-brand-700 hover:underline">Browse providers directly</Link>
+        </p>
       </section>
 
       <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6">

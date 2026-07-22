@@ -1,4 +1,4 @@
-import type { NextAuthConfig } from "next-auth";
+import NextAuth, { type NextAuthConfig } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 import bcrypt from "bcryptjs";
@@ -48,5 +48,25 @@ export const authConfig = {
       if (isOnAuthPages) return true;
       return isLoggedIn;
     },
+    // Prisma-free token->session mapping — safe to run in the Edge runtime,
+    // unlike the `jwt` callback override in auth.ts (which re-hydrates from
+    // the DB and therefore must only run in the Node.js runtime).
+    async session({ session, token }) {
+      if (session.user) {
+        session.user.id = token.uid as string;
+        session.user.role = token.role as any;
+        session.user.status = token.status as any;
+      }
+      return session;
+    },
   },
 } satisfies NextAuthConfig;
+
+/**
+ * Edge-safe NextAuth instance for middleware use only: no Prisma adapter, no
+ * DB-touching callbacks (just token decoding + the `authorized`/`session`
+ * callbacks above). Prisma's client cannot run in the Edge runtime that
+ * Next.js middleware executes in, so middleware.ts files must import
+ * `authMiddleware` here rather than the full `auth` from ./auth.ts.
+ */
+export const { auth: authMiddleware } = NextAuth(authConfig);

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { auth } from "@asaplocal/auth";
+import { authMiddleware as auth } from "@asaplocal/auth";
 
 const PUBLIC_PREFIXES = ["/login", "/register", "/forgot-password", "/verify-email", "/api/webhooks"];
 

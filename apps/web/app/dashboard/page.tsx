@@ -3,6 +3,7 @@ import Link from "next/link";
 import { auth } from "@asaplocal/auth";
 import { prisma } from "@asaplocal/db";
 import { Badge, Card, formatPence } from "@asaplocal/ui";
+import { InstallAppBanner } from "@/components/install-app-banner";
 
 export default async function CustomerDashboard() {
   const session = await auth();
@@ -17,7 +18,10 @@ export default async function CustomerDashboard() {
   return (
     <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
       <h1 className="text-2xl font-bold">My account</h1>
-      <div className="mt-8 grid gap-8 md:grid-cols-2">
+      <div className="mt-6">
+        <InstallAppBanner />
+      </div>
+      <div className="mt-2 grid gap-8 md:grid-cols-2">
         <section>
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-lg font-semibold">Open job requests</h2>

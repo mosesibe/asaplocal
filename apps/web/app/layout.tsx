@@ -7,6 +7,7 @@ import { ThemeScript } from "@asaplocal/ui";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { WebBottomNav } from "@/components/web-bottom-nav";
+import { RegisterServiceWorker } from "@/components/register-service-worker";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
@@ -24,7 +25,7 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true },
 };
 
-export const viewport: Viewport = { viewportFit: "cover" };
+export const viewport: Viewport = { viewportFit: "cover", themeColor: "#158757" };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
@@ -35,6 +36,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       </head>
       <body className={`${inter.variable} font-sans`}>
         <Providers>
+          <RegisterServiceWorker />
           <SiteHeader session={session} />
           <main className="min-h-[70vh] pb-16 md:pb-0">{children}</main>
           <SiteFooter />

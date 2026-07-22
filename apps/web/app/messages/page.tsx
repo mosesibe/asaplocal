@@ -3,6 +3,7 @@ import Link from "next/link";
 import { auth } from "@asaplocal/auth";
 import { prisma } from "@asaplocal/db";
 import { Avatar, Card } from "@asaplocal/ui";
+import { InstallAppBanner } from "@/components/install-app-banner";
 
 export default async function MessagesPage() {
   const session = await auth();
@@ -17,7 +18,10 @@ export default async function MessagesPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
       <h1 className="text-2xl font-bold">Messages</h1>
-      <div className="mt-6 space-y-3">
+      <div className="mt-6">
+        <InstallAppBanner />
+      </div>
+      <div className="mt-2 space-y-3">
         {conversations.map((c) => {
           const other = c.participants.find((p) => p.userId !== session.user.id);
           const name = other?.user.business?.name ?? `${other?.user.profile?.firstName ?? "User"}`;

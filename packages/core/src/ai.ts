@@ -57,6 +57,24 @@ export async function generateQuoteTemplate(opts: {
   );
 }
 
+/** Turns a customer's freeform description into a category match + a clean, postable title/description. */
+export async function suggestJobFromDescription(description: string, categories: { id: string; name: string }[]) {
+  const fallbackTitle = description.trim().slice(0, 60);
+  const result = await chatJSON<{ categoryName: string | null; title: string; description: string; confidence: number }>(
+    `You help customers turn a rough description of a home-service job into a clear job post for local tradespeople. Respond as JSON: {"categoryName": string|null, "title": string, "description": string, "confidence": number between 0 and 1}. "categoryName" must be one of the given categories, or null if none fit. "title" must be 8-120 characters, a short clear summary. "description" must be 20-2000 characters, expanding on the customer's input with any obviously implied details, in plain professional language — do not invent specifics the customer didn't mention (materials, exact cause, etc).`,
+    `Categories: ${categories.map((c) => c.name).join(", ")}\n\nCustomer's description: "${description}"`,
+    { categoryName: null, title: fallbackTitle, description: description.trim(), confidence: 0 }
+  );
+  const match = categories.find((c) => c.name.toLowerCase() === result.categoryName?.toLowerCase());
+  return {
+    categoryId: match?.id ?? null,
+    categoryName: match?.name ?? null,
+    title: result.title || fallbackTitle,
+    description: result.description || description.trim(),
+    confidence: result.confidence,
+  };
+}
+
 /** Flags reviews that look fake, coordinated, or abusive for human moderation. */
 export async function moderateReview(comment: string, rating: number) {
   return chatJSON<{ flagged: boolean; reason: string | null; category: "SPAM" | "PROFANITY" | "COMPETITOR_ATTACK" | "FAKE" | "NONE" }>(
