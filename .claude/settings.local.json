@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(sudo -n true)",
+      "Bash(apt list *)",
+      "Bash(corepack -v)"
+    ]
+  }
+}

@@ -1,0 +1,95 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+env:
+  DATABASE_URL: postgresql://postgres:postgres@localhost:5432/asaplocal_test
+  DIRECT_URL: postgresql://postgres:postgres@localhost:5432/asaplocal_test
+  NEXTAUTH_SECRET: ci-test-secret-do-not-use-in-prod
+  NEXTAUTH_URL: http://localhost:3000
+
+jobs:
+  lint-typecheck-test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: asaplocal_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.12.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Audit dependencies
+        run: pnpm audit --audit-level=high || true # non-blocking; surfaces in PR checks
+
+      - name: Generate Prisma client
+        run: pnpm db:generate
+
+      - name: Run migrations against test DB
+        run: pnpm --filter @asaplocal/db exec prisma migrate deploy
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Build all apps
+        run: pnpm build
+
+      - name: Run tests
+        run: pnpm test
+
+  security-review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check for committed secrets
+        run: |
+          if git grep -nE "(sk_live_|whsec_|AKIA[0-9A-Z]{16})" -- . ':!*.md'; then
+            echo "Potential secret committed — failing build." && exit 1
+          fi
+          echo "No obvious secrets found."
+
+  deploy-preview:
+    needs: [lint-typecheck-test, security-review]
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy preview (Vercel)
+        run: echo "Vercel Git integration auto-deploys PR previews for apps/web, apps/provider, apps/admin — no manual step needed here."
+
+  deploy-production:
+    needs: [lint-typecheck-test, security-review]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy production (Vercel)
+        run: echo "Vercel Git integration auto-deploys main to production for all three apps — no manual step needed here."

@@ -1,0 +1,12 @@
+{
+  "extends": "./base.json",
+  "compilerOptions": {
+    "plugins": [{ "name": "next" }],
+    "module": "esnext",
+    "jsx": "preserve",
+    "allowJs": true,
+    "noEmit": true,
+    "baseUrl": ".",
+    "paths": { "@/*": ["./*"] }
+  }
+}
