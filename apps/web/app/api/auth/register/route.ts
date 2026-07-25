@@ -10,6 +10,10 @@ const schema = z.object({
   password: z.string().min(8, "Password must be at least 8 characters"),
   firstName: z.string().min(1),
   lastName: z.string().min(1),
+  phone: z
+    .string()
+    .trim()
+    .regex(/^\+?[0-9\s()-]{7,20}$/, "Enter a valid phone number"),
 });
 
 export async function POST(req: NextRequest) {
@@ -30,6 +34,7 @@ export async function POST(req: NextRequest) {
   const user = await prisma.user.create({
     data: {
       email: parsed.data.email,
+      phone: parsed.data.phone,
       passwordHash,
       role: "CUSTOMER",
       status: "PENDING_VERIFICATION",

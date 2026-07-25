@@ -5,7 +5,6 @@ import { Providers } from "./providers";
 import { auth } from "@asaplocal/auth";
 import { ThemeScript } from "@asaplocal/ui";
 import { SiteHeader } from "@/components/site-header";
-import { SiteFooter } from "@/components/site-footer";
 import { WebBottomNav } from "@/components/web-bottom-nav";
 import { RegisterServiceWorker } from "@/components/register-service-worker";
 
@@ -39,7 +38,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <RegisterServiceWorker />
           <SiteHeader session={session} />
           <main className="min-h-[70vh] pb-16 md:pb-0">{children}</main>
-          <SiteFooter />
           <WebBottomNav session={session} />
         </Providers>
       </body>

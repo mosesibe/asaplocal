@@ -1,11 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Button, Card, Input, Select, Textarea } from "@asaplocal/ui";
+
+// Lets an anonymous visitor fill in the whole form before we make them sign
+// up: the values are cached here on submit, the signed-out user is bounced
+// to /register, and once they're back with a session job-request-form
+// replays this exact (already-validated) payload instead of losing it.
+const PENDING_JOB_KEY = "asaplocal:pendingJobPost";
+type PendingJob = { values: FormValues; targetBusinessId?: string };
 
 const formSchema = z.object({
   categoryId: z.string().min(1, "Choose a category"),
@@ -30,15 +38,18 @@ export function JobRequestForm({
   defaultCategorySlug?: string;
 }) {
   const router = useRouter();
+  const { status } = useSession();
   const [submitting, setSubmitting] = useState(false);
+  const [resuming, setResuming] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
   const {
     register,
     handleSubmit,
+    reset,
     formState: { errors },
   } = useForm<FormValues>({ resolver: zodResolver(formSchema) });
 
-  async function onSubmit(values: FormValues) {
+  async function postJob(values: FormValues, businessId?: string) {
     setSubmitting(true);
     setServerError(null);
     try {
@@ -49,7 +60,7 @@ export function JobRequestForm({
           ...values,
           budgetMinPence: values.budgetMinPence ? values.budgetMinPence * 100 : undefined,
           budgetMaxPence: values.budgetMaxPence ? values.budgetMaxPence * 100 : undefined,
-          targetBusinessId,
+          targetBusinessId: businessId,
         }),
       });
       if (!res.ok) {
@@ -62,7 +73,36 @@ export function JobRequestForm({
       setServerError(e instanceof Error ? e.message : "Something went wrong");
     } finally {
       setSubmitting(false);
+      setResuming(false);
     }
+  }
+
+  // Resume a job post that was cached before a sign-up detour: once a
+  // session exists, replay it automatically instead of leaving the visitor
+  // to re-type everything.
+  useEffect(() => {
+    if (status !== "authenticated") return;
+    const raw = sessionStorage.getItem(PENDING_JOB_KEY);
+    if (!raw) return;
+    sessionStorage.removeItem(PENDING_JOB_KEY);
+    try {
+      const pending: PendingJob = JSON.parse(raw);
+      reset(pending.values);
+      setResuming(true);
+      void postJob(pending.values, pending.targetBusinessId ?? targetBusinessId);
+    } catch {
+      // ignore malformed cache
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status]);
+
+  async function onSubmit(values: FormValues) {
+    if (status !== "authenticated") {
+      sessionStorage.setItem(PENDING_JOB_KEY, JSON.stringify({ values, targetBusinessId } satisfies PendingJob));
+      router.push(`/register?next=${encodeURIComponent("/jobs/new")}&reason=post-job`);
+      return;
+    }
+    await postJob(values, targetBusinessId);
   }
 
   return (
@@ -117,13 +157,18 @@ export function JobRequestForm({
           </div>
         </div>
 
+        {resuming && !serverError && (
+          <p className="text-sm text-brand-700">Welcome back — finishing your job post…</p>
+        )}
         {serverError && <p className="text-sm text-red-600">{serverError}</p>}
 
         <Button type="submit" size="lg" className="w-full" disabled={submitting}>
           {submitting ? "Posting…" : targetBusinessId ? "Send request" : "Post job & get quotes"}
         </Button>
         <p className="text-center text-xs text-muted-foreground">
-          Posting is free. Providers pay to access your request — you'll never be charged for quotes.
+          {status === "authenticated"
+            ? "Posting is free. Providers pay to access your request — you'll never be charged for quotes."
+            : "Posting is free. We'll ask you to create a quick account before your job goes live."}
         </p>
       </form>
     </Card>

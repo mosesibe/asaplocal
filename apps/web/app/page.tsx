@@ -1,18 +1,11 @@
 import Link from "next/link";
 import { prisma } from "@asaplocal/db";
 import { Card } from "@asaplocal/ui";
-import { ProviderCard } from "@/components/provider-card";
 import { AiJobRequest } from "@/components/ai-job-request";
+import { CategoryFlyerCarousel } from "@/components/category-flyer-carousel";
 
 export default async function HomePage() {
-  const [categories, featured] = await Promise.all([
-    prisma.category.findMany({ where: { isActive: true, parentId: null }, orderBy: { sortOrder: "asc" } }),
-    prisma.business.findMany({
-      where: { isFeatured: true, verificationStatus: "VERIFIED" },
-      take: 6,
-      include: { services: { include: { category: true }, take: 1 } },
-    }),
-  ]);
+  const categories = await prisma.category.findMany({ where: { isActive: true, parentId: null }, orderBy: { sortOrder: "asc" } });
 
   return (
     <div>
@@ -20,7 +13,7 @@ export default async function HomePage() {
         <div className="mx-auto max-w-2xl text-center">
           <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">What do you need done?</h1>
           <p className="mt-3 text-lg text-muted-foreground">
-            Describe the job in your own words — we'll match you with vetted local pros.
+            Describe the job in your own words — we'll match you with vetted local pros ASAP.
           </p>
         </div>
         <div className="mt-8">
@@ -44,31 +37,10 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {featured.length > 0 && (
-        <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6">
-          <h2 className="mb-6 text-2xl font-semibold">Featured providers</h2>
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {featured.map((biz) => (
-              <ProviderCard
-                key={biz.id}
-                p={{
-                  slug: biz.slug,
-                  name: biz.name,
-                  logoUrl: biz.logoUrl,
-                  city: biz.city,
-                  avgRating: Number(biz.avgRating),
-                  reviewCount: biz.reviewCount,
-                  completedJobsCount: biz.completedJobsCount,
-                  isFeatured: biz.isFeatured,
-                  verificationStatus: biz.verificationStatus,
-                  categoryName: biz.services[0]?.category.name,
-                  fromPricePence: biz.services[0]?.priceMinPence,
-                }}
-              />
-            ))}
-          </div>
-        </section>
-      )}
+      <section className="py-4">
+        <h2 className="mb-6 px-4 text-2xl font-semibold sm:px-6">Explore services</h2>
+        <CategoryFlyerCarousel categories={categories.map((c) => ({ id: c.id, name: c.name, slug: c.slug, icon: c.icon }))} />
+      </section>
     </div>
   );
 }
