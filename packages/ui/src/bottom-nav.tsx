@@ -45,11 +45,11 @@ export function BottomNavItem({
       {emphasized ? (
         <span
           className={cn(
-            "-mt-6 flex h-11 w-11 items-center justify-center rounded-full shadow-card transition-colors",
+            "-mt-9 flex h-16 w-16 items-center justify-center rounded-[22px] shadow-xl transition-colors",
             active ? "bg-brand-700 text-white" : "bg-brand-600 text-white"
           )}
         >
-          <Icon size={22} />
+          <Icon size={28} />
         </span>
       ) : (
         <Icon size={22} strokeWidth={active ? 2.5 : 2} />

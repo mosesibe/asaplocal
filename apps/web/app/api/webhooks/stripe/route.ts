@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@asaplocal/core";
 import { prisma } from "@asaplocal/db";
-import { notify, emailTemplates, sendEmail } from "@asaplocal/core";
+import { notify, emailTemplates, sendEmail, completeReferralOnFirstPayment } from "@asaplocal/core";
 import type Stripe from "stripe";
 
 /**
@@ -44,6 +44,7 @@ export async function POST(req: NextRequest) {
             stripePaymentIntentId: typeof cs.payment_intent === "string" ? cs.payment_intent : undefined,
           },
         });
+        await completeReferralOnFirstPayment(booking.customerId).catch(() => {});
         await notify(booking.business.ownerId, "PAYMENT_RECEIVED", "Payment received", `Deposit received for ${booking.id}`, `/bookings/${booking.id}`);
         await sendEmail({
           to: booking.customer.email,

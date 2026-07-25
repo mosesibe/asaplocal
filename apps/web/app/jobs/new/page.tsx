@@ -5,7 +5,7 @@ export const metadata = { title: "Post a job — get quotes from local pros" };
 
 export default async function NewJobPage({ searchParams }: { searchParams: Promise<{ businessId?: string; businessName?: string; category?: string }> }) {
   const sp = await searchParams;
-  const categories = await prisma.category.findMany({ where: { isActive: true, parentId: null }, orderBy: { name: "asc" } });
+  const categories = await prisma.category.findMany({ where: { isActive: true }, orderBy: [{ sortOrder: "asc" }, { name: "asc" }] });
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-10 sm:px-6">
@@ -18,7 +18,11 @@ export default async function NewJobPage({ searchParams }: { searchParams: Promi
           : "Describe what you need done. Vetted local providers in your area will see your request and send you quotes — you pick who to book."}
       </p>
       <div className="mt-8">
-        <JobRequestForm categories={categories.map((c) => ({ id: c.id, name: c.name }))} targetBusinessId={sp.businessId} defaultCategorySlug={sp.category} />
+        <JobRequestForm
+          categories={categories.map((c) => ({ id: c.id, name: c.name, slug: c.slug, parentId: c.parentId }))}
+          targetBusinessId={sp.businessId}
+          defaultCategorySlug={sp.category}
+        />
       </div>
     </div>
   );

@@ -1,65 +1,119 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import { HelpCircle, FileText, Shield, Receipt } from "lucide-react";
 import { auth } from "@asaplocal/auth";
 import { prisma } from "@asaplocal/db";
-import { Badge, Card, formatPence } from "@asaplocal/ui";
+import { formatPence } from "@asaplocal/ui";
+import { getCustomerAccountStats, getSignInMethods } from "@asaplocal/core";
 import { InstallAppBanner } from "@/components/install-app-banner";
+import { SignOutButton } from "@/components/sign-out-button";
+import { ProfileCard } from "@/components/account/profile-card";
+import { SectionCard, SectionRow } from "@/components/account/section-row";
+import { VerifyPhoneRow } from "@/components/account/verify-phone";
+import { PreferencesRows } from "@/components/account/preferences";
+import { ReferralCard } from "@/components/account/referral-card";
+import { AddressesSection } from "@/components/account/addresses-section";
+import { SecuritySection } from "@/components/account/security-section";
 
 export default async function CustomerDashboard() {
   const session = await auth();
   if (!session?.user) redirect("/login?callbackUrl=/dashboard");
 
-  const [bookings, jobRequests, favouritesCount] = await Promise.all([
-    prisma.booking.findMany({ where: { customerId: session.user.id }, include: { business: true }, orderBy: { createdAt: "desc" }, take: 5 }),
-    prisma.jobRequest.findMany({ where: { customerId: session.user.id }, orderBy: { createdAt: "desc" }, take: 5 }),
-    prisma.favourite.count({ where: { customerId: session.user.id } }),
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    include: { profile: true, addresses: { orderBy: { createdAt: "desc" } }, accounts: true, authenticators: true },
+  });
+  // Stale/invalid session (e.g. the account behind it no longer exists) —
+  // bounce to login rather than crash.
+  if (!user) redirect("/login?callbackUrl=/dashboard");
+
+  const [stats, payments] = await Promise.all([
+    getCustomerAccountStats(session.user.id),
+    prisma.payment.findMany({
+      where: { userId: session.user.id, status: "SUCCEEDED" },
+      orderBy: { createdAt: "desc" },
+      take: 10,
+      include: { business: true },
+    }),
   ]);
 
+  const name = user.profile ? `${user.profile.firstName} ${user.profile.lastName}` : user.name ?? user.email;
+  const contact = user.email + (user.phone ? ` · ${user.phone}` : "");
+  const signInMethods = getSignInMethods(user, user.accounts);
+
   return (
-    <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
-      <h1 className="text-2xl font-bold">My account</h1>
+    <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">My account</h1>
+        <SignOutButton />
+      </div>
       <div className="mt-6">
         <InstallAppBanner />
       </div>
-      <div className="mt-2 grid gap-8 md:grid-cols-2">
-        <section>
-          <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-lg font-semibold">Open job requests</h2>
-            <Link href="/jobs/new" className="text-sm text-brand-700 hover:underline">Post another →</Link>
-          </div>
-          <div className="space-y-3">
-            {jobRequests.map((j) => (
-              <Link key={j.id} href={`/jobs/${j.id}`}>
-                <Card className="flex flex-col gap-2 p-4 sm:flex-row sm:items-center sm:justify-between">
-                  <span className="font-medium">{j.title}</span>
-                  <Badge variant="outline" className="w-fit">{j.status.replace("_", " ")}</Badge>
-                </Card>
-              </Link>
-            ))}
-            {jobRequests.length === 0 && <p className="text-sm text-muted-foreground">No job requests yet.</p>}
-          </div>
-        </section>
-        <section>
-          <h2 className="mb-3 text-lg font-semibold">Recent bookings</h2>
-          <div className="space-y-3">
-            {bookings.map((b) => (
-              <Link key={b.id} href={`/bookings/${b.id}`}>
-                <Card className="flex items-center justify-between p-4">
-                  <div>
-                    <p className="font-medium">{b.business.name}</p>
-                    <p className="text-xs text-muted-foreground">{formatPence(b.totalAmountPence)}</p>
-                  </div>
-                  <Badge variant="outline">{b.status}</Badge>
-                </Card>
-              </Link>
-            ))}
-            {bookings.length === 0 && <p className="text-sm text-muted-foreground">No bookings yet.</p>}
-          </div>
-        </section>
+
+      {/* Section 1 — profile & activity */}
+      <div className="mt-6">
+        <ProfileCard
+          name={name}
+          avatarUrl={user.image ?? user.profile?.avatarUrl}
+          contact={contact}
+          status={user.status}
+          memberSince={user.createdAt}
+          totalSpentPence={stats.totalSpentPence}
+          servicesRequested={stats.servicesRequested}
+        />
       </div>
-      <div className="mt-8 flex gap-4 text-sm">
-        <Link href="/favourites" className="text-brand-700 hover:underline">{favouritesCount} favourites →</Link>
-        <Link href="/messages" className="text-brand-700 hover:underline">Messages →</Link>
+
+      {/* Section 2 — account */}
+      <div className="mt-8">
+        <SectionCard title="Account">
+          <VerifyPhoneRow phone={user.phone} verified={Boolean(user.phoneVerifiedAt)} />
+          <PreferencesRows />
+          <SectionRow
+            icon={Receipt}
+            label="Invoices and receipts"
+            description={payments.length > 0 ? `${payments.length} payment${payments.length === 1 ? "" : "s"}` : "No payments yet"}
+          />
+          <ReferralCard />
+        </SectionCard>
+        {payments.length > 0 && (
+          <div className="mt-2 divide-y divide-border overflow-hidden rounded-2xl border border-border bg-surface">
+            {payments.map((p) => (
+              <Link
+                key={p.id}
+                href={p.bookingId ? `/bookings/${p.bookingId}` : "#"}
+                className="flex items-center justify-between px-4 py-3 text-sm hover:bg-muted"
+              >
+                <div>
+                  <p className="font-medium">{p.business?.name ?? p.type.replace("_", " ")}</p>
+                  <p className="text-xs text-muted-foreground">{p.createdAt.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}</p>
+                </div>
+                <span className="font-medium">{formatPence(p.amountPence)}</span>
+              </Link>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Section 3 — addresses */}
+      <div className="mt-8">
+        <AddressesSection
+          addresses={user.addresses.map((a) => ({ id: a.id, addressLine: a.addressLine, city: a.city, postcode: a.postcode }))}
+        />
+      </div>
+
+      {/* Section 4 — security */}
+      <div className="mt-8">
+        <SecuritySection signInMethods={signInMethods} hasPasskey={user.authenticators.length > 0} />
+      </div>
+
+      {/* Section 5 — support */}
+      <div className="mt-8">
+        <SectionCard title="Support">
+          <SectionRow as={Link} href="/help" icon={HelpCircle} label="Help center" />
+          <SectionRow as={Link} href="/terms" icon={FileText} label="Terms of service" />
+          <SectionRow as={Link} href="/privacy" icon={Shield} label="Privacy policy" />
+        </SectionCard>
       </div>
     </div>
   );

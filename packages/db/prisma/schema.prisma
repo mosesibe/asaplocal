@@ -207,6 +207,8 @@ model User {
   role              Role          @default(CUSTOMER)
   status            UserStatus    @default(PENDING_VERIFICATION)
   image             String?
+  phoneVerifiedAt   DateTime?
+  referralCode      String?       @unique
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
   lastLoginAt       DateTime?
@@ -230,10 +232,91 @@ model User {
   dispatcherAssignments    DispatcherAssignment[] @relation("DispatcherActor")
   accounts          Account[]
   sessions          Session[]
+  addresses         Address[]
+  authenticators    Authenticator[]
+  phoneVerificationCodes PhoneVerificationCode[]
+  referralsSent     Referral[]      @relation("Referrer")
+  referralReceived  Referral?       @relation("Referee")
+  accountCredits    AccountCredit[]
 
   @@index([role])
   @@index([status])
   @@index([email])
+}
+
+// Auth.js WebAuthn (passkey) credential storage — shape required by the
+// Prisma adapter's WebAuthn support. providerAccountId mirrors userId for
+// the "webauthn" provider (no separate external account id).
+model Authenticator {
+  credentialID         String  @unique
+  userId               String  @db.Uuid
+  providerAccountId    String
+  credentialPublicKey  String
+  counter              Int
+  credentialDeviceType String
+  credentialBackedUp   Boolean
+  transports           String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, credentialID])
+}
+
+// Short-lived OTP codes for "Verify phone" in the account Security section.
+model PhoneVerificationCode {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String   @db.Uuid
+  phone     String
+  code      String
+  attempts  Int      @default(0)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+enum ReferralStatus {
+  PENDING
+  COMPLETED
+}
+
+// referrerId shared a code; refereeId signed up using it. Rewarded (both
+// sides credited via AccountCredit) once the referee's first payment succeeds.
+model Referral {
+  id          String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  referrerId  String         @db.Uuid
+  refereeId   String         @unique @db.Uuid
+  code        String
+  status      ReferralStatus @default(PENDING)
+  rewardPence Int            @default(1000)
+  createdAt   DateTime       @default(now())
+  completedAt DateTime?
+
+  referrer User @relation("Referrer", fields: [referrerId], references: [id], onDelete: Cascade)
+  referee  User @relation("Referee", fields: [refereeId], references: [id], onDelete: Cascade)
+
+  @@index([referrerId])
+}
+
+enum AccountCreditReason {
+  REFERRAL_REWARD
+}
+
+// Ledger of account-credit grants; balance = sum(amountPence) for a user.
+// Redemption at checkout is a separate, not-yet-built feature.
+model AccountCredit {
+  id          String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId      String              @db.Uuid
+  amountPence Int
+  reason      AccountCreditReason
+  referralId  String?             @db.Uuid
+  createdAt   DateTime            @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 // Auth.js adapter tables
@@ -298,6 +381,26 @@ model Profile {
   @@index([city])
 }
 
+// Saved service-location addresses for a customer, reused across job posts
+// via the "saved address" option in the job-posting location picker. Distinct
+// from Profile's home address — a customer may post jobs for several sites.
+model Address {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId      String   @db.Uuid
+  addressLine String
+  city        String
+  postcode    String?
+  country     String   @default("GB")
+  lat         Decimal  @db.Decimal(9, 6)
+  lng         Decimal  @db.Decimal(9, 6)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
 // ── Categories & Businesses ─────────────────────────────────────────────
 
 model Category {
@@ -308,6 +411,8 @@ model Category {
   description String?    @db.Text
   parentId    String?    @db.Uuid
   isActive    Boolean    @default(true)
+  isFeatured  Boolean    @default(false)
+  isEmergency Boolean    @default(false)
   sortOrder   Int        @default(0)
   createdAt   DateTime   @default(now())
 

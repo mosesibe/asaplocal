@@ -7,11 +7,11 @@ import { authMiddleware as auth } from "@asaplocal/auth";
  * are bounced to their own apps rather than allowed into customer-only
  * routes (each role has its own deployed app).
  */
-const PUBLIC_PREFIXES = ["/", "/search", "/providers", "/jobs/new", "/api/jobs/suggest", "/login", "/register", "/forgot-password", "/verify-email", "/api/webhooks", "/api/auth", "/sitemap.xml", "/robots.txt", "/how-it-works", "/pricing", "/about", "/trust-safety", "/terms", "/privacy"];
+const PUBLIC_PREFIXES = ["/", "/search", "/providers", "/jobs/new", "/api/jobs/suggest", "/api/geo", "/login", "/register", "/forgot-password", "/verify-email", "/api/webhooks", "/api/auth", "/sitemap.xml", "/robots.txt", "/how-it-works", "/pricing", "/about", "/trust-safety", "/terms", "/privacy"];
 
 // Account-area routes that must never be swallowed by the /[slug] SEO
 // catch-all's public match below, even though they're single path segments.
-const PROTECTED_TOP_LEVEL = ["dashboard", "favourites", "messages", "jobs", "bookings", "account-suspended"];
+const PROTECTED_TOP_LEVEL = ["dashboard", "favourites", "messages", "jobs", "bookings", "account-suspended", "activity"];
 
 export default auth((req) => {
   const { pathname } = req.nextUrl;

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@asaplocal/auth";
 import { prisma } from "@asaplocal/db";
-import { jobRequestSchema, createJobRequestWithLead, checkRateLimit, geocodeAddress, stripHtml, categoriseJobRequest } from "@asaplocal/core";
+import { jobRequestSchema, createJobRequestWithLead, checkRateLimit, geocodeAddress, stripHtml, categoriseJobRequest, upsertUserAddress } from "@asaplocal/core";
 
 export async function POST(req: NextRequest) {
   const session = await auth();
@@ -39,6 +39,20 @@ export async function POST(req: NextRequest) {
   const aiSuggestion = await categoriseJobRequest(parsed.data.description, categories).catch(() => null);
 
   const jobRequest = await createJobRequestWithLead({ ...parsed.data, customerId: session.user.id });
+
+  // The customer typed a brand-new address (as opposed to GPS or a previously
+  // saved one) — save it to their account so it shows up as a "saved address"
+  // next time. Best-effort: never let this block a successful job post.
+  const locationSource = typeof body.locationSource === "string" ? body.locationSource : undefined;
+  if (locationSource === "new" && parsed.data.addressLine) {
+    await upsertUserAddress(session.user.id, {
+      addressLine: parsed.data.addressLine,
+      city: parsed.data.city,
+      postcode: parsed.data.postcode,
+      lat: parsed.data.lat,
+      lng: parsed.data.lng,
+    }).catch(() => {});
+  }
 
   if (aiSuggestion?.categoryId) {
     await prisma.jobRequest.update({

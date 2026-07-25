@@ -13,16 +13,207 @@ import { randomUUID } from "crypto";
 
 const prisma = new PrismaClient();
 
-const CATEGORIES = [
-  { name: "Cleaners", slug: "cleaners", icon: "sparkles" },
-  { name: "Plumbers", slug: "plumbers", icon: "wrench" },
-  { name: "Electricians", slug: "electricians", icon: "zap" },
-  { name: "Gardeners", slug: "gardeners", icon: "leaf" },
-  { name: "Handymen", slug: "handymen", icon: "hammer" },
-  { name: "Movers", slug: "movers", icon: "truck" },
-  { name: "Tutors", slug: "tutors", icon: "book-open" },
-  { name: "Pet Sitters", slug: "pet-sitters", icon: "paw-print" },
+interface CategoryDef {
+  name: string;
+  slug: string;
+  icon: string;
+  isFeatured?: boolean;
+  children: { name: string; slug: string; isEmergency?: boolean }[];
+}
+
+// Phase-1 launch categories (isFeatured) per the "best categories to launch
+// first" analysis: highest search demand + repeat-booking rate.
+const CATEGORIES: CategoryDef[] = [
+  {
+    name: "Home Cleaning",
+    slug: "cleaning",
+    icon: "sparkles",
+    isFeatured: true,
+    children: [
+      { name: "Regular house cleaning", slug: "regular-house-cleaning" },
+      { name: "Deep cleaning", slug: "deep-cleaning" },
+      { name: "End-of-tenancy cleaning", slug: "end-of-tenancy-cleaning" },
+      { name: "Carpet cleaning", slug: "carpet-cleaning" },
+      { name: "Upholstery cleaning", slug: "upholstery-cleaning" },
+      { name: "Window cleaning", slug: "window-cleaning" },
+      { name: "Oven cleaning", slug: "oven-cleaning" },
+      { name: "After-party cleaning", slug: "after-party-cleaning" },
+      { name: "Airbnb / holiday-let cleaning", slug: "airbnb-cleaning" },
+      { name: "Office cleaning", slug: "office-cleaning" },
+    ],
+  },
+  {
+    name: "Plumbing",
+    slug: "plumbing",
+    icon: "wrench",
+    isFeatured: true,
+    children: [
+      { name: "Emergency plumbing", slug: "emergency-plumbing", isEmergency: true },
+      { name: "Leak repair", slug: "leak-repair", isEmergency: true },
+      { name: "Tap replacement", slug: "tap-replacement" },
+      { name: "Toilet repair", slug: "toilet-repair" },
+      { name: "Shower installation", slug: "shower-installation" },
+      { name: "Pipe repair", slug: "pipe-repair" },
+      { name: "Radiator installation", slug: "radiator-installation" },
+      { name: "Boiler pressure issues", slug: "boiler-pressure-issues", isEmergency: true },
+      { name: "Drain unblocking", slug: "drain-unblocking", isEmergency: true },
+      { name: "Bathroom plumbing", slug: "bathroom-plumbing" },
+    ],
+  },
+  {
+    name: "Electrical",
+    slug: "electrical",
+    icon: "zap",
+    isFeatured: true,
+    children: [
+      { name: "Emergency electrician", slug: "emergency-electrician", isEmergency: true },
+      { name: "Light fitting installation", slug: "light-fitting-installation" },
+      { name: "Socket installation", slug: "socket-installation" },
+      { name: "Consumer unit (fuse box) upgrades", slug: "consumer-unit-upgrades" },
+      { name: "Fault finding", slug: "fault-finding" },
+      { name: "Rewiring", slug: "rewiring" },
+      { name: "Outdoor lighting", slug: "outdoor-lighting" },
+      { name: "EV charger installation", slug: "ev-charger-installation" },
+      { name: "Smoke alarm installation", slug: "smoke-alarm-installation" },
+      { name: "Appliance connection", slug: "appliance-connection" },
+    ],
+  },
+  {
+    name: "Gardening & Outdoor",
+    slug: "gardening",
+    icon: "leaf",
+    isFeatured: true,
+    children: [
+      { name: "Lawn mowing", slug: "lawn-mowing" },
+      { name: "Hedge trimming", slug: "hedge-trimming" },
+      { name: "Weeding", slug: "weeding" },
+      { name: "Garden clearance", slug: "garden-clearance" },
+      { name: "Pressure washing", slug: "pressure-washing" },
+      { name: "Fence repair", slug: "fence-repair" },
+      { name: "Decking installation", slug: "decking-installation" },
+      { name: "Patio cleaning", slug: "patio-cleaning" },
+      { name: "Tree pruning", slug: "tree-pruning" },
+      { name: "Artificial grass installation", slug: "artificial-grass-installation" },
+    ],
+  },
+  {
+    name: "Handyman",
+    slug: "handyman",
+    icon: "hammer",
+    isFeatured: true,
+    children: [
+      { name: "Flat-pack furniture assembly", slug: "flat-pack-furniture-assembly" },
+      { name: "TV wall mounting", slug: "tv-wall-mounting" },
+      { name: "Shelf installation", slug: "shelf-installation" },
+      { name: "Curtain & blind fitting", slug: "curtain-blind-fitting" },
+      { name: "Door repairs", slug: "door-repairs" },
+      { name: "Lock replacement", slug: "lock-replacement" },
+      { name: "Minor plaster repairs", slug: "minor-plaster-repairs" },
+      { name: "Picture hanging", slug: "picture-hanging" },
+      { name: "Silicone sealing", slug: "silicone-sealing" },
+      { name: "General odd jobs", slug: "general-odd-jobs" },
+    ],
+  },
+  {
+    name: "Painting & Decorating",
+    slug: "painting",
+    icon: "paint-roller",
+    children: [
+      { name: "Interior painting", slug: "interior-painting" },
+      { name: "Exterior painting", slug: "exterior-painting" },
+      { name: "Wallpaper installation", slug: "wallpaper-installation" },
+      { name: "Wallpaper removal", slug: "wallpaper-removal" },
+      { name: "Ceiling painting", slug: "ceiling-painting" },
+      { name: "Woodwork painting", slug: "woodwork-painting" },
+      { name: "Touch-up repairs", slug: "touch-up-repairs" },
+      { name: "Fence painting", slug: "fence-painting" },
+      { name: "Commercial decorating", slug: "commercial-decorating" },
+      { name: "Feature wall decorating", slug: "feature-wall-decorating" },
+    ],
+  },
+  {
+    name: "Removals & Moving",
+    slug: "removals",
+    icon: "truck",
+    children: [
+      { name: "House removals", slug: "house-removals" },
+      { name: "Flat removals", slug: "flat-removals" },
+      { name: "Man with a van", slug: "man-with-a-van" },
+      { name: "Furniture moving", slug: "furniture-moving" },
+      { name: "Packing services", slug: "packing-services" },
+      { name: "Unpacking services", slug: "unpacking-services" },
+      { name: "Office relocation", slug: "office-relocation" },
+      { name: "Student moves", slug: "student-moves" },
+      { name: "Storage collection", slug: "storage-collection" },
+      { name: "Single-item delivery", slug: "single-item-delivery" },
+    ],
+  },
+  {
+    name: "Tutoring",
+    slug: "tutoring",
+    icon: "book-open",
+    children: [
+      { name: "Maths tutoring", slug: "maths-tutoring" },
+      { name: "English tutoring", slug: "english-tutoring" },
+      { name: "Science tutoring", slug: "science-tutoring" },
+      { name: "GCSE preparation", slug: "gcse-preparation" },
+      { name: "A-level preparation", slug: "a-level-preparation" },
+      { name: "Primary school support", slug: "primary-school-support" },
+      { name: "University tutoring", slug: "university-tutoring" },
+      { name: "Online tutoring", slug: "online-tutoring" },
+      { name: "Music lessons", slug: "music-lessons" },
+      { name: "Language lessons", slug: "language-lessons" },
+    ],
+  },
+  {
+    name: "Beauty & Wellness",
+    slug: "beauty",
+    icon: "scissors",
+    children: [
+      { name: "Mobile hairdresser", slug: "mobile-hairdresser" },
+      { name: "Barber services", slug: "barber-services" },
+      { name: "Makeup artist", slug: "makeup-artist" },
+      { name: "Nail technician", slug: "nail-technician" },
+      { name: "Eyebrow & lash services", slug: "eyebrow-lash-services" },
+      { name: "Massage therapy", slug: "massage-therapy" },
+      { name: "Personal training", slug: "personal-training" },
+      { name: "Yoga instruction", slug: "yoga-instruction" },
+      { name: "Spray tanning", slug: "spray-tanning" },
+      { name: "Bridal beauty services", slug: "bridal-beauty-services" },
+    ],
+  },
+  {
+    name: "Pet Services",
+    slug: "pet-services",
+    icon: "paw-print",
+    children: [
+      { name: "Dog walking", slug: "dog-walking" },
+      { name: "Pet sitting", slug: "pet-sitting" },
+      { name: "Cat sitting", slug: "cat-sitting" },
+      { name: "Dog grooming", slug: "dog-grooming" },
+      { name: "Puppy visits", slug: "puppy-visits" },
+      { name: "Overnight pet care", slug: "overnight-pet-care" },
+      { name: "Pet transport", slug: "pet-transport" },
+      { name: "Feeding visits", slug: "feeding-visits" },
+      { name: "Small animal care", slug: "small-animal-care" },
+      { name: "Pet exercise sessions", slug: "pet-exercise-sessions" },
+    ],
+  },
 ];
+
+// Old flat 8-category slug scheme this taxonomy replaces. Renaming (rather
+// than re-inserting under the new slug) preserves the row's id so existing
+// Business/Service/JobRequest foreign keys stay valid.
+const LEGACY_SLUG_RENAMES: Record<string, string> = {
+  cleaners: "cleaning",
+  plumbers: "plumbing",
+  electricians: "electrical",
+  gardeners: "gardening",
+  handymen: "handyman",
+  movers: "removals",
+  tutors: "tutoring",
+  "pet-sitters": "pet-services",
+};
 
 const CITIES = [
   { city: "Manchester", lat: 53.4808, lng: -2.2426 },
@@ -35,16 +226,38 @@ async function main() {
   console.log("Seeding AsapLocal…");
 
   // ── Categories ──────────────────────────────────────────────────────
-  const categories = await Promise.all(
-    CATEGORIES.map((c) =>
+  for (const [oldSlug, newSlug] of Object.entries(LEGACY_SLUG_RENAMES)) {
+    const existing = await prisma.category.findUnique({ where: { slug: oldSlug } });
+    if (existing) {
+      const def = CATEGORIES.find((c) => c.slug === newSlug)!;
+      await prisma.category.update({ where: { id: existing.id }, data: { slug: newSlug, name: def.name, icon: def.icon } });
+    }
+  }
+
+  const parentCategories = await Promise.all(
+    CATEGORIES.map((c, i) =>
       prisma.category.upsert({
         where: { slug: c.slug },
-        update: {},
-        create: c,
+        update: { name: c.name, icon: c.icon, isFeatured: !!c.isFeatured, sortOrder: i },
+        create: { name: c.name, slug: c.slug, icon: c.icon, isFeatured: !!c.isFeatured, sortOrder: i },
       })
     )
   );
-  const catBySlug = Object.fromEntries(categories.map((c) => [c.slug, c]));
+  const catBySlug = Object.fromEntries(parentCategories.map((c) => [c.slug, c]));
+
+  const childCategories = [];
+  for (const c of CATEGORIES) {
+    const parent = catBySlug[c.slug];
+    for (const [i, child] of c.children.entries()) {
+      const row = await prisma.category.upsert({
+        where: { slug: child.slug },
+        update: { name: child.name, parentId: parent.id, isEmergency: !!child.isEmergency, sortOrder: i },
+        create: { name: child.name, slug: child.slug, parentId: parent.id, isEmergency: !!child.isEmergency, sortOrder: i },
+      });
+      childCategories.push(row);
+    }
+  }
+  const categories = [...parentCategories, ...childCategories];
 
   // ── Admin ───────────────────────────────────────────────────────────
   const admin = await prisma.user.upsert({
@@ -100,11 +313,11 @@ async function main() {
   // ── Providers (businesses) ─────────────────────────────────────────
   type SeedBiz = { email: string; name: string; catSlug: string; city: string; lat: number; lng: number; plan: SubscriptionPlan; verified?: boolean; featured?: boolean };
   const seedBusinesses: SeedBiz[] = [
-    { email: "sparkle.cleaning@example.com", name: "Sparkle Cleaning Co.", catSlug: "cleaners", city: "Manchester", lat: 53.4808, lng: -2.2426, plan: SubscriptionPlan.PRO, verified: true },
-    { email: "flowfix.plumbing@example.com", name: "FlowFix Plumbing", catSlug: "plumbers", city: "Manchester", lat: 53.4831, lng: -2.2441, plan: SubscriptionPlan.PREMIUM, verified: true, featured: true },
-    { email: "brightspark.electric@example.com", name: "BrightSpark Electrical", catSlug: "electricians", city: "Manchester", lat: 53.479, lng: -2.245, plan: SubscriptionPlan.FREE },
-    { email: "greenthumb.gardens@example.com", name: "GreenThumb Gardens", catSlug: "gardeners", city: "Liverpool", lat: 53.4084, lng: -2.9916, plan: SubscriptionPlan.PRO, verified: true },
-    { email: "citymove.movers@example.com", name: "CityMove Removals", catSlug: "movers", city: "London", lat: 51.5072, lng: -0.1276, plan: SubscriptionPlan.PREMIUM, verified: true, featured: true },
+    { email: "sparkle.cleaning@example.com", name: "Sparkle Cleaning Co.", catSlug: "cleaning", city: "Manchester", lat: 53.4808, lng: -2.2426, plan: SubscriptionPlan.PRO, verified: true },
+    { email: "flowfix.plumbing@example.com", name: "FlowFix Plumbing", catSlug: "plumbing", city: "Manchester", lat: 53.4831, lng: -2.2441, plan: SubscriptionPlan.PREMIUM, verified: true, featured: true },
+    { email: "brightspark.electric@example.com", name: "BrightSpark Electrical", catSlug: "electrical", city: "Manchester", lat: 53.479, lng: -2.245, plan: SubscriptionPlan.FREE },
+    { email: "greenthumb.gardens@example.com", name: "GreenThumb Gardens", catSlug: "gardening", city: "Liverpool", lat: 53.4084, lng: -2.9916, plan: SubscriptionPlan.PRO, verified: true },
+    { email: "citymove.movers@example.com", name: "CityMove Removals", catSlug: "removals", city: "London", lat: 51.5072, lng: -0.1276, plan: SubscriptionPlan.PREMIUM, verified: true, featured: true },
   ];
 
   const businesses = [];
@@ -149,7 +362,7 @@ async function main() {
           create: [
             {
               categoryId: catBySlug[b.catSlug].id,
-              title: `Standard ${catBySlug[b.catSlug].name.slice(0, -1)} Service`,
+              title: `Standard ${catBySlug[b.catSlug].name} Service`,
               description: "Standard call-out, diagnostics and same-day completion where possible.",
               priceType: PriceType.HOURLY,
               priceMinPence: 3500,
@@ -179,7 +392,7 @@ async function main() {
   const jr1 = await prisma.jobRequest.create({
     data: {
       customerId: customer1.id,
-      categoryId: catBySlug["plumbers"].id,
+      categoryId: catBySlug["plumbing"].id,
       title: "Leaking kitchen tap needs urgent repair",
       description: "Tap has been dripping constantly for 2 days, water pooling under the sink cabinet.",
       photos: [],
@@ -204,8 +417,8 @@ async function main() {
     include: { lead: true },
   });
 
-  const plumber = businesses.find((b) => b.catSlug === "plumbers")!.business;
-  const electrician = businesses.find((b) => b.catSlug === "electricians")!.business;
+  const plumber = businesses.find((b) => b.catSlug === "plumbing")!.business;
+  const electrician = businesses.find((b) => b.catSlug === "electrical")!.business;
 
   // FlowFix purchases the lead outright (£8 lead)
   await prisma.leadAccess.create({
@@ -223,7 +436,7 @@ async function main() {
   const jr2 = await prisma.jobRequest.create({
     data: {
       customerId: customer2.id,
-      categoryId: catBySlug["electricians"].id,
+      categoryId: catBySlug["electrical"].id,
       title: "Rewire two bedrooms and add new sockets",
       description: "Victorian terrace, need an assessment and quote for rewiring two upstairs bedrooms plus 4 new sockets.",
       photos: [],
@@ -256,7 +469,7 @@ async function main() {
   await prisma.lead.update({ where: { id: jr2.lead!.id }, data: { salesCount: { increment: 1 } } });
 
   // ── A completed booking with a review (Sparkle Cleaning) ────────────
-  const cleaner = businesses.find((b) => b.catSlug === "cleaners")!.business;
+  const cleaner = businesses.find((b) => b.catSlug === "cleaning")!.business;
   const cleanerService = await prisma.service.findFirstOrThrow({ where: { businessId: cleaner.id } });
 
   const booking = await prisma.booking.create({

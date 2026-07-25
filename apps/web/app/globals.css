@@ -4,18 +4,20 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222 47% 11%;
-    --surface: 0 0% 100%;
-    --muted: 220 14% 96%;
-    --border: 220 13% 91%;
+    --background: 30 25% 97%;
+    --foreground: 20 30% 12%;
+    --surface: 30 30% 99%;
+    --muted: 28 20% 93%;
+    --muted-foreground: 25 12% 42%;
+    --border: 26 18% 86%;
   }
   .dark {
-    --background: 222 47% 7%;
-    --foreground: 210 20% 98%;
-    --surface: 222 40% 10%;
-    --muted: 217 33% 17%;
-    --border: 217 33% 20%;
+    --background: 20 35% 7%;
+    --foreground: 30 25% 96%;
+    --surface: 20 28% 11%;
+    --muted: 22 22% 17%;
+    --muted-foreground: 25 14% 65%;
+    --border: 22 20% 22%;
   }
   * {
     @apply border-border;
@@ -28,5 +30,15 @@
   }
   :focus-visible {
     @apply outline-none ring-2 ring-brand-500 ring-offset-2 ring-offset-background;
+  }
+}
+
+@layer utilities {
+  .scrollbar-hide {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
   }
 }

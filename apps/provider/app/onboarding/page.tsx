@@ -3,11 +3,22 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button, Card, Input, Select, Textarea } from "@asaplocal/ui";
 
-const CATEGORIES = ["cleaners", "plumbers", "electricians", "gardeners", "handymen", "movers", "tutors", "pet-sitters"];
+const CATEGORIES = [
+  { slug: "cleaning", name: "Home Cleaning" },
+  { slug: "plumbing", name: "Plumbing" },
+  { slug: "electrical", name: "Electrical" },
+  { slug: "gardening", name: "Gardening & Outdoor" },
+  { slug: "handyman", name: "Handyman" },
+  { slug: "painting", name: "Painting & Decorating" },
+  { slug: "removals", name: "Removals & Moving" },
+  { slug: "tutoring", name: "Tutoring" },
+  { slug: "beauty", name: "Beauty & Wellness" },
+  { slug: "pet-services", name: "Pet Services" },
+];
 
 export default function OnboardingPage() {
   const router = useRouter();
-  const [form, setForm] = useState({ name: "", description: "", city: "", postcode: "", categorySlug: "cleaners", baseRadiusMiles: 15 });
+  const [form, setForm] = useState({ name: "", description: "", city: "", postcode: "", categorySlug: "cleaning", baseRadiusMiles: 15 });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -28,7 +39,7 @@ export default function OnboardingPage() {
         <Input placeholder="Business name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
         <Textarea placeholder="Describe your business (20+ characters)" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={4} />
         <Select value={form.categorySlug} onChange={(e) => setForm({ ...form, categorySlug: e.target.value })}>
-          {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+          {CATEGORIES.map((c) => <option key={c.slug} value={c.slug}>{c.name}</option>)}
         </Select>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <Input placeholder="City" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} />

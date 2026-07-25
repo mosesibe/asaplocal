@@ -21,6 +21,85 @@ export async function geocodeAddress(address: string): Promise<{ lat: number; ln
   return { lat, lng, formattedAddress: data.results[0].formatted_address };
 }
 
+export interface ResolvedAddress {
+  addressLine: string;
+  city: string;
+  postcode?: string;
+  lat: number;
+  lng: number;
+  formattedAddress: string;
+}
+
+interface GoogleAddressComponent {
+  long_name: string;
+  types: string[];
+}
+
+interface GoogleGeocodeResult {
+  formatted_address: string;
+  address_components?: GoogleAddressComponent[];
+  geometry: { location: { lat: number; lng: number } };
+}
+
+function parseGeocodeResult(result: GoogleGeocodeResult): ResolvedAddress {
+  const components = result.address_components ?? [];
+  const find = (type: string) => components.find((c) => c.types.includes(type))?.long_name;
+  const streetNumber = find("street_number");
+  const route = find("route");
+  const city = find("postal_town") ?? find("locality") ?? find("administrative_area_level_2") ?? "";
+  const postcode = find("postal_code");
+  const addressLine = [streetNumber, route].filter(Boolean).join(" ") || result.formatted_address.split(",")[0] || result.formatted_address;
+  return {
+    addressLine,
+    city,
+    postcode,
+    lat: result.geometry.location.lat,
+    lng: result.geometry.location.lng,
+    formattedAddress: result.formatted_address,
+  };
+}
+
+/** Reverse-geocode GPS coordinates ("current location") into a human-readable address. */
+export async function reverseGeocode(lat: number, lng: number): Promise<ResolvedAddress | null> {
+  const key = process.env.GOOGLE_MAPS_API_KEY;
+  if (!key) throw new Error("GOOGLE_MAPS_API_KEY not configured");
+  const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${key}`;
+  const res = await fetch(url);
+  const data = await res.json();
+  if (data.status !== "OK" || !data.results?.[0]) return null;
+  return parseGeocodeResult(data.results[0]);
+}
+
+export interface PlacePrediction {
+  placeId: string;
+  description: string;
+}
+
+/** Server-proxied Google Places Autocomplete — never exposes the API key to the browser. */
+export async function placeAutocomplete(input: string): Promise<PlacePrediction[]> {
+  const key = process.env.GOOGLE_MAPS_API_KEY;
+  if (!key) throw new Error("GOOGLE_MAPS_API_KEY not configured");
+  const url = `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(input)}&components=country:gb&key=${key}`;
+  const res = await fetch(url);
+  const data = await res.json();
+  if (data.status !== "OK" && data.status !== "ZERO_RESULTS") throw new Error(`Places autocomplete failed: ${data.status}`);
+  return (data.predictions ?? []).map((p: { place_id: string; description: string }) => ({
+    placeId: p.place_id,
+    description: p.description,
+  }));
+}
+
+/** Resolve a Places `placeId` (from placeAutocomplete) into a full address + coordinates. */
+export async function placeDetails(placeId: string): Promise<ResolvedAddress | null> {
+  const key = process.env.GOOGLE_MAPS_API_KEY;
+  if (!key) throw new Error("GOOGLE_MAPS_API_KEY not configured");
+  const url = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${encodeURIComponent(placeId)}&fields=formatted_address,address_component,geometry&key=${key}`;
+  const res = await fetch(url);
+  const data = await res.json();
+  if (data.status !== "OK" || !data.result) return null;
+  return parseGeocodeResult(data.result);
+}
+
 /** A cheap bounding-box pre-filter to use in SQL before precise haversine filtering in app code. */
 export function boundingBox(lat: number, lng: number, radiusMiles: number) {
   const latDelta = radiusMiles / 69; // ~69 miles per degree latitude

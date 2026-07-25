@@ -1,11 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Button, Card, Input, Select, Textarea } from "@asaplocal/ui";
+import { LocationPicker, type LocationValue } from "@/components/location-picker";
+import { PreferredDatePicker, toPreferredDateTime, type PreferredDateValue } from "@/components/preferred-date-picker";
+
+// Lets an anonymous visitor fill in the whole form before we make them sign
+// up: the values are cached here on submit, the signed-out user is bounced
+// to /register, and once they're back with a session job-request-form
+// replays this exact (already-validated) payload instead of losing it.
+const PENDING_JOB_KEY = "asaplocal:pendingJobPost";
+type PendingJob = { values: FormValues; location: LocationValue | null; preferredDate: PreferredDateValue | null; targetBusinessId?: string };
 
 const formSchema = z.object({
   categoryId: z.string().min(1, "Choose a category"),
@@ -13,10 +23,6 @@ const formSchema = z.object({
   description: z.string().min(20, "A few more details would help providers quote accurately (20+ characters)"),
   budgetMinPence: z.coerce.number().int().nonnegative().optional(),
   budgetMaxPence: z.coerce.number().int().nonnegative().optional(),
-  preferredDate: z.string().optional(),
-  city: z.string().min(2, "City is required"),
-  postcode: z.string().optional(),
-  addressLine: z.string().optional(),
 });
 type FormValues = z.infer<typeof formSchema>;
 
@@ -25,20 +31,32 @@ export function JobRequestForm({
   targetBusinessId,
   defaultCategorySlug,
 }: {
-  categories: { id: string; name: string }[];
+  categories: { id: string; name: string; slug: string; parentId: string | null }[];
   targetBusinessId?: string;
   defaultCategorySlug?: string;
 }) {
+  const parentCategories = categories.filter((c) => !c.parentId);
+  const childrenByParent = new Map<string, typeof categories>();
+  for (const c of categories) {
+    if (!c.parentId) continue;
+    childrenByParent.set(c.parentId, [...(childrenByParent.get(c.parentId) ?? []), c]);
+  }
   const router = useRouter();
+  const { status } = useSession();
   const [submitting, setSubmitting] = useState(false);
+  const [resuming, setResuming] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
+  const [location, setLocation] = useState<LocationValue | null>(null);
+  const [locationError, setLocationError] = useState<string | null>(null);
+  const [preferredDate, setPreferredDate] = useState<PreferredDateValue | null>(null);
   const {
     register,
     handleSubmit,
+    reset,
     formState: { errors },
   } = useForm<FormValues>({ resolver: zodResolver(formSchema) });
 
-  async function onSubmit(values: FormValues) {
+  async function postJob(values: FormValues, loc: LocationValue, date: PreferredDateValue | null, businessId?: string) {
     setSubmitting(true);
     setServerError(null);
     try {
@@ -46,10 +64,20 @@ export function JobRequestForm({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          ...values,
+          categoryId: values.categoryId,
+          title: values.title,
+          description: values.description,
+          preferredDate: date ? toPreferredDateTime(date) : undefined,
+          flexibleDate: date ? date.timeSlot === "flexible" : true,
           budgetMinPence: values.budgetMinPence ? values.budgetMinPence * 100 : undefined,
           budgetMaxPence: values.budgetMaxPence ? values.budgetMaxPence * 100 : undefined,
-          targetBusinessId,
+          addressLine: loc.addressLine,
+          city: loc.city,
+          postcode: loc.postcode,
+          lat: loc.lat,
+          lng: loc.lng,
+          locationSource: loc.source,
+          targetBusinessId: businessId,
         }),
       });
       if (!res.ok) {
@@ -62,7 +90,45 @@ export function JobRequestForm({
       setServerError(e instanceof Error ? e.message : "Something went wrong");
     } finally {
       setSubmitting(false);
+      setResuming(false);
     }
+  }
+
+  // Resume a job post that was cached before a sign-up detour: once a
+  // session exists, replay it automatically instead of leaving the visitor
+  // to re-type everything.
+  useEffect(() => {
+    if (status !== "authenticated") return;
+    const raw = sessionStorage.getItem(PENDING_JOB_KEY);
+    if (!raw) return;
+    sessionStorage.removeItem(PENDING_JOB_KEY);
+    try {
+      const pending: PendingJob = JSON.parse(raw);
+      reset(pending.values);
+      setLocation(pending.location);
+      setPreferredDate(pending.preferredDate);
+      if (pending.location) {
+        setResuming(true);
+        void postJob(pending.values, pending.location, pending.preferredDate, pending.targetBusinessId ?? targetBusinessId);
+      }
+    } catch {
+      // ignore malformed cache
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status]);
+
+  async function onSubmit(values: FormValues) {
+    if (!location) {
+      setLocationError("Please choose a service location");
+      return;
+    }
+    setLocationError(null);
+    if (status !== "authenticated") {
+      sessionStorage.setItem(PENDING_JOB_KEY, JSON.stringify({ values, location, preferredDate, targetBusinessId } satisfies PendingJob));
+      router.push(`/register?next=${encodeURIComponent("/jobs/new")}&reason=post-job`);
+      return;
+    }
+    await postJob(values, location, preferredDate, targetBusinessId);
   }
 
   return (
@@ -70,9 +136,14 @@ export function JobRequestForm({
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
         <div>
           <label className="text-sm font-medium">Category</label>
-          <Select {...register("categoryId")} defaultValue={categories.find((c) => c.name.toLowerCase().startsWith(defaultCategorySlug?.split("-")[0] ?? ""))?.id} className="mt-1">
+          <Select {...register("categoryId")} defaultValue={categories.find((c) => c.slug === defaultCategorySlug)?.id} className="mt-1">
             <option value="">Select a category</option>
-            {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+            {parentCategories.map((p) => (
+              <optgroup key={p.id} label={p.name}>
+                <option value={p.id}>{p.name} (general)</option>
+                {(childrenByParent.get(p.id) ?? []).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </optgroup>
+            ))}
           </Select>
           {errors.categoryId && <p className="mt-1 text-xs text-red-600">{errors.categoryId.message}</p>}
         </div>
@@ -102,28 +173,31 @@ export function JobRequestForm({
 
         <div>
           <label className="text-sm font-medium">Preferred date (optional)</label>
-          <Input type="date" {...register("preferredDate")} className="mt-1" />
-        </div>
-
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <div>
-            <label className="text-sm font-medium">City</label>
-            <Input {...register("city")} placeholder="Manchester" className="mt-1" />
-            {errors.city && <p className="mt-1 text-xs text-red-600">{errors.city.message}</p>}
-          </div>
-          <div>
-            <label className="text-sm font-medium">Postcode (optional)</label>
-            <Input {...register("postcode")} className="mt-1" />
+          <div className="mt-1">
+            <PreferredDatePicker value={preferredDate} onChange={setPreferredDate} location={location} />
           </div>
         </div>
 
+        <div>
+          <label className="text-sm font-medium">Service location</label>
+          <div className="mt-1">
+            <LocationPicker value={location} onChange={setLocation} />
+          </div>
+          {locationError && <p className="mt-1 text-xs text-red-600">{locationError}</p>}
+        </div>
+
+        {resuming && !serverError && (
+          <p className="text-sm text-brand-700">Welcome back — finishing your job post…</p>
+        )}
         {serverError && <p className="text-sm text-red-600">{serverError}</p>}
 
         <Button type="submit" size="lg" className="w-full" disabled={submitting}>
           {submitting ? "Posting…" : targetBusinessId ? "Send request" : "Post job & get quotes"}
         </Button>
         <p className="text-center text-xs text-muted-foreground">
-          Posting is free. Providers pay to access your request — you'll never be charged for quotes.
+          {status === "authenticated"
+            ? "Posting is free. Providers pay to access your request — you'll never be charged for quotes."
+            : "Posting is free. We'll ask you to create a quick account before your job goes live."}
         </p>
       </form>
     </Card>

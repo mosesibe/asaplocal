@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
       lng: geo.lng,
       baseRadiusMiles: parsed.data.baseRadiusMiles,
       serviceAreas: { create: [{ city: parsed.data.city, lat: geo.lat, lng: geo.lng, radiusMiles: parsed.data.baseRadiusMiles }] },
-      services: { create: [{ categoryId: category.id, title: `${category.name.slice(0, -1)} services`, priceType: "QUOTE_ONLY" }] },
+      services: { create: [{ categoryId: category.id, title: `${category.name} services`, priceType: "QUOTE_ONLY" }] },
       subscription: { create: { plan: "FREE", status: "ACTIVE", monthlyLeadAllowance: 0 } },
       leadCreditWallet: { create: { balance: 2 } }, // welcome credits
     },

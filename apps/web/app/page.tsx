@@ -1,33 +1,30 @@
 import Link from "next/link";
 import { prisma } from "@asaplocal/db";
 import { Card } from "@asaplocal/ui";
-import { ProviderCard } from "@/components/provider-card";
 import { AiJobRequest } from "@/components/ai-job-request";
+import { CategoryFlyerCarousel } from "@/components/category-flyer-carousel";
 
 export default async function HomePage() {
-  const [categories, featured] = await Promise.all([
-    prisma.category.findMany({ where: { isActive: true, parentId: null }, orderBy: { sortOrder: "asc" } }),
-    prisma.business.findMany({
-      where: { isFeatured: true, verificationStatus: "VERIFIED" },
-      take: 6,
-      include: { services: { include: { category: true }, take: 1 } },
-    }),
-  ]);
+  const categories = await prisma.category.findMany({ where: { isActive: true, parentId: null }, orderBy: { sortOrder: "asc" } });
 
   return (
     <div>
-      <section className="bg-gradient-to-b from-brand-50 to-white px-4 py-12 sm:px-6 sm:py-16">
-        <div className="mx-auto max-w-2xl text-center">
-          <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">What do you need done?</h1>
-          <p className="mt-3 text-lg text-muted-foreground">
-            Describe the job in your own words — we'll match you with vetted local pros.
+      <section className="relative overflow-hidden bg-espresso-950 px-4 py-14 sm:px-6 sm:py-20">
+        <div
+          className="pointer-events-none absolute inset-0 bg-gradient-to-br from-brand-900/40 via-transparent to-transparent"
+          aria-hidden
+        />
+        <div className="relative mx-auto max-w-2xl text-center">
+          <h1 className="text-3xl font-bold tracking-tight text-brand-50 sm:text-4xl">What do you need done?</h1>
+          <p className="mt-3 text-lg text-espresso-200">
+            Describe the job in your own words — we'll match you with vetted local pros ASAP.
           </p>
         </div>
-        <div className="mt-8">
+        <div className="relative mt-8">
           <AiJobRequest categories={categories.map((c) => ({ id: c.id, name: c.name }))} />
         </div>
-        <p className="mt-4 text-center text-sm text-muted-foreground">
-          Prefer to look yourself? <Link href="/search" className="font-medium text-brand-700 hover:underline">Browse providers directly</Link>
+        <p className="relative mt-4 text-center text-sm text-espresso-200">
+          Prefer to look yourself? <Link href="/search" className="font-medium text-brand-300 hover:text-brand-200 hover:underline">Browse providers directly</Link>
         </p>
       </section>
 
@@ -36,7 +33,7 @@ export default async function HomePage() {
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
           {categories.map((c) => (
             <Link key={c.id} href={`/${c.slug}-manchester`}>
-              <Card className="p-5 text-center hover:shadow-lg">
+              <Card className="p-5 text-center transition-shadow hover:border-brand-300 hover:shadow-accent dark:hover:border-brand-700">
                 <p className="font-medium">{c.name}</p>
               </Card>
             </Link>
@@ -44,31 +41,10 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {featured.length > 0 && (
-        <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6">
-          <h2 className="mb-6 text-2xl font-semibold">Featured providers</h2>
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {featured.map((biz) => (
-              <ProviderCard
-                key={biz.id}
-                p={{
-                  slug: biz.slug,
-                  name: biz.name,
-                  logoUrl: biz.logoUrl,
-                  city: biz.city,
-                  avgRating: Number(biz.avgRating),
-                  reviewCount: biz.reviewCount,
-                  completedJobsCount: biz.completedJobsCount,
-                  isFeatured: biz.isFeatured,
-                  verificationStatus: biz.verificationStatus,
-                  categoryName: biz.services[0]?.category.name,
-                  fromPricePence: biz.services[0]?.priceMinPence,
-                }}
-              />
-            ))}
-          </div>
-        </section>
-      )}
+      <section className="py-4">
+        <h2 className="mb-6 px-4 text-2xl font-semibold sm:px-6">Explore services</h2>
+        <CategoryFlyerCarousel categories={categories.map((c) => ({ id: c.id, name: c.name, slug: c.slug, icon: c.icon }))} />
+      </section>
     </div>
   );
 }
