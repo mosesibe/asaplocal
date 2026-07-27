@@ -2,28 +2,25 @@
 
 import { useEffect, useState } from "react";
 import { Calendar, ChevronLeft, ChevronRight, X } from "lucide-react";
-import { Button } from "@asaplocal/ui";
-
-export type TimeSlot = "morning" | "afternoon" | "evening" | "flexible";
 
 export interface PreferredDateValue {
   date: string; // YYYY-MM-DD
-  timeSlot: TimeSlot;
+  time: string | null; // HH:MM (24-hour), or null if the customer is flexible on arrival time
 }
 
-const TIME_SLOTS: { id: TimeSlot; label: string; sub: string; hour: number }[] = [
-  { id: "morning", label: "Morning", sub: "8am–12pm", hour: 9 },
-  { id: "afternoon", label: "Afternoon", sub: "12pm–4pm", hour: 13 },
-  { id: "evening", label: "Evening", sub: "4pm–8pm", hour: 17 },
-  { id: "flexible", label: "Flexible", sub: "Any time works", hour: 12 },
-];
+const DEFAULT_TIME = "09:00";
 
-/** Combines a picked date + time slot into a single ISO timestamp for the `preferredDate` field. */
+/** Combines a picked date + exact arrival time into a single ISO timestamp for the `preferredDate` field. */
 export function toPreferredDateTime(value: PreferredDateValue): string {
-  const hour = TIME_SLOTS.find((s) => s.id === value.timeSlot)?.hour ?? 12;
+  const [hours, minutes] = (value.time ?? DEFAULT_TIME).split(":").map(Number) as [number, number];
   const d = new Date(`${value.date}T00:00:00`);
-  d.setHours(hour, 0, 0, 0);
+  d.setHours(hours, minutes, 0, 0);
   return d.toISOString();
+}
+
+function formatTime(time: string) {
+  const [hours, minutes] = time.split(":").map(Number);
+  return new Intl.DateTimeFormat("en-GB", { hour: "numeric", minute: "2-digit" }).format(new Date(2000, 0, 1, hours, minutes));
 }
 
 function toISODate(d: Date) {
@@ -80,14 +77,19 @@ export function PreferredDatePicker({
 
   function selectDay(day: number) {
     const picked = new Date(viewMonth.getFullYear(), viewMonth.getMonth(), day);
-    onChange(null); // require re-picking a time slot for the new date
+    onChange(null); // require re-picking an arrival time for the new date
     setOpen(false);
     setPendingDate(toISODate(picked));
   }
 
-  function selectSlot(slot: TimeSlot) {
+  function selectTime(time: string) {
     if (!pendingDate) return;
-    onChange({ date: pendingDate, timeSlot: slot });
+    onChange({ date: pendingDate, time });
+  }
+
+  function toggleFlexible(flexible: boolean) {
+    if (!pendingDate) return;
+    onChange({ date: pendingDate, time: flexible ? null : DEFAULT_TIME });
   }
 
   function clear() {
@@ -115,7 +117,9 @@ export function PreferredDatePicker({
             {activeDate ? (
               <span>
                 {new Intl.DateTimeFormat("en-GB", { weekday: "short", day: "numeric", month: "short" }).format(new Date(activeDate))}
-                {value?.timeSlot && <span className="text-muted-foreground"> · {TIME_SLOTS.find((s) => s.id === value.timeSlot)?.label}</span>}
+                {value?.time !== undefined && (
+                  <span className="text-muted-foreground"> · {value.time ? formatTime(value.time) : "Flexible"}</span>
+                )}
               </span>
             ) : (
               <span className="text-muted-foreground">Choose a date (optional)</span>
@@ -185,12 +189,25 @@ export function PreferredDatePicker({
       </div>
 
       {activeDate && !open && (
-        <div className="mt-2 flex flex-wrap gap-2">
-          {TIME_SLOTS.map((slot) => (
-            <Button key={slot.id} type="button" size="sm" variant={value?.timeSlot === slot.id ? "default" : "outline"} onClick={() => selectSlot(slot.id)}>
-              {slot.label}
-            </Button>
-          ))}
+        <div className="mt-2 flex flex-wrap items-center gap-3">
+          <label className="flex items-center gap-2 text-sm">
+            <span className="text-muted-foreground">Arrival time</span>
+            <input
+              type="time"
+              value={value?.time ?? DEFAULT_TIME}
+              disabled={value?.time === null}
+              onChange={(e) => selectTime(e.target.value)}
+              className="h-9 rounded-lg border border-border bg-surface px-2 text-sm disabled:opacity-50"
+            />
+          </label>
+          <label className="flex items-center gap-1.5 text-sm text-muted-foreground">
+            <input
+              type="checkbox"
+              checked={value?.time === null}
+              onChange={(e) => toggleFlexible(e.target.checked)}
+            />
+            I'm flexible — any time works
+          </label>
         </div>
       )}
 

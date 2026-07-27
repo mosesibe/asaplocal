@@ -68,7 +68,7 @@ export function JobRequestForm({
           title: values.title,
           description: values.description,
           preferredDate: date ? toPreferredDateTime(date) : undefined,
-          flexibleDate: date ? date.timeSlot === "flexible" : true,
+          flexibleDate: date ? date.time === null : true,
           budgetMinPence: values.budgetMinPence ? values.budgetMinPence * 100 : undefined,
           budgetMaxPence: values.budgetMaxPence ? values.budgetMaxPence * 100 : undefined,
           addressLine: loc.addressLine,
@@ -172,7 +172,7 @@ export function JobRequestForm({
         </div>
 
         <div>
-          <label className="text-sm font-medium">Preferred date (optional)</label>
+          <label className="text-sm font-medium">Preferred date & arrival time (optional)</label>
           <div className="mt-1">
             <PreferredDatePicker value={preferredDate} onChange={setPreferredDate} location={location} />
           </div>
