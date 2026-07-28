@@ -3,7 +3,7 @@
   "globalDependencies": [".env"],
   "tasks": {
     "build": {
-      "dependsOn": ["^build", "^db:generate"],
+      "dependsOn": ["^build", "^generate"],
       "outputs": [".next/**", "!.next/cache/**"],
       "env": ["DATABASE_URL", "NEXTAUTH_SECRET", "STRIPE_SECRET_KEY", "OPENAI_API_KEY"]
     },
@@ -20,7 +20,7 @@
     "test": {
       "dependsOn": ["^build"]
     },
-    "db:generate": {
+    "generate": {
       "cache": false
     }
   }
