@@ -296,14 +296,14 @@ export async function getLeadConversionAnalytics(businessId: string) {
   const accesses = await prisma.leadAccess.findMany({ where: { businessId }, include: { lead: { include: { jobRequest: true } } } });
 
   const total = accesses.length;
-  const byStatus = { NEW: 0, CONTACTED: 0, QUOTED: 0, WON: 0, LOST: 0 } as Record<string, number>;
+  const byStatus = { NEW: 0, CONTACTED: 0, QUOTED: 0, WON: 0, LOST: 0 };
   let totalSpendPence = 0;
   let wonRevenuePence = 0;
   let contactedCount = 0;
   let totalTimeToContactMs = 0;
 
   for (const a of accesses) {
-    byStatus[a.status] = (byStatus[a.status] ?? 0) + 1;
+    byStatus[a.status as keyof typeof byStatus]++;
     totalSpendPence += a.pricePaidPence;
     if (a.contactedAt) {
       contactedCount++;

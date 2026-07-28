@@ -1,3 +1,5 @@
+/// <reference path="./types.d.ts" />
+
 export * from "./auth";
 export * from "./auth.config";
 export * from "./rbac";

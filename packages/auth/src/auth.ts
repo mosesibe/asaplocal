@@ -17,7 +17,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (user) {
         token.role = (user as any).role;
         token.status = (user as any).status;
-        token.uid = user.id;
+        token.uid = user.id as string;
       }
       // Re-hydrate role/status on every request in case an admin changed them.
       if (trigger === "update" || !user) {
