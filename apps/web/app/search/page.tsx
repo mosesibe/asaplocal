@@ -4,6 +4,7 @@ import { ProviderCard } from "@/components/provider-card";
 import { SearchFiltersContainer } from "./search-filters-container";
 
 interface SearchParams {
+  [key: string]: string | undefined;
   category?: string;
   city?: string;
   minRating?: string;

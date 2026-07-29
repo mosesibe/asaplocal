@@ -9,7 +9,8 @@
     "next-auth": "5.0.0-beta.25",
     "bcryptjs": "^2.4.3",
     "@simplewebauthn/server": "^9.0.3",
-    "@asaplocal/db": "workspace:*"
+    "@asaplocal/db": "workspace:*",
+    "@prisma/client": "^5.20.0"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
