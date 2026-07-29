@@ -1,9 +1,17 @@
 import twilio from "twilio";
 
-const client =
-  process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN
-    ? twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN)
-    : null;
+function createClient() {
+  const accountSid = process.env.TWILIO_ACCOUNT_SID;
+  const authToken = process.env.TWILIO_AUTH_TOKEN;
+  if (!accountSid?.startsWith("AC") || !authToken) return null;
+  try {
+    return twilio(accountSid, authToken);
+  } catch {
+    return null;
+  }
+}
+
+const client = createClient();
 const FROM = process.env.TWILIO_FROM_NUMBER;
 
 export async function sendSms(opts: { to: string; body: string }) {
