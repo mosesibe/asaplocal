@@ -2,6 +2,7 @@ export * from "./stripe";
 export * from "./rate-limit";
 export * from "./s3";
 export * from "./email";
+export * from "./email-verification";
 export * from "./pusher";
 export * from "./geo";
 export * from "./addresses";

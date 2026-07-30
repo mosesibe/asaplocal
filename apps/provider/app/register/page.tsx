@@ -1,28 +1,45 @@
 "use client";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
 import Link from "next/link";
 import { Button, Card, Input } from "@asaplocal/ui";
 
 export default function RegisterPage() {
+  const router = useRouter();
   const [form, setForm] = useState({ firstName: "", lastName: "", email: "", password: "" });
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [done, setDone] = useState(false);
+  const [done, setDone] = useState<"signed-in" | "needs-login" | false>(false);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     setError(null);
     const res = await fetch("/api/auth/register", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(form) });
+    if (!res.ok) {
+      setError((await res.json().catch(() => ({}))).message ?? "Something went wrong");
+      setLoading(false);
+      return;
+    }
+
+    // Sign the new account straight in so they can get on with setting up
+    // their business profile — email verification happens in the
+    // background and isn't required to continue.
+    const signInRes = await signIn("credentials", { email: form.email, password: form.password, redirect: false });
     setLoading(false);
-    if (!res.ok) { setError((await res.json().catch(() => ({}))).message ?? "Something went wrong"); return; }
-    setDone(true);
+    setDone(signInRes?.ok ? "signed-in" : "needs-login");
   }
 
   if (done) return (
     <div className="mx-auto max-w-sm px-4 py-16 text-center sm:px-6">
       <h1 className="text-2xl font-bold">Check your inbox</h1>
-      <p className="mt-3 text-muted-foreground">Verify your email, then log in to set up your business profile.</p>
+      <p className="mt-3 text-muted-foreground">
+        We've sent a verification link to {form.email}. You can confirm it anytime — let's get your business profile set up first.
+      </p>
+      <Button className="mt-6 w-full" onClick={() => router.push(done === "signed-in" ? "/onboarding" : "/login")}>
+        Continue
+      </Button>
     </div>
   );
 

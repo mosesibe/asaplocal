@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
-import { randomBytes } from "crypto";
 import { prisma } from "@asaplocal/db";
-import { checkRateLimit, sendEmail, emailTemplates } from "@asaplocal/core";
+import { checkRateLimit, createAndSendVerificationEmail } from "@asaplocal/core";
 
 const schema = z.object({ email: z.string().email(), password: z.string().min(8), firstName: z.string().min(1), lastName: z.string().min(1) });
 
@@ -32,10 +31,7 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  const token = randomBytes(32).toString("hex");
-  await prisma.verificationToken.create({ data: { identifier: user.email, token, expires: new Date(Date.now() + 24 * 3600 * 1000) } });
-  const link = `${process.env.NEXT_PUBLIC_PROVIDER_URL}/verify-email?token=${token}&email=${encodeURIComponent(user.email)}`;
-  await sendEmail({ to: user.email, subject: "Verify your AsapLocal Business account", html: emailTemplates.verifyEmail(link) }).catch(() => {});
+  await createAndSendVerificationEmail(user, process.env.NEXT_PUBLIC_PROVIDER_URL!, "Verify your AsapLocal Business account");
 
   return NextResponse.json({ id: user.id }, { status: 201 });
 }

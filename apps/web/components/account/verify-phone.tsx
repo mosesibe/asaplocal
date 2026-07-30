@@ -56,10 +56,17 @@ export function VerifyPhoneRow({ phone, verified }: { phone: string | null; veri
     <>
       <SectionRow
         icon={Phone}
-        label="Verify phone"
+        label="Phone number"
         description={phone ?? "No phone number on file"}
-        onClick={() => setOpen(true)}
-        right={<Badge variant={verified ? "success" : "warning"}>{verified ? "Verified" : "Not verified"}</Badge>}
+        right={
+          verified ? (
+            <Badge variant="success">Verified</Badge>
+          ) : (
+            <Button size="sm" variant="outline" onClick={() => setOpen(true)}>
+              Verify phone
+            </Button>
+          )
+        }
       />
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent>

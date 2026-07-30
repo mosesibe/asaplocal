@@ -15,7 +15,7 @@ export default function RegisterPage() {
   const [form, setForm] = useState({ firstName: "", lastName: "", email: "", phone: "", password: "" });
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [done, setDone] = useState(false);
+  const [done, setDone] = useState<"signed-in" | "needs-login" | false>(false);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -34,18 +34,22 @@ export default function RegisterPage() {
     // verification happens in the background and isn't required to sign in.
     const signInRes = await signIn("credentials", { email: form.email, password: form.password, redirect: false });
     setLoading(false);
-    if (signInRes?.ok) {
-      router.push(next);
-      return;
-    }
-    setDone(true);
+    setDone(signInRes?.ok ? "signed-in" : "needs-login");
   }
 
   if (done) {
     return (
       <div className="mx-auto max-w-sm px-4 py-16 text-center sm:px-6">
         <h1 className="text-2xl font-bold">Check your inbox</h1>
-        <p className="mt-3 text-muted-foreground">We've sent a verification link to {form.email}. Confirm your email to finish signing up.</p>
+        <p className="mt-3 text-muted-foreground">
+          We've sent a verification link to {form.email}. You can confirm it anytime — no need to wait, let's get you started.
+        </p>
+        <Button
+          className="mt-6 w-full"
+          onClick={() => router.push(done === "signed-in" ? next : `/login?callbackUrl=${encodeURIComponent(next)}`)}
+        >
+          Continue
+        </Button>
       </div>
     );
   }

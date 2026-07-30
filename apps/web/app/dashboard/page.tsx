@@ -10,6 +10,7 @@ import { SignOutButton } from "@/components/sign-out-button";
 import { ProfileCard } from "@/components/account/profile-card";
 import { SectionCard, SectionRow } from "@/components/account/section-row";
 import { VerifyPhoneRow } from "@/components/account/verify-phone";
+import { VerifyEmailRow } from "@/components/account/verify-email";
 import { PreferencesRows } from "@/components/account/preferences";
 import { ReferralCard } from "@/components/account/referral-card";
 import { AddressesSection } from "@/components/account/addresses-section";
@@ -67,6 +68,7 @@ export default async function CustomerDashboard() {
       {/* Section 2 — account */}
       <div className="mt-8">
         <SectionCard title="Account">
+          <VerifyEmailRow email={user.email} verified={Boolean(user.emailVerified)} />
           <VerifyPhoneRow phone={user.phone} verified={Boolean(user.phoneVerifiedAt)} />
           <PreferencesRows />
           <SectionRow
