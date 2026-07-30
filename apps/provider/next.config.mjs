@@ -3,7 +3,7 @@ const nextConfig = {
   reactStrictMode: true,
   output: "standalone",
   outputFileTracingIncludes: {
-    "/**/*": ["../../node_modules/.pnpm/@prisma+client@*/node_modules/.prisma/client/**/*"],
+    "/**": ["../../node_modules/.pnpm/@prisma+client@*/node_modules/.prisma/client/**/*"],
   },
   transpilePackages: ["@asaplocal/ui", "@asaplocal/auth", "@asaplocal/db", "@asaplocal/core"],
   images: { remotePatterns: [{ protocol: "https", hostname: "*.s3.*.amazonaws.com" }] },
