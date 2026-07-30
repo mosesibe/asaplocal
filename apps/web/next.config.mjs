@@ -4,6 +4,9 @@ const isDev = process.env.NODE_ENV !== "production";
 const nextConfig = {
   reactStrictMode: true,
   output: "standalone",
+  outputFileTracingIncludes: {
+    "/**/*": ["../../node_modules/.pnpm/@prisma+client@*/node_modules/.prisma/client/**/*"],
+  },
   transpilePackages: ["@asaplocal/ui", "@asaplocal/auth", "@asaplocal/db"],
   images: {
     remotePatterns: [
