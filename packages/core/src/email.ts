@@ -8,7 +8,15 @@ export async function sendEmail(opts: { to: string; subject: string; html: strin
     console.warn(`[email:dev] Skipping send (no RESEND_API_KEY). To=${opts.to} Subject=${opts.subject}`);
     return;
   }
-  await resend.emails.send({ from: FROM, to: opts.to, subject: opts.subject, html: opts.html });
+  // The Resend SDK reports API-level failures (bad key, unverified domain,
+  // etc.) via a returned `error` object instead of throwing — a caller that
+  // only awaits the call sees no exception and no email, silently. Surface
+  // it in logs and throw so upstream `.catch()`s at least know a send failed.
+  const { error } = await resend.emails.send({ from: FROM, to: opts.to, subject: opts.subject, html: opts.html });
+  if (error) {
+    console.error(`[email] Resend send failed. To=${opts.to} Subject=${opts.subject}`, error);
+    throw new Error(error.message ?? "Failed to send email");
+  }
 }
 
 export const emailTemplates = {
