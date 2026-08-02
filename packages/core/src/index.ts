@@ -14,5 +14,6 @@ export * from "./lead-marketplace";
 export * from "./ai";
 export * from "./csrf";
 export * from "./sms";
+export * from "./phone-verification";
 export * from "./referral";
 export * from "./account-stats";

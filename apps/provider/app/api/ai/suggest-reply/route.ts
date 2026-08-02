@@ -6,7 +6,7 @@ import { suggestLeadReply } from "@asaplocal/core";
 /** AI Chat Assistant: drafts a reply for a provider inside a conversation thread. */
 export async function POST(req: NextRequest) {
   const session = await auth();
-  if (!session?.user || session.user.role !== "PROVIDER") return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  if (!session?.user || !session.user.isProvider) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
 
   const { conversationId } = await req.json();
   const business = await prisma.business.findUnique({ where: { ownerId: session.user.id } });

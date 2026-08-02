@@ -13,19 +13,23 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [...authConfig.providers, WebAuthn({})],
   callbacks: {
     ...authConfig.callbacks,
-    async jwt({ token, user, trigger }) {
-      if (user) {
-        token.role = (user as any).role;
-        token.status = (user as any).status;
-        token.uid = user.id as string;
-      }
-      // Re-hydrate role/status on every request in case an admin changed them.
-      if (trigger === "update" || !user) {
-        const dbUser = await prisma.user.findUnique({ where: { id: token.uid as string } });
-        if (dbUser) {
-          token.role = dbUser.role;
-          token.status = dbUser.status;
-        }
+    async jwt({ token, user }) {
+      if (user) token.uid = user.id as string;
+      // Always re-hydrate from the DB rather than trusting `user` — it's
+      // only populated on initial sign-in, and for OAuth sign-ins it's the
+      // adapter's raw row (no isProvider/emailVerified/phoneVerified
+      // booleans on it). This also picks up admin-made changes and
+      // verification completions on every subsequent request.
+      const dbUser = await prisma.user.findUnique({
+        where: { id: token.uid as string },
+        include: { business: { select: { id: true } } },
+      });
+      if (dbUser) {
+        token.role = dbUser.role;
+        token.status = dbUser.status;
+        token.isEmailVerified = !!dbUser.emailVerified;
+        token.isPhoneVerified = !!dbUser.phoneVerifiedAt;
+        token.isProvider = dbUser.role === "PROVIDER" || !!dbUser.business || !!dbUser.providerSince;
       }
       return token;
     },

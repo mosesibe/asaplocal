@@ -8,7 +8,7 @@ const schema = z.object({ leadAccessId: z.string().uuid(), status: z.enum(["CONT
 
 export async function PATCH(req: NextRequest) {
   const session = await auth();
-  if (!session?.user || session.user.role !== "PROVIDER") return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  if (!session?.user || !session.user.isProvider) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
 
   const parsed = schema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ message: "Invalid input" }, { status: 422 });

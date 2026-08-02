@@ -10,6 +10,10 @@ import { prisma } from "@asaplocal/db";
  * middleware import of this file uses the `authorized` callback only).
  */
 export const authConfig = {
+  // Each app (web/provider/admin) runs on its own origin but shares one
+  // NEXTAUTH_URL in local dev — trust the incoming Host header instead of
+  // that fixed value so redirects stay on the app that issued them.
+  trustHost: true,
   pages: {
     signIn: "/login",
     error: "/login",
@@ -30,12 +34,24 @@ export const authConfig = {
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null;
-        const user = await prisma.user.findUnique({ where: { email: credentials.email as string } });
+        const user = await prisma.user.findUnique({
+          where: { email: credentials.email as string },
+          include: { business: { select: { id: true } } },
+        });
         if (!user?.passwordHash) return null;
         if (user.status === "SUSPENDED" || user.status === "DEACTIVATED") return null;
         const valid = await bcrypt.compare(credentials.password as string, user.passwordHash);
         if (!valid) return null;
-        return { id: user.id, email: user.email, name: user.email, role: user.role, status: user.status };
+        return {
+          id: user.id,
+          email: user.email,
+          name: user.email,
+          role: user.role,
+          status: user.status,
+          isEmailVerified: !!user.emailVerified,
+          isPhoneVerified: !!user.phoneVerifiedAt,
+          isProvider: user.role === "PROVIDER" || !!user.business || !!user.providerSince,
+        };
       },
     }),
   ],
@@ -56,6 +72,9 @@ export const authConfig = {
         session.user.id = token.uid as string;
         session.user.role = token.role as any;
         session.user.status = token.status as any;
+        session.user.isEmailVerified = !!token.isEmailVerified;
+        session.user.isPhoneVerified = !!token.isPhoneVerified;
+        session.user.isProvider = !!token.isProvider;
       }
       return session;
     },

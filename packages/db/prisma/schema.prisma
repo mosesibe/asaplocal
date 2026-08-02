@@ -203,12 +203,19 @@ model User {
   email             String        @unique
   emailVerified     DateTime?
   name              String?       // populated by OAuth providers (e.g. Google); not used for display — see Profile.firstName/lastName
-  phone             String?
+  phone             String?       @unique
   passwordHash      String?       // null when using OAuth-only
   role              Role          @default(CUSTOMER)
   status            UserStatus    @default(PENDING_VERIFICATION)
   image             String?
   phoneVerifiedAt   DateTime?
+  // Set the moment an account starts (or gains) provider access — at fresh
+  // provider signup, or when an existing customer confirms their password to
+  // add a business. Independent of `role` (which stays CUSTOMER for a merged
+  // account, see Business relation below) and of `business` (not created
+  // until onboarding completes) — this is what lets the provider app's
+  // middleware admit the user before either of those is otherwise true.
+  providerSince     DateTime?
   referralCode      String?       @unique
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
@@ -217,7 +224,7 @@ model User {
   suspendedReason    String?
 
   profile           Profile?
-  business          Business?               // present only when role = PROVIDER
+  business          Business?               // present once onboarding completes; role stays CUSTOMER for accounts that added a business on top of an existing customer account — see providerSince
   jobRequests       JobRequest[]             @relation("CustomerJobRequests")
   favourites        Favourite[]
   reviewsWritten    Review[]                 @relation("ReviewAuthor")

@@ -5,7 +5,7 @@ import { quoteSchema, stripHtml, notify, emailTemplates, sendEmail } from "@asap
 
 export async function POST(req: NextRequest) {
   const session = await auth();
-  if (!session?.user || session.user.role !== "PROVIDER") return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  if (!session?.user || !session.user.isProvider) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
 
   const business = await prisma.business.findUnique({ where: { ownerId: session.user.id } });
   if (!business) return NextResponse.json({ message: "No business profile found" }, { status: 404 });

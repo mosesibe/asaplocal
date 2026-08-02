@@ -6,7 +6,7 @@ import { acquireLeadWithAllowanceOrCredits, checkRateLimit } from "@asaplocal/co
 export async function POST(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const session = await auth();
-  if (!session?.user || session.user.role !== "PROVIDER") return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  if (!session?.user || !session.user.isProvider) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
 
   try {
     await checkRateLimit("lead-acquire", session.user.id, 20, 60);

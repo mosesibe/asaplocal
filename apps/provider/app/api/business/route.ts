@@ -15,7 +15,7 @@ const schema = z.object({
 
 export async function PATCH(req: NextRequest) {
   const session = await auth();
-  if (!session?.user || session.user.role !== "PROVIDER") return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  if (!session?.user || !session.user.isProvider) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
 
   const business = await prisma.business.findUnique({ where: { ownerId: session.user.id } });
   if (!business) return NextResponse.json({ message: "Not found" }, { status: 404 });

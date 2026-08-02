@@ -16,7 +16,7 @@ const schema = z.object({
 
 export async function POST(req: NextRequest) {
   const session = await auth();
-  if (!session?.user || session.user.role !== "PROVIDER") return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  if (!session?.user || !session.user.isProvider) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
 
   const existing = await prisma.business.findUnique({ where: { ownerId: session.user.id } });
   if (existing) return NextResponse.json({ message: "Business already exists" }, { status: 409 });
