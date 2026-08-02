@@ -1,12 +1,14 @@
 /**
- * OpenAI-backed features. Every function degrades gracefully (returns a
- * safe fallback) if OPENAI_API_KEY isn't configured, so local dev and CI
- * never hard-fail on AI calls.
+ * DeepSeek-backed features (OpenAI-compatible API). Every function degrades
+ * gracefully (returns a safe fallback) if DEEPSEEK_API_KEY isn't configured,
+ * so local dev and CI never hard-fail on AI calls.
  */
 import OpenAI from "openai";
 
-const openai = process.env.OPENAI_API_KEY ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY }) : null;
-const MODEL = "gpt-4o-mini";
+const openai = process.env.DEEPSEEK_API_KEY
+  ? new OpenAI({ apiKey: process.env.DEEPSEEK_API_KEY, baseURL: "https://api.deepseek.com" })
+  : null;
+const MODEL = "deepseek-chat";
 
 async function chatJSON<T>(system: string, user: string, fallback: T): Promise<T> {
   if (!openai) return fallback;

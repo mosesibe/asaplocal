@@ -11,11 +11,18 @@ import { LocationPicker, type LocationValue } from "./location-picker";
 interface Category {
   id: string;
   name: string;
+  parentId: string | null;
 }
 
 type Step = "describe" | "confirm";
 
 export function AiJobRequest({ categories }: { categories: Category[] }) {
+  const parentCategories = categories.filter((c) => !c.parentId);
+  const childrenByParent = new Map<string, Category[]>();
+  for (const c of categories) {
+    if (!c.parentId) continue;
+    childrenByParent.set(c.parentId, [...(childrenByParent.get(c.parentId) ?? []), c]);
+  }
   const router = useRouter();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [step, setStep] = useState<Step>("describe");
@@ -173,10 +180,15 @@ export function AiJobRequest({ categories }: { categories: Category[] }) {
                 onChange={(e) => setCategoryId(e.target.value)}
               >
                 <option value="">Select a category</option>
-                {categories.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
+                {parentCategories.map((p) => (
+                  <optgroup key={p.id} label={p.name}>
+                    <option value={p.id}>{p.name}</option>
+                    {(childrenByParent.get(p.id) ?? []).map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </optgroup>
                 ))}
               </Select>
             </div>
