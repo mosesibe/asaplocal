@@ -22,6 +22,11 @@ export default async function BusinessProfilePage() {
             phone: business.phone ?? "",
             website: business.website ?? "",
             baseRadiusMiles: business.baseRadiusMiles,
+            photoUrls: business.photoUrls,
+            languagesSpoken: business.languagesSpoken,
+            emergencyCalloutsAvailable: business.emergencyCalloutsAvailable,
+            workingHours: (business.workingHours as any) ?? null,
+            targetResponseMins: business.targetResponseMins ?? undefined,
           }}
         />
       </div>

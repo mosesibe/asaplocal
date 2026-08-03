@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import type Stripe from "stripe";
-import { stripe, grantPurchasedLeadAccess, grantMonthlyAllowance, notify } from "@asaplocal/core";
+import { stripe, grantPurchasedLeadAccess, grantMonthlyAllowance, notify, retrieveIdentityVerificationSession, recomputeTrustTier } from "@asaplocal/core";
 import { prisma } from "@asaplocal/db";
 
 /**
@@ -103,6 +103,66 @@ export async function POST(req: NextRequest) {
             ...(event.type === "customer.subscription.deleted" ? { plan: "FREE", monthlyLeadAllowance: 0 } : {}),
           },
         });
+      }
+      break;
+    }
+
+    case "identity.verification_session.verified": {
+      const vs = event.data.object as Stripe.Identity.VerificationSession;
+      const record = await prisma.identityVerification.findUnique({ where: { stripeVerificationSessionId: vs.id } });
+      if (record) {
+        const full = await retrieveIdentityVerificationSession(vs.id);
+        const outputs = full.verified_outputs;
+        const fullName = outputs?.first_name || outputs?.last_name ? `${outputs.first_name ?? ""} ${outputs.last_name ?? ""}`.trim() : null;
+        await prisma.identityVerification.update({
+          where: { id: record.id },
+          data: { status: "VERIFIED", verifiedAt: new Date(), extractedFullName: fullName, lastError: null },
+        });
+        const business = await prisma.business.findUnique({ where: { id: record.businessId } });
+        if (business) await notify(business.ownerId, "VERIFICATION_UPDATE", "Identity verified", "Your identity has been verified.", "/verification/identity");
+        await recomputeTrustTier(record.businessId);
+      }
+      break;
+    }
+
+    case "identity.verification_session.requires_input": {
+      const vs = event.data.object as Stripe.Identity.VerificationSession;
+      const record = await prisma.identityVerification.findUnique({ where: { stripeVerificationSessionId: vs.id } });
+      if (record) {
+        // Unrecoverable errors (e.g. expired/invalid document) get REJECTED;
+        // anything else is treated as recoverable — the provider can retry.
+        const unrecoverable = ["document_expired", "document_type_not_supported", "under_supported_age"];
+        const errorCode = vs.last_error?.code;
+        const status = errorCode && unrecoverable.includes(errorCode) ? "REJECTED" : "MORE_INFO_REQUESTED";
+        await prisma.identityVerification.update({
+          where: { id: record.id },
+          data: { status, lastError: vs.last_error?.reason ?? "Verification requires more information" },
+        });
+        const business = await prisma.business.findUnique({ where: { id: record.businessId } });
+        if (business) await notify(business.ownerId, "VERIFICATION_UPDATE", "Identity verification needs attention", vs.last_error?.reason ?? undefined, "/verification/identity");
+        await recomputeTrustTier(record.businessId);
+      }
+      break;
+    }
+
+    case "identity.verification_session.processing":
+      break;
+
+    case "account.updated": {
+      const account = event.data.object as Stripe.Account;
+      const business = await prisma.business.findFirst({ where: { stripeAccountId: account.id } });
+      if (business) {
+        const payoutsEnabled = !!account.charges_enabled && !!account.payouts_enabled;
+        await prisma.business.update({
+          where: { id: business.id },
+          data: {
+            payoutsEnabled,
+            ...(payoutsEnabled && !business.stripeConnectOnboardedAt ? { stripeConnectOnboardedAt: new Date() } : {}),
+          },
+        });
+        if (payoutsEnabled && !business.payoutsEnabled) {
+          await notify(business.ownerId, "VERIFICATION_UPDATE", "Bank account connected", "You're all set up to receive payouts.", "/verification/banking");
+        }
       }
       break;
     }

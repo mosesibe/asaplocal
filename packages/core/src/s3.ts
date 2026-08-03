@@ -5,8 +5,23 @@ import { randomUUID } from "crypto";
 const s3 = new S3Client({ region: process.env.AWS_REGION ?? "eu-west-2" });
 const BUCKET = process.env.AWS_S3_BUCKET ?? "asaplocal-uploads";
 
+type UploadPurpose =
+  | "job-photo"
+  | "business-logo"
+  | "business-cover"
+  | "business-photo"
+  | "portfolio-media"
+  | "review-photo"
+  | "verification-doc"
+  | "message-attachment";
+
 const ALLOWED_MIME = new Set(["image/jpeg", "image/png", "image/webp", "image/heic", "application/pdf"]);
-const MAX_BYTES = 10 * 1024 * 1024; // 10MB
+const DEFAULT_MAX_BYTES = 10 * 1024 * 1024; // 10MB
+
+// Portfolio is the only purpose that accepts video, and needs a much bigger
+// ceiling than the flat image/PDF default.
+const PORTFOLIO_ALLOWED_MIME = new Set([...ALLOWED_MIME, "video/mp4"]);
+const PORTFOLIO_MAX_BYTES = 200 * 1024 * 1024; // 200MB
 
 /**
  * Issues a short-lived presigned PUT URL so the browser uploads directly to
@@ -15,12 +30,11 @@ const MAX_BYTES = 10 * 1024 * 1024; // 10MB
  * client must send. Keys are namespaced by purpose + a random UUID so user
  * input never reaches the object key (avoids path traversal).
  */
-export async function createPresignedUpload(opts: {
-  purpose: "job-photo" | "business-logo" | "business-cover" | "review-photo" | "verification-doc" | "message-attachment";
-  contentType: string;
-  ownerId: string;
-}) {
-  if (!ALLOWED_MIME.has(opts.contentType)) {
+export async function createPresignedUpload(opts: { purpose: UploadPurpose; contentType: string; ownerId: string }) {
+  const allowedMime = opts.purpose === "portfolio-media" ? PORTFOLIO_ALLOWED_MIME : ALLOWED_MIME;
+  const maxBytes = opts.purpose === "portfolio-media" ? PORTFOLIO_MAX_BYTES : DEFAULT_MAX_BYTES;
+
+  if (!allowedMime.has(opts.contentType)) {
     throw Object.assign(new Error("Unsupported file type"), { statusCode: 400 });
   }
   const ext = opts.contentType.split("/")[1];
@@ -34,7 +48,7 @@ export async function createPresignedUpload(opts: {
 
   const url = await getSignedUrl(s3, command, { expiresIn: 120 });
   const publicUrl = `https://${BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
-  return { uploadUrl: url, publicUrl, key, maxBytes: MAX_BYTES };
+  return { uploadUrl: url, publicUrl, key, maxBytes };
 }
 
 export async function deleteObject(key: string) {

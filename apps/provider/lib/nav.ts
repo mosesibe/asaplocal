@@ -1,4 +1,4 @@
-import { LayoutDashboard, Target, CalendarDays, MessageSquare, CreditCard, Store, BarChart3, Star } from "lucide-react";
+import { LayoutDashboard, Target, CalendarDays, MessageSquare, CreditCard, Store, BarChart3, Star, ShieldCheck } from "lucide-react";
 
 export const PRIMARY_NAV = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -12,4 +12,5 @@ export const SECONDARY_NAV = [
   { href: "/analytics", label: "Analytics", icon: BarChart3 },
   { href: "/billing", label: "Billing & credits", icon: CreditCard },
   { href: "/profile", label: "Business profile", icon: Store },
+  { href: "/verification", label: "Verification Center", icon: ShieldCheck },
 ];

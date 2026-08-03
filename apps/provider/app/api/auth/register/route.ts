@@ -4,6 +4,10 @@ import bcrypt from "bcryptjs";
 import { prisma } from "@asaplocal/db";
 import { checkRateLimit, createAndSendVerificationEmail, sendPhoneVerificationCode } from "@asaplocal/core";
 
+// Bumping this string re-prompts every provider to accept terms again next
+// time they hit a flow that checks termsVersion (none does yet — reserved).
+const TERMS_VERSION = "2026-08-04";
+
 const schema = z.object({
   email: z.string().email(),
   password: z.string().min(8),
@@ -13,6 +17,7 @@ const schema = z.object({
     .string()
     .trim()
     .regex(/^\+?[0-9\s()-]{7,20}$/, "Enter a valid phone number"),
+  termsAccepted: z.literal(true, { message: "You must agree to the Terms & Privacy Policy" }),
   // Only sent on the second submission, once we've told the client this
   // email already belongs to a customer account — proves they own it
   // instead of silently taking over an existing account.
@@ -59,7 +64,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: "That phone number is already registered to another account." }, { status: 409 });
     }
 
-    await prisma.user.update({ where: { id: existing.id }, data: { providerSince: new Date() } });
+    await prisma.user.update({
+      where: { id: existing.id },
+      data: {
+        providerSince: new Date(),
+        ...(existing.termsAcceptedAt ? {} : { termsAcceptedAt: new Date(), termsVersion: TERMS_VERSION }),
+      },
+    });
 
     const phoneAlreadyVerified = existing.phone === phone && !!existing.phoneVerifiedAt;
     if (!phoneAlreadyVerified) {
@@ -84,6 +95,8 @@ export async function POST(req: NextRequest) {
       role: "PROVIDER",
       status: "PENDING_VERIFICATION",
       providerSince: new Date(),
+      termsAcceptedAt: new Date(),
+      termsVersion: TERMS_VERSION,
       profile: { create: { firstName: parsed.data.firstName, lastName: parsed.data.lastName } },
     },
   });

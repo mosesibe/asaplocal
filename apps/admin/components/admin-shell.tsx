@@ -1,11 +1,12 @@
 import Link from "next/link";
-import { LayoutDashboard, Users, Flag, ListTree, CreditCard, Truck, ClipboardCheck, RefreshCcw } from "lucide-react";
+import { LayoutDashboard, Users, Flag, ListTree, CreditCard, Truck, ClipboardCheck, RefreshCcw, ShieldCheck } from "lucide-react";
 import { SignOutButton } from "./sign-out-button";
 import type { Role } from "@asaplocal/db";
 
 const ADMIN_NAV = [
   { href: "/dashboard", label: "Financial dashboard", icon: LayoutDashboard },
   { href: "/users", label: "Users", icon: Users },
+  { href: "/verification", label: "Verification queue", icon: ShieldCheck },
   { href: "/moderation", label: "Moderation", icon: Flag },
   { href: "/categories", label: "Categories", icon: ListTree },
   { href: "/subscriptions", label: "Subscriptions", icon: CreditCard },

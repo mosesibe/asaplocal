@@ -40,4 +40,13 @@ export const emailTemplates = {
   bookingConfirmed: (link: string) => `
     <h2>Your booking is confirmed</h2>
     <p><a href="${link}">View booking details</a></p>`,
+  referenceRequest: (businessName: string, refereeName: string, link: string) => `
+    <h2>${businessName} listed you as a reference</h2>
+    <p>Hi ${refereeName}, ${businessName} is building trust on AsapLocal and listed you as someone who can vouch for their work.</p>
+    <p>It only takes a minute — click below to confirm and optionally leave a short note.</p>
+    <p><a href="${link}">Confirm reference</a></p>`,
+  insuranceExpiring: (businessName: string, policyType: string, expiryDate: string, link: string) => `
+    <h2>Your ${policyType} insurance is expiring soon</h2>
+    <p>Hi ${businessName}, your policy expires on ${expiryDate}. Renew and re-upload it to keep your verified status.</p>
+    <p><a href="${link}">Update insurance</a></p>`,
 };

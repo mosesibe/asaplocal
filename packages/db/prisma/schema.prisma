@@ -37,6 +37,48 @@ enum VerificationStatus {
   PENDING
   VERIFIED
   REJECTED
+  MORE_INFO_REQUESTED
+}
+
+enum BusinessType {
+  SOLE_TRADER
+  LIMITED_COMPANY
+  PARTNERSHIP
+  SELF_EMPLOYED
+  CHARITY
+}
+
+enum IdentityDocType {
+  PASSPORT
+  DRIVING_LICENCE
+  NATIONAL_ID
+}
+
+enum TrustTier {
+  BRONZE
+  SILVER
+  GOLD
+  PLATINUM
+}
+
+enum InsuranceType {
+  PUBLIC_LIABILITY
+  PROFESSIONAL_INDEMNITY
+  EMPLOYERS_LIABILITY
+}
+
+enum VerificationDocType {
+  UTILITY_BILL
+  BUSINESS_BANK_STATEMENT
+  HMRC_CORRESPONDENCE
+  PUBLIC_LIABILITY_INSURANCE
+  OTHER
+}
+
+enum ReferenceStatus {
+  REQUESTED
+  VERIFIED
+  EXPIRED
 }
 
 enum SubscriptionPlan {
@@ -62,10 +104,10 @@ enum PriceType {
 }
 
 enum JobRequestStatus {
-  OPEN          // just posted, being matched to providers
-  MATCHING      // leads distributed to eligible providers
-  QUOTED        // at least one quote received
-  ASSIGNED      // customer accepted a quote / booked a provider
+  OPEN // just posted, being matched to providers
+  MATCHING // leads distributed to eligible providers
+  QUOTED // at least one quote received
+  ASSIGNED // customer accepted a quote / booked a provider
   IN_PROGRESS
   COMPLETED
   CANCELLED
@@ -73,17 +115,17 @@ enum JobRequestStatus {
 }
 
 enum LeadStatus {
-  AVAILABLE   // still open for purchase/claim by more providers
-  LIMITED     // sold to max providers, no longer purchasable
+  AVAILABLE // still open for purchase/claim by more providers
+  LIMITED // sold to max providers, no longer purchasable
   EXPIRED
-  CLOSED      // job request cancelled/completed upstream
+  CLOSED // job request cancelled/completed upstream
 }
 
 enum LeadAcquisitionType {
-  PURCHASE              // paid per-lead via card
+  PURCHASE // paid per-lead via card
   SUBSCRIPTION_ALLOWANCE // consumed from monthly plan allowance
-  CREDIT                // consumed from purchased lead-credit wallet
-  CLAIM                 // free claim (e.g. promo / first-come within radius)
+  CREDIT // consumed from purchased lead-credit wallet
+  CLAIM // free claim (e.g. promo / first-come within radius)
 }
 
 enum ProviderLeadStatus {
@@ -199,53 +241,57 @@ enum ApprovalRequestStatus {
 // ── Core identity ───────────────────────────────────────────────────────
 
 model User {
-  id                String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  email             String        @unique
-  emailVerified     DateTime?
-  name              String?       // populated by OAuth providers (e.g. Google); not used for display — see Profile.firstName/lastName
-  phone             String?       @unique
-  passwordHash      String?       // null when using OAuth-only
-  role              Role          @default(CUSTOMER)
-  status            UserStatus    @default(PENDING_VERIFICATION)
-  image             String?
-  phoneVerifiedAt   DateTime?
+  id              String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email           String     @unique
+  emailVerified   DateTime?
+  name            String? // populated by OAuth providers (e.g. Google); not used for display — see Profile.firstName/lastName
+  phone           String?    @unique
+  passwordHash    String? // null when using OAuth-only
+  role            Role       @default(CUSTOMER)
+  status          UserStatus @default(PENDING_VERIFICATION)
+  image           String?
+  phoneVerifiedAt DateTime?
   // Set the moment an account starts (or gains) provider access — at fresh
   // provider signup, or when an existing customer confirms their password to
   // add a business. Independent of `role` (which stays CUSTOMER for a merged
   // account, see Business relation below) and of `business` (not created
   // until onboarding completes) — this is what lets the provider app's
   // middleware admit the user before either of those is otherwise true.
-  providerSince     DateTime?
-  referralCode      String?       @unique
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
-  lastLoginAt       DateTime?
-  suspendedAt       DateTime?
-  suspendedReason    String?
+  providerSince   DateTime?
+  // Set at registration when the required Terms & Privacy Policy checkbox
+  // is accepted. termsVersion records which version of the terms they saw.
+  termsAcceptedAt DateTime?
+  termsVersion    String?
+  referralCode    String?    @unique
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  lastLoginAt     DateTime?
+  suspendedAt     DateTime?
+  suspendedReason String?
 
-  profile           Profile?
-  business          Business?               // present once onboarding completes; role stays CUSTOMER for accounts that added a business on top of an existing customer account — see providerSince
-  jobRequests       JobRequest[]             @relation("CustomerJobRequests")
-  favourites        Favourite[]
-  reviewsWritten    Review[]                 @relation("ReviewAuthor")
-  bookingsAsCustomer Booking[]               @relation("CustomerBookings")
-  payments          Payment[]
-  notifications     Notification[]
-  sentMessages      Message[]                @relation("MessageSender")
-  conversations     ConversationParticipant[]
-  reportsFiled      Report[]                 @relation("ReportsFiled")
-  auditLogs         AuditLog[]               @relation("AuditActor")
-  approvalRequestsMade     ApprovalRequest[]  @relation("ApprovalRequester")
-  approvalRequestsReviewed ApprovalRequest[]  @relation("ApprovalReviewer")
-  dispatcherAssignments    DispatcherAssignment[] @relation("DispatcherActor")
-  accounts          Account[]
-  sessions          Session[]
-  addresses         Address[]
-  authenticators    Authenticator[]
-  phoneVerificationCodes PhoneVerificationCode[]
-  referralsSent     Referral[]      @relation("Referrer")
-  referralReceived  Referral?       @relation("Referee")
-  accountCredits    AccountCredit[]
+  profile                  Profile?
+  business                 Business? // present once onboarding completes; role stays CUSTOMER for accounts that added a business on top of an existing customer account — see providerSince
+  jobRequests              JobRequest[]              @relation("CustomerJobRequests")
+  favourites               Favourite[]
+  reviewsWritten           Review[]                  @relation("ReviewAuthor")
+  bookingsAsCustomer       Booking[]                 @relation("CustomerBookings")
+  payments                 Payment[]
+  notifications            Notification[]
+  sentMessages             Message[]                 @relation("MessageSender")
+  conversations            ConversationParticipant[]
+  reportsFiled             Report[]                  @relation("ReportsFiled")
+  auditLogs                AuditLog[]                @relation("AuditActor")
+  approvalRequestsMade     ApprovalRequest[]         @relation("ApprovalRequester")
+  approvalRequestsReviewed ApprovalRequest[]         @relation("ApprovalReviewer")
+  dispatcherAssignments    DispatcherAssignment[]    @relation("DispatcherActor")
+  accounts                 Account[]
+  sessions                 Session[]
+  addresses                Address[]
+  authenticators           Authenticator[]
+  phoneVerificationCodes   PhoneVerificationCode[]
+  referralsSent            Referral[]                @relation("Referrer")
+  referralReceived         Referral?                 @relation("Referee")
+  accountCredits           AccountCredit[]
 
   @@index([role])
   @@index([status])
@@ -412,92 +458,253 @@ model Address {
 // ── Categories & Businesses ─────────────────────────────────────────────
 
 model Category {
-  id          String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name        String     @unique
-  slug        String     @unique
-  icon        String?
-  description String?    @db.Text
-  parentId    String?    @db.Uuid
-  isActive    Boolean    @default(true)
-  isFeatured  Boolean    @default(false)
-  isEmergency Boolean    @default(false)
-  sortOrder   Int        @default(0)
-  createdAt   DateTime   @default(now())
+  id                      String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                    String   @unique
+  slug                    String   @unique
+  icon                    String?
+  description             String?  @db.Text
+  parentId                String?  @db.Uuid
+  isActive                Boolean  @default(true)
+  isFeatured              Boolean  @default(false)
+  isEmergency             Boolean  @default(false)
+  sortOrder               Int      @default(0)
+  createdAt               DateTime @default(now())
+  // Regulated-trade guidance shown on the qualifications verification step
+  // (e.g. Electrician -> ["NICEIC","NAPIT","ECA"]). Advisory only — not
+  // enforced; Qualification.name stays free text.
+  isRegulatedTrade        Boolean  @default(false)
+  suggestedQualifications String[] @default([])
 
-  parent      Category?  @relation("CategoryChildren", fields: [parentId], references: [id], onDelete: SetNull)
-  children    Category[] @relation("CategoryChildren")
-  services    Service[]
-  jobRequests JobRequest[]
+  parent         Category?       @relation("CategoryChildren", fields: [parentId], references: [id], onDelete: SetNull)
+  children       Category[]      @relation("CategoryChildren")
+  services       Service[]
+  jobRequests    JobRequest[]
+  qualifications Qualification[]
+  portfolioItems PortfolioItem[]
 
   @@index([parentId])
   @@index([slug])
 }
 
 model Business {
-  id                 String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  ownerId            String              @unique @db.Uuid
-  name               String
-  slug               String              @unique
-  description        String?             @db.Text
-  logoUrl            String?
-  coverImageUrl      String?
-  phone              String?
-  email              String?
-  website            String?
-  verificationStatus VerificationStatus  @default(UNVERIFIED)
-  verifiedAt         DateTime?
+  id                  String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  ownerId             String             @unique @db.Uuid
+  name                String
+  slug                String             @unique
+  description         String?            @db.Text
+  logoUrl             String?
+  coverImageUrl       String?
+  phone               String?
+  email               String?
+  website             String?
+  verificationStatus  VerificationStatus @default(UNVERIFIED)
+  verifiedAt          DateTime?
   verificationDocsUrl String[]
-  addressLine        String?
-  city               String
-  postcode           String?
-  country            String              @default("GB")
-  lat                Decimal             @db.Decimal(9, 6)
-  lng                Decimal             @db.Decimal(9, 6)
+  addressLine         String?
+  city                String
+  postcode            String?
+  country             String             @default("GB")
+  lat                 Decimal            @db.Decimal(9, 6)
+  lng                 Decimal            @db.Decimal(9, 6)
   baseRadiusMiles     Int                @default(10)
-  yearsInBusiness    Int?
-  employeeCount      Int?
-  insured            Boolean             @default(false)
-  avgRating          Decimal             @default(0) @db.Decimal(2, 1)
-  reviewCount        Int                 @default(0)
-  completedJobsCount Int                 @default(0)
-  responseRatePct    Decimal             @default(0) @db.Decimal(5, 2)
-  avgResponseMins    Int?
-  profileViews       Int                 @default(0)
-  isFeatured         Boolean             @default(false)
-  featuredUntil      DateTime?
-  stripeAccountId    String?             // Stripe Connect (payouts)
-  stripeCustomerId   String?             // Stripe Customer (billing)
-  createdAt          DateTime            @default(now())
-  updatedAt          DateTime            @updatedAt
+  yearsInBusiness     Int?
+  employeeCount       Int?
+  insured             Boolean            @default(false)
+  avgRating           Decimal            @default(0) @db.Decimal(2, 1)
+  reviewCount         Int                @default(0)
+  completedJobsCount  Int                @default(0)
+  responseRatePct     Decimal            @default(0) @db.Decimal(5, 2)
+  avgResponseMins     Int?
+  profileViews        Int                @default(0)
+  isFeatured          Boolean            @default(false)
+  featuredUntil       DateTime?
+  stripeAccountId     String? // Stripe Connect (payouts)
+  stripeCustomerId    String? // Stripe Customer (billing)
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
 
-  owner              User                @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  serviceAreas       ServiceArea[]
-  services           Service[]
-  subscription       Subscription?
-  leadCreditWallet   LeadCreditWallet?
-  leadAccesses       LeadAccess[]
-  quotes             Quote[]
-  bookings           Booking[]           @relation("ProviderBookings")
-  reviews            Review[]
-  favouritedBy       Favourite[]
-  payments           Payment[]
-  dispatcherAssignments DispatcherAssignment[] @relation("AssignedBusiness")
+  // ── Phase 2: Business Information ──────────────────────────────────────
+  businessType              BusinessType?
+  tradingName               String?
+  companyRegistrationNumber String?
+  companyDirectorName       String? // self-reported; matched against Companies House officers in Phase 4
+  utrNumber                 String?
+  vatNumber                 String?
+  businessInfoCompletedAt   DateTime?
+
+  // ── Phase 4: Business Verification (Companies House auto-check) ───────
+  // Overall pass/fail for this phase reuses verificationStatus/verifiedAt
+  // above — both the Ltd auto-check and the sole-trader manual-document
+  // path drive that same field, so there's no duplicate status column here.
+  companiesHouseSnapshot      Json?
+  companiesHouseCheckedAt     DateTime?
+  companiesHouseDirectorMatch Boolean?
+
+  // ── Phase 9: Banking (Stripe Connect) ──────────────────────────────────
+  payoutsEnabled           Boolean   @default(false)
+  stripeConnectOnboardedAt DateTime?
+
+  // ── Phase 10: Profile Creation ─────────────────────────────────────────
+  photoUrls                  String[]
+  languagesSpoken            String[]
+  emergencyCalloutsAvailable Boolean   @default(false)
+  workingHours               Json? // { mon: {open,close}, tue: {...}, ... }
+  targetResponseMins         Int? // self-declared target, distinct from computed avgResponseMins
+  profileCompletedAt         DateTime?
+
+  // ── Trust tier (computed — see packages/core/src/trust-tier.ts) ───────
+  trustTier          TrustTier @default(BRONZE)
+  trustTierUpdatedAt DateTime?
+  platinumOverride   Boolean   @default(false) // admin-settable manual Platinum promotion
+
+  owner                 User                           @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  serviceAreas          ServiceArea[]
+  services              Service[]
+  subscription          Subscription?
+  leadCreditWallet      LeadCreditWallet?
+  leadAccesses          LeadAccess[]
+  quotes                Quote[]
+  bookings              Booking[]                      @relation("ProviderBookings")
+  reviews               Review[]
+  favouritedBy          Favourite[]
+  payments              Payment[]
+  dispatcherAssignments DispatcherAssignment[]         @relation("AssignedBusiness")
+  identityVerification  IdentityVerification?
+  verificationDocuments BusinessVerificationDocument[]
+  qualifications        Qualification[]
+  insurancePolicies     InsurancePolicy[]
+  portfolioItems        PortfolioItem[]
+  references            BusinessReference[]
 
   @@index([city])
   @@index([verificationStatus])
   @@index([isFeatured])
   @@index([lat, lng])
+  @@index([trustTier])
+}
+
+model IdentityVerification {
+  id                          String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  businessId                  String             @unique @db.Uuid
+  docType                     IdentityDocType?
+  stripeVerificationSessionId String?            @unique
+  status                      VerificationStatus @default(UNVERIFIED)
+  verifiedAt                  DateTime?
+  lastError                   String?
+  // Extracted from Stripe's verified_outputs once VERIFIED — used to
+  // cross-check against the self-reported Companies House director name.
+  extractedFullName           String?
+  reviewNote                  String?
+  createdAt                   DateTime           @default(now())
+  updatedAt                   DateTime           @updatedAt
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+}
+
+model BusinessVerificationDocument {
+  id         String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  businessId String              @db.Uuid
+  docType    VerificationDocType
+  fileUrl    String
+  uploadedAt DateTime            @default(now())
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
+}
+
+model Qualification {
+  id                String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  businessId        String             @db.Uuid
+  categoryId        String?            @db.Uuid
+  name              String // e.g. "NICEIC", "Gas Safe Register", "NVQ Level 2 Beauty Therapy"
+  issuingBody       String?
+  certificateNumber String?
+  expiryDate        DateTime?
+  documentUrl       String?
+  status            VerificationStatus @default(UNVERIFIED)
+  verifiedAt        DateTime?
+  reviewNote        String?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+
+  business Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  category Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  @@index([businessId])
+  @@index([status])
+}
+
+model InsurancePolicy {
+  id                   String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  businessId           String             @db.Uuid
+  type                 InsuranceType
+  provider             String
+  policyNumber         String
+  expiryDate           DateTime
+  coverageAmountPence  Int
+  documentUrl          String
+  status               VerificationStatus @default(UNVERIFIED)
+  verifiedAt           DateTime?
+  reviewNote           String?
+  expiryReminderSentAt DateTime?
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@unique([businessId, type])
+  @@index([status])
+  @@index([expiryDate])
+}
+
+model PortfolioItem {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  businessId  String   @db.Uuid
+  categoryId  String?  @db.Uuid
+  title       String?
+  description String?  @db.Text
+  beforeUrl   String?
+  afterUrl    String?
+  videoUrl    String?
+  photoUrls   String[]
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  business Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  category Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  @@index([businessId])
+}
+
+model BusinessReference {
+  id                String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  businessId        String          @db.Uuid
+  refereeName       String
+  refereeEmail      String
+  relationshipNote  String?
+  verificationToken String          @unique
+  status            ReferenceStatus @default(REQUESTED)
+  testimonial       String?         @db.Text
+  requestedAt       DateTime        @default(now())
+  verifiedAt        DateTime?
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
 }
 
 model ServiceArea {
-  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  businessId   String   @db.Uuid
-  city         String
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  businessId     String   @db.Uuid
+  city           String
   postcodePrefix String?
-  lat          Decimal  @db.Decimal(9, 6)
-  lng          Decimal  @db.Decimal(9, 6)
-  radiusMiles  Int      @default(10)
-  createdAt    DateTime @default(now())
+  lat            Decimal  @db.Decimal(9, 6)
+  lng            Decimal  @db.Decimal(9, 6)
+  radiusMiles    Int      @default(10)
+  createdAt      DateTime @default(now())
 
   business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
 
@@ -506,22 +713,22 @@ model ServiceArea {
 }
 
 model Service {
-  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  businessId  String    @db.Uuid
-  categoryId  String    @db.Uuid
-  title       String
-  description String?   @db.Text
-  priceType   PriceType @default(QUOTE_ONLY)
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  businessId    String    @db.Uuid
+  categoryId    String    @db.Uuid
+  title         String
+  description   String?   @db.Text
+  priceType     PriceType @default(QUOTE_ONLY)
   priceMinPence Int?
   priceMaxPence Int?
-  durationMins Int?
-  images      String[]
-  isActive    Boolean   @default(true)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  durationMins  Int?
+  images        String[]
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
-  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  category Category @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  business Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  category Category  @relation(fields: [categoryId], references: [id], onDelete: Restrict)
   bookings Booking[]
 
   @@index([businessId])
@@ -535,38 +742,38 @@ model Service {
 // and track their own pipeline status independently of other providers.
 
 model JobRequest {
-  id            String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  customerId    String            @db.Uuid
-  categoryId    String            @db.Uuid
-  title         String
-  description   String            @db.Text
-  photos        String[]
-  budgetMinPence Int?
-  budgetMaxPence Int?
-  preferredDate DateTime?
-  flexibleDate  Boolean           @default(true)
-  addressLine   String?
-  city          String
-  postcode      String?
-  lat           Decimal           @db.Decimal(9, 6)
-  lng           Decimal           @db.Decimal(9, 6)
-  status        JobRequestStatus  @default(OPEN)
-  aiSuggestedCategoryId String?   @db.Uuid
-  aiCategoryConfidence  Decimal?  @db.Decimal(4, 3)
-  maxLeadSales  Int               @default(5)   // cap on how many providers can acquire this lead
-  leadPricePence Int              @default(1000) // computed at creation (£5–£20 band)
-  expiresAt     DateTime
-  createdAt     DateTime          @default(now())
-  updatedAt     DateTime          @updatedAt
+  id                    String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  customerId            String           @db.Uuid
+  categoryId            String           @db.Uuid
+  title                 String
+  description           String           @db.Text
+  photos                String[]
+  budgetMinPence        Int?
+  budgetMaxPence        Int?
+  preferredDate         DateTime?
+  flexibleDate          Boolean          @default(true)
+  addressLine           String?
+  city                  String
+  postcode              String?
+  lat                   Decimal          @db.Decimal(9, 6)
+  lng                   Decimal          @db.Decimal(9, 6)
+  status                JobRequestStatus @default(OPEN)
+  aiSuggestedCategoryId String?          @db.Uuid
+  aiCategoryConfidence  Decimal?         @db.Decimal(4, 3)
+  maxLeadSales          Int              @default(5) // cap on how many providers can acquire this lead
+  leadPricePence        Int              @default(1000) // computed at creation (£5–£20 band)
+  expiresAt             DateTime
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
 
-  customer   User        @relation("CustomerJobRequests", fields: [customerId], references: [id], onDelete: Cascade)
-  category   Category    @relation(fields: [categoryId], references: [id], onDelete: Restrict)
-  lead       Lead?
-  quotes     Quote[]
-  booking    Booking?
-  conversations Conversation[]
+  customer              User                   @relation("CustomerJobRequests", fields: [customerId], references: [id], onDelete: Cascade)
+  category              Category               @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  lead                  Lead?
+  quotes                Quote[]
+  booking               Booking?
+  conversations         Conversation[]
   dispatcherAssignments DispatcherAssignment[]
-  approvalRequests ApprovalRequest[]
+  approvalRequests      ApprovalRequest[]
 
   @@index([customerId])
   @@index([categoryId])
@@ -576,14 +783,14 @@ model JobRequest {
 }
 
 model Lead {
-  id            String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  jobRequestId  String     @unique @db.Uuid
-  status        LeadStatus @default(AVAILABLE)
-  radiusMiles   Int        @default(15)
-  salesCount    Int        @default(0)
-  viewCount     Int        @default(0)
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
+  id           String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  jobRequestId String     @unique @db.Uuid
+  status       LeadStatus @default(AVAILABLE)
+  radiusMiles  Int        @default(15)
+  salesCount   Int        @default(0)
+  viewCount    Int        @default(0)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
 
   jobRequest JobRequest   @relation(fields: [jobRequestId], references: [id], onDelete: Cascade)
   accesses   LeadAccess[]
@@ -593,26 +800,26 @@ model Lead {
 
 // One row per provider who has acquired (purchased/claimed) a given lead.
 model LeadAccess {
-  id               String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  leadId           String              @db.Uuid
-  businessId       String              @db.Uuid
-  acquisitionType  LeadAcquisitionType
-  pricePaidPence   Int                 @default(0)
-  creditsSpent     Int                 @default(0)
-  status           ProviderLeadStatus  @default(NEW)
-  contactedAt      DateTime?
-  quotedAt         DateTime?
-  wonAt            DateTime?
-  lostAt           DateTime?
-  lostReason       String?
-  isRefunded       Boolean             @default(false)
-  createdAt        DateTime            @default(now())
-  updatedAt        DateTime            @updatedAt
+  id              String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  leadId          String              @db.Uuid
+  businessId      String              @db.Uuid
+  acquisitionType LeadAcquisitionType
+  pricePaidPence  Int                 @default(0)
+  creditsSpent    Int                 @default(0)
+  status          ProviderLeadStatus  @default(NEW)
+  contactedAt     DateTime?
+  quotedAt        DateTime?
+  wonAt           DateTime?
+  lostAt          DateTime?
+  lostReason      String?
+  isRefunded      Boolean             @default(false)
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
 
-  lead             Lead                 @relation(fields: [leadId], references: [id], onDelete: Cascade)
-  business         Business             @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  payment          Payment?
-  refundRequest    RefundRequest?
+  lead              Lead                   @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  business          Business               @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  payment           Payment?
+  refundRequest     RefundRequest?
   creditTransaction LeadCreditTransaction?
 
   @@unique([leadId, businessId]) // a provider can only acquire a given lead once
@@ -621,17 +828,17 @@ model LeadAccess {
 }
 
 model RefundRequest {
-  id             String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  leadAccessId   String               @unique @db.Uuid
-  requestedById  String               @db.Uuid
-  reason         RefundReason
-  details        String?              @db.Text
-  status         RefundRequestStatus  @default(PENDING)
+  id                String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  leadAccessId      String              @unique @db.Uuid
+  requestedById     String              @db.Uuid
+  reason            RefundReason
+  details           String?             @db.Text
+  status            RefundRequestStatus @default(PENDING)
   refundAmountPence Int?
-  reviewedById   String?              @db.Uuid
-  reviewedAt     DateTime?
-  reviewNote     String?
-  createdAt      DateTime             @default(now())
+  reviewedById      String?             @db.Uuid
+  reviewedAt        DateTime?
+  reviewNote        String?
+  createdAt         DateTime            @default(now())
 
   leadAccess LeadAccess @relation(fields: [leadAccessId], references: [id], onDelete: Cascade)
 
@@ -645,7 +852,7 @@ model LeadCreditWallet {
   updatedAt  DateTime @updatedAt
   createdAt  DateTime @default(now())
 
-  business     Business               @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  business     Business                @relation(fields: [businessId], references: [id], onDelete: Cascade)
   transactions LeadCreditTransaction[]
 }
 
@@ -658,13 +865,13 @@ enum LeadCreditTxType {
 }
 
 model LeadCreditTransaction {
-  id           String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  walletId     String            @db.Uuid
+  id           String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  walletId     String           @db.Uuid
   type         LeadCreditTxType
-  amount       Int               // positive = credit, negative = debit
-  leadAccessId String?           @unique @db.Uuid
+  amount       Int // positive = credit, negative = debit
+  leadAccessId String?          @unique @db.Uuid
   description  String?
-  createdAt    DateTime          @default(now())
+  createdAt    DateTime         @default(now())
 
   wallet     LeadCreditWallet @relation(fields: [walletId], references: [id], onDelete: Cascade)
   leadAccess LeadAccess?      @relation(fields: [leadAccessId], references: [id], onDelete: SetNull)
@@ -695,33 +902,33 @@ model Quote {
 }
 
 model Booking {
-  id               String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  customerId       String        @db.Uuid
-  businessId       String        @db.Uuid
-  serviceId        String?       @db.Uuid
-  jobRequestId     String?       @unique @db.Uuid
-  quoteId          String?       @unique @db.Uuid
-  scheduledDate    DateTime
-  status           BookingStatus @default(PENDING)
-  totalAmountPence Int
+  id                 String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  customerId         String        @db.Uuid
+  businessId         String        @db.Uuid
+  serviceId          String?       @db.Uuid
+  jobRequestId       String?       @unique @db.Uuid
+  quoteId            String?       @unique @db.Uuid
+  scheduledDate      DateTime
+  status             BookingStatus @default(PENDING)
+  totalAmountPence   Int
   depositAmountPence Int?
-  addressLine      String
-  city             String
-  postcode         String?
-  notes            String?       @db.Text
-  cancelledReason  String?
-  cancelledAt      DateTime?
-  completedAt      DateTime?
-  createdAt        DateTime      @default(now())
-  updatedAt        DateTime      @updatedAt
+  addressLine        String
+  city               String
+  postcode           String?
+  notes              String?       @db.Text
+  cancelledReason    String?
+  cancelledAt        DateTime?
+  completedAt        DateTime?
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
 
-  customer   User        @relation("CustomerBookings", fields: [customerId], references: [id], onDelete: Cascade)
-  business   Business    @relation("ProviderBookings", fields: [businessId], references: [id], onDelete: Cascade)
-  service    Service?    @relation(fields: [serviceId], references: [id], onDelete: SetNull)
-  jobRequest JobRequest? @relation(fields: [jobRequestId], references: [id], onDelete: SetNull)
-  quote      Quote?      @relation(fields: [quoteId], references: [id], onDelete: SetNull)
-  payments   Payment[]
-  review     Review?
+  customer     User          @relation("CustomerBookings", fields: [customerId], references: [id], onDelete: Cascade)
+  business     Business      @relation("ProviderBookings", fields: [businessId], references: [id], onDelete: Cascade)
+  service      Service?      @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+  jobRequest   JobRequest?   @relation(fields: [jobRequestId], references: [id], onDelete: SetNull)
+  quote        Quote?        @relation(fields: [quoteId], references: [id], onDelete: SetNull)
+  payments     Payment[]
+  review       Review?
   conversation Conversation?
 
   @@index([customerId])
@@ -733,20 +940,20 @@ model Booking {
 // ── Reviews & Favourites ─────────────────────────────────────────────────
 
 model Review {
-  id              String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  bookingId       String       @unique @db.Uuid
-  authorId        String       @db.Uuid
-  businessId      String       @db.Uuid
-  rating          Int          // 1-5
-  comment         String?      @db.Text
-  photos          String[]
-  status          ReviewStatus @default(PUBLISHED)
-  aiFlagged       Boolean      @default(false)
-  aiFlagReason    String?
-  providerResponse String?     @db.Text
-  respondedAt     DateTime?
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
+  id               String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  bookingId        String       @unique @db.Uuid
+  authorId         String       @db.Uuid
+  businessId       String       @db.Uuid
+  rating           Int // 1-5
+  comment          String?      @db.Text
+  photos           String[]
+  status           ReviewStatus @default(PUBLISHED)
+  aiFlagged        Boolean      @default(false)
+  aiFlagReason     String?
+  providerResponse String?      @db.Text
+  respondedAt      DateTime?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
 
   booking  Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
   author   User     @relation("ReviewAuthor", fields: [authorId], references: [id], onDelete: Cascade)
@@ -772,14 +979,14 @@ model Favourite {
 // ── Messaging ─────────────────────────────────────────────────────────────
 
 model Conversation {
-  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  jobRequestId String?   @db.Uuid
-  bookingId    String?   @unique @db.Uuid
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  jobRequestId  String?   @db.Uuid
+  bookingId     String?   @unique @db.Uuid
   lastMessageAt DateTime?
-  createdAt    DateTime  @default(now())
+  createdAt     DateTime  @default(now())
 
-  jobRequest   JobRequest? @relation(fields: [jobRequestId], references: [id], onDelete: SetNull)
-  booking      Booking?    @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+  jobRequest   JobRequest?               @relation(fields: [jobRequestId], references: [id], onDelete: SetNull)
+  booking      Booking?                  @relation(fields: [bookingId], references: [id], onDelete: SetNull)
   participants ConversationParticipant[]
   messages     Message[]
 
@@ -846,20 +1053,20 @@ model Payment {
 }
 
 model Subscription {
-  id                   String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  businessId           String              @unique @db.Uuid
-  plan                 SubscriptionPlan    @default(FREE)
-  status               SubscriptionStatus  @default(ACTIVE)
+  id                   String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  businessId           String             @unique @db.Uuid
+  plan                 SubscriptionPlan   @default(FREE)
+  status               SubscriptionStatus @default(ACTIVE)
   stripeCustomerId     String?
-  stripeSubscriptionId String?             @unique
+  stripeSubscriptionId String?            @unique
   stripePriceId        String?
-  monthlyLeadAllowance Int                 @default(0)
-  leadAllowanceUsed    Int                 @default(0)
+  monthlyLeadAllowance Int                @default(0)
+  leadAllowanceUsed    Int                @default(0)
   currentPeriodStart   DateTime?
   currentPeriodEnd     DateTime?
-  cancelAtPeriodEnd    Boolean             @default(false)
-  createdAt            DateTime            @default(now())
-  updatedAt            DateTime            @updatedAt
+  cancelAtPeriodEnd    Boolean            @default(false)
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
 
   business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
 
@@ -870,14 +1077,14 @@ model Subscription {
 // ── Notifications, Reports, Audit, Dispatcher approvals ──────────────────
 
 model Notification {
-  id        String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId    String            @db.Uuid
+  id        String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String           @db.Uuid
   type      NotificationType
   title     String
   body      String?
   link      String?
-  isRead    Boolean           @default(false)
-  createdAt DateTime          @default(now())
+  isRead    Boolean          @default(false)
+  createdAt DateTime         @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -885,20 +1092,20 @@ model Notification {
 }
 
 model Report {
-  id           String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  reporterId   String           @db.Uuid
-  targetType   ReportTargetType
-  targetId     String           @db.Uuid
-  reviewTarget String?          @db.Uuid // convenience FK when targetType = REVIEW
-  reason       String
-  details      String?          @db.Text
-  status       ReportStatus     @default(OPEN)
-  resolvedById String?          @db.Uuid
-  resolvedAt   DateTime?
+  id             String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  reporterId     String           @db.Uuid
+  targetType     ReportTargetType
+  targetId       String           @db.Uuid
+  reviewTarget   String?          @db.Uuid // convenience FK when targetType = REVIEW
+  reason         String
+  details        String?          @db.Text
+  status         ReportStatus     @default(OPEN)
+  resolvedById   String?          @db.Uuid
+  resolvedAt     DateTime?
   resolutionNote String?
-  createdAt    DateTime         @default(now())
+  createdAt      DateTime         @default(now())
 
-  reporter     User    @relation("ReportsFiled", fields: [reporterId], references: [id], onDelete: Cascade)
+  reporter       User    @relation("ReportsFiled", fields: [reporterId], references: [id], onDelete: Cascade)
   reviewedReview Review? @relation(fields: [reviewTarget], references: [id], onDelete: SetNull)
 
   @@index([status])
@@ -909,7 +1116,7 @@ model AuditLog {
   id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   actorId    String?  @db.Uuid
   actorRole  Role?
-  action     String   // e.g. "user.suspend", "lead.refund.approve"
+  action     String // e.g. "user.suspend", "lead.refund.approve"
   targetType String
   targetId   String?
   metadata   Json?
@@ -930,16 +1137,16 @@ model AuditLog {
 // must approve before it takes effect (except read-only tracking/assignment
 // proposals, which is why `payload` stores the *proposed* change).
 model ApprovalRequest {
-  id            String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  requestedById String                 @db.Uuid
+  id            String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  requestedById String                @db.Uuid
   actionType    ApprovalActionType
-  jobRequestId  String?                @db.Uuid
-  payload       Json                   // proposed change, e.g. { assignBusinessId, note }
-  status        ApprovalRequestStatus  @default(PENDING)
-  reviewedById  String?                @db.Uuid
+  jobRequestId  String?               @db.Uuid
+  payload       Json // proposed change, e.g. { assignBusinessId, note }
+  status        ApprovalRequestStatus @default(PENDING)
+  reviewedById  String?               @db.Uuid
   reviewedAt    DateTime?
   reviewNote    String?
-  createdAt     DateTime               @default(now())
+  createdAt     DateTime              @default(now())
 
   requestedBy User        @relation("ApprovalRequester", fields: [requestedById], references: [id], onDelete: Cascade)
   reviewedBy  User?       @relation("ApprovalReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
@@ -952,13 +1159,13 @@ model ApprovalRequest {
 // Confirmed record of a dispatcher sending a job to a specific provider
 // (created once the corresponding ApprovalRequest is APPROVED).
 model DispatcherAssignment {
-  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  jobRequestId      String   @db.Uuid
-  dispatcherId      String   @db.Uuid
-  assignedBusinessId String  @db.Uuid
-  note              String?
-  approvalRequestId String?  @unique @db.Uuid
-  createdAt         DateTime @default(now())
+  id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  jobRequestId       String   @db.Uuid
+  dispatcherId       String   @db.Uuid
+  assignedBusinessId String   @db.Uuid
+  note               String?
+  approvalRequestId  String?  @unique @db.Uuid
+  createdAt          DateTime @default(now())
 
   jobRequest       JobRequest @relation(fields: [jobRequestId], references: [id], onDelete: Cascade)
   dispatcher       User       @relation("DispatcherActor", fields: [dispatcherId], references: [id], onDelete: Cascade)

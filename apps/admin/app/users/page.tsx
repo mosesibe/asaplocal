@@ -28,7 +28,7 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
             <div className="flex items-center gap-2">
               <Badge variant={u.status === "ACTIVE" ? "success" : u.status === "SUSPENDED" ? "destructive" : "outline"}>{u.status}</Badge>
               {u.business && <Badge variant={u.business.verificationStatus === "VERIFIED" ? "success" : "warning"}>{u.business.verificationStatus}</Badge>}
-              <UserRowActions userId={u.id} status={u.status} businessId={u.business?.id} verificationStatus={u.business?.verificationStatus} />
+              <UserRowActions userId={u.id} status={u.status} businessId={u.business?.id} />
             </div>
           </Card>
         ))}

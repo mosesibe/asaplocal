@@ -24,7 +24,12 @@ export default async function ProviderDashboard() {
     <div>
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-bold">Welcome back, {business.name}</h1>
-        <Badge variant={business.verificationStatus === "VERIFIED" ? "success" : "warning"}>{business.verificationStatus}</Badge>
+        <div className="flex items-center gap-2">
+          <Link href="/verification">
+            <Badge variant="outline">{business.trustTier} tier</Badge>
+          </Link>
+          <Badge variant={business.verificationStatus === "VERIFIED" ? "success" : "warning"}>{business.verificationStatus}</Badge>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">

@@ -18,6 +18,10 @@ interface CategoryDef {
   slug: string;
   icon: string;
   isFeatured?: boolean;
+  // Advisory-only guidance shown on the provider qualifications
+  // verification step — not enforced (Qualification.name stays free text).
+  isRegulatedTrade?: boolean;
+  suggestedQualifications?: string[];
   children: { name: string; slug: string; isEmergency?: boolean }[];
 }
 
@@ -47,6 +51,10 @@ const CATEGORIES: CategoryDef[] = [
     slug: "plumbing",
     icon: "wrench",
     isFeatured: true,
+    // Gas work (boilers, gas appliances) is a legal Gas Safe requirement in
+    // the UK regardless of how the provider self-describes their trade.
+    isRegulatedTrade: true,
+    suggestedQualifications: ["Gas Safe Register"],
     children: [
       { name: "Emergency plumbing", slug: "emergency-plumbing", isEmergency: true },
       { name: "Leak repair", slug: "leak-repair", isEmergency: true },
@@ -65,6 +73,8 @@ const CATEGORIES: CategoryDef[] = [
     slug: "electrical",
     icon: "zap",
     isFeatured: true,
+    isRegulatedTrade: true,
+    suggestedQualifications: ["NICEIC", "NAPIT", "ECA"],
     children: [
       { name: "Emergency electrician", slug: "emergency-electrician", isEmergency: true },
       { name: "Light fitting installation", slug: "light-fitting-installation" },
@@ -152,6 +162,8 @@ const CATEGORIES: CategoryDef[] = [
     name: "Tutoring",
     slug: "tutoring",
     icon: "book-open",
+    isRegulatedTrade: true,
+    suggestedQualifications: ["Degree", "Certificates", "Teacher Status"],
     children: [
       { name: "Maths tutoring", slug: "maths-tutoring" },
       { name: "English tutoring", slug: "english-tutoring" },
@@ -169,6 +181,8 @@ const CATEGORIES: CategoryDef[] = [
     name: "Beauty & Wellness",
     slug: "beauty",
     icon: "scissors",
+    isRegulatedTrade: true,
+    suggestedQualifications: ["NVQ", "Insurance"],
     children: [
       { name: "Mobile hairdresser", slug: "mobile-hairdresser" },
       { name: "Barber services", slug: "barber-services" },
@@ -238,8 +252,23 @@ async function main() {
     CATEGORIES.map((c, i) =>
       prisma.category.upsert({
         where: { slug: c.slug },
-        update: { name: c.name, icon: c.icon, isFeatured: !!c.isFeatured, sortOrder: i },
-        create: { name: c.name, slug: c.slug, icon: c.icon, isFeatured: !!c.isFeatured, sortOrder: i },
+        update: {
+          name: c.name,
+          icon: c.icon,
+          isFeatured: !!c.isFeatured,
+          sortOrder: i,
+          isRegulatedTrade: !!c.isRegulatedTrade,
+          suggestedQualifications: c.suggestedQualifications ?? [],
+        },
+        create: {
+          name: c.name,
+          slug: c.slug,
+          icon: c.icon,
+          isFeatured: !!c.isFeatured,
+          sortOrder: i,
+          isRegulatedTrade: !!c.isRegulatedTrade,
+          suggestedQualifications: c.suggestedQualifications ?? [],
+        },
       })
     )
   );

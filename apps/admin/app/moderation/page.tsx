@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { prisma } from "@asaplocal/db";
 import { Badge, Card } from "@asaplocal/ui";
 import { ReviewModerationActions } from "./review-moderation-actions";
@@ -35,10 +36,12 @@ export default async function ModerationPage() {
         <h2 className="mb-3 text-lg font-semibold">Businesses pending verification ({pendingBusinesses.length})</h2>
         <div className="space-y-2">
           {pendingBusinesses.map((b) => (
-            <Card key={b.id} className="flex items-center justify-between p-4">
-              <p className="font-medium">{b.name}</p>
-              <Badge variant="warning">PENDING</Badge>
-            </Card>
+            <Link key={b.id} href={`/verification/${b.id}`}>
+              <Card className="flex items-center justify-between p-4 transition-shadow hover:shadow-card">
+                <p className="font-medium">{b.name}</p>
+                <Badge variant="warning">PENDING</Badge>
+              </Card>
+            </Link>
           ))}
           {pendingBusinesses.length === 0 && <p className="text-sm text-muted-foreground">None pending.</p>}
         </div>

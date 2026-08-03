@@ -5,6 +5,7 @@ import type { Metadata } from "next";
 import { prisma } from "@asaplocal/db";
 import { Badge, Card, StarRating, formatPence } from "@asaplocal/ui";
 import { BadgeCheck, MapPin, Clock, Briefcase, ChevronLeft } from "lucide-react";
+import { computeBadges } from "@asaplocal/core";
 import { ReviewList } from "@/components/review-list";
 import { QuoteRequestButton } from "@/components/quote-request-button";
 
@@ -15,6 +16,9 @@ async function getBusiness(slug: string) {
       services: { where: { isActive: true }, include: { category: true } },
       serviceAreas: true,
       reviews: { where: { status: "PUBLISHED" }, orderBy: { createdAt: "desc" }, take: 20, include: { author: { include: { profile: true } } } },
+      identityVerification: true,
+      insurancePolicies: true,
+      qualifications: true,
     },
   });
 }
@@ -39,6 +43,8 @@ export default async function ProviderProfilePage({ params }: { params: Promise<
   if (!biz) notFound();
 
   await prisma.business.update({ where: { id: biz.id }, data: { profileViews: { increment: 1 } } }).catch(() => {});
+
+  const badges = computeBadges(biz);
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -79,13 +85,17 @@ export default async function ProviderProfilePage({ params }: { params: Promise<
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-2xl font-bold">{biz.name}</h1>
-                {biz.verificationStatus === "VERIFIED" && (
-                  <Badge variant="success" className="gap-1"><BadgeCheck size={14} /> Verified</Badge>
-                )}
                 {biz.isFeatured && <Badge variant="warning">Featured</Badge>}
               </div>
               <p className="mt-1 flex items-center gap-1 text-sm text-muted-foreground"><MapPin size={14} /> {biz.city} · serves {biz.baseRadiusMiles} mile radius</p>
               <div className="mt-2"><StarRating rating={Number(biz.avgRating)} count={biz.reviewCount} /></div>
+              {badges.length > 0 && (
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {badges.map((b) => (
+                    <Badge key={b.key} variant="success" className="gap-1"><BadgeCheck size={14} /> {b.label}</Badge>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
           <div className="flex gap-2">

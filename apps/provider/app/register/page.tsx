@@ -11,11 +11,12 @@ export default function RegisterPage() {
   const router = useRouter();
   const [phase, setPhase] = useState<Phase>("form");
   const [form, setForm] = useState({ firstName: "", lastName: "", email: "", phone: "", password: "" });
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  async function submit(body: Record<string, string>, signInPassword: string) {
+  async function submit(body: Record<string, string | boolean>, signInPassword: string) {
     setLoading(true);
     setError(null);
     const res = await fetch("/api/auth/register", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
@@ -41,12 +42,16 @@ export default function RegisterPage() {
 
   function onSubmitForm(e: React.FormEvent) {
     e.preventDefault();
-    submit(form, form.password);
+    if (!termsAccepted) {
+      setError("You must agree to the Terms & Privacy Policy");
+      return;
+    }
+    submit({ ...form, termsAccepted }, form.password);
   }
 
   function onSubmitConfirm(e: React.FormEvent) {
     e.preventDefault();
-    submit({ ...form, confirmPassword }, confirmPassword);
+    submit({ ...form, confirmPassword, termsAccepted }, confirmPassword);
   }
 
   if (phase === "confirm-existing") {
@@ -89,6 +94,25 @@ export default function RegisterPage() {
           <Input required type="email" placeholder="Email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
           <Input required type="tel" placeholder="Phone number" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
           <Input required type="password" placeholder="Password (min 8 characters)" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
+          <label className="flex items-start gap-2 text-sm text-muted-foreground">
+            <input
+              type="checkbox"
+              required
+              checked={termsAccepted}
+              onChange={(e) => setTermsAccepted(e.target.checked)}
+              className="mt-0.5"
+            />
+            <span>
+              I agree to the{" "}
+              <a href={`${process.env.NEXT_PUBLIC_WEB_URL}/terms`} target="_blank" rel="noreferrer" className="font-medium text-brand-700 hover:underline">
+                Terms
+              </a>{" "}
+              &{" "}
+              <a href={`${process.env.NEXT_PUBLIC_WEB_URL}/privacy`} target="_blank" rel="noreferrer" className="font-medium text-brand-700 hover:underline">
+                Privacy Policy
+              </a>
+            </span>
+          </label>
           {error && <p className="text-sm text-red-600">{error}</p>}
           <Button type="submit" className="w-full" disabled={loading}>{loading ? "Creating account…" : "Sign up as a provider"}</Button>
         </form>
