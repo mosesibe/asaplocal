@@ -35,7 +35,7 @@ export default async function BillingPage() {
             {p.key === "SUBSCRIPTION_PRO" || p.key === "SUBSCRIPTION_PREMIUM" ? (
               <CheckoutButton kind={p.key as "SUBSCRIPTION_PRO" | "SUBSCRIPTION_PREMIUM"} className="mt-4" />
             ) : p.key === "ENTERPRISE" ? (
-              <a href="mailto:sales@asaplocal.app" className="mt-4 text-center text-sm font-medium text-brand-700 hover:underline">Contact sales</a>
+              <a href="mailto:sales@asaplocal.pro" className="mt-4 text-center text-sm font-medium text-brand-700 hover:underline">Contact sales</a>
             ) : (
               <p className="mt-4 text-center text-sm text-muted-foreground">Current default</p>
             )}

@@ -4,7 +4,7 @@ import { prisma } from "@asaplocal/db";
 const CITIES = ["manchester", "london", "liverpool", "birmingham"];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const base = process.env.NEXT_PUBLIC_WEB_URL ?? "https://asaplocal.app";
+  const base = process.env.NEXT_PUBLIC_WEB_URL ?? "https://asaplocal.pro";
   const [categories, businesses] = await Promise.all([
     prisma.category.findMany({ where: { isActive: true } }),
     prisma.business.findMany({ where: { verificationStatus: "VERIFIED" }, select: { slug: true, updatedAt: true } }),

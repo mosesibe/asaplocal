@@ -1,7 +1,7 @@
 import { Resend } from "resend";
 
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
-const FROM = process.env.EMAIL_FROM ?? "AsapLocal <noreply@asaplocal.app>";
+const FROM = process.env.EMAIL_FROM ?? "AsapLocal <noreply@asaplocal.pro>";
 
 export async function sendEmail(opts: { to: string; subject: string; html: string }) {
   if (!resend) {

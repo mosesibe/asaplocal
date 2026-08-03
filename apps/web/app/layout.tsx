@@ -11,7 +11,7 @@ import { RegisterServiceWorker } from "@/components/register-service-worker";
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_WEB_URL ?? "https://asaplocal.app"),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_WEB_URL ?? "https://asaplocal.pro"),
   title: { default: "AsapLocal — Find trusted local service providers", template: "%s | AsapLocal" },
   description:
     "Compare, message and book vetted local cleaners, plumbers, electricians, gardeners, handymen, movers, tutors and pet sitters near you.",

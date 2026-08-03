@@ -261,10 +261,10 @@ async function main() {
 
   // ── Admin ───────────────────────────────────────────────────────────
   const admin = await prisma.user.upsert({
-    where: { email: "admin@asaplocal.app" },
+    where: { email: "admin@asaplocal.pro" },
     update: {},
     create: {
-      email: "admin@asaplocal.app",
+      email: "admin@asaplocal.pro",
       role: Role.ADMIN,
       status: "ACTIVE",
       emailVerified: new Date(),
@@ -274,10 +274,10 @@ async function main() {
 
   // ── Dispatcher ──────────────────────────────────────────────────────
   const dispatcher = await prisma.user.upsert({
-    where: { email: "dispatcher@asaplocal.app" },
+    where: { email: "dispatcher@asaplocal.pro" },
     update: {},
     create: {
-      email: "dispatcher@asaplocal.app",
+      email: "dispatcher@asaplocal.pro",
       role: Role.DISPATCHER,
       status: "ACTIVE",
       emailVerified: new Date(),
@@ -515,8 +515,8 @@ async function main() {
   console.log("Seed complete:");
   console.log(`  categories: ${categories.length}`);
   console.log(`  businesses: ${businesses.length}`);
-  console.log(`  admin login:      admin@asaplocal.app`);
-  console.log(`  dispatcher login: dispatcher@asaplocal.app`);
+  console.log(`  admin login:      admin@asaplocal.pro`);
+  console.log(`  dispatcher login: dispatcher@asaplocal.pro`);
   console.log(`  customer logins:  customer1@example.com, customer2@example.com`);
 }
 

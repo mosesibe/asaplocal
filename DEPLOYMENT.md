@@ -50,8 +50,8 @@ Vercel auto-detects Next.js and pnpm workspaces, so in practice the default
 build command usually works once "Root Directory" is set — the table above
 is the explicit fallback if auto-detection picks the wrong scope.
 
-Attach a custom domain to each: e.g. `asaplocal.app` (web),
-`business.asaplocal.app` (provider), `admin.asaplocal.app` (admin — put
+Attach a custom domain to each: e.g. `asaplocal.pro` (web),
+`business.asaplocal.pro` (provider), `admin.asaplocal.pro` (admin — put
 this one behind Vercel's password protection or an IP allowlist in addition
 to app-level RBAC, since it's staff-only).
 
@@ -65,8 +65,8 @@ all import `@asaplocal/db` / `@asaplocal/core`. Set these per project:
   — set to the **same three values in all three projects** (each app links
   out to the others, e.g. the customer app links to the provider signup page).
 - `NEXTAUTH_URL` — set to **that specific project's own domain**, e.g.
-  `https://asaplocal.app` on the web project, `https://business.asaplocal.app`
-  on the provider project, `https://admin.asaplocal.app` on the admin
+  `https://asaplocal.pro` on the web project, `https://business.asaplocal.pro`
+  on the provider project, `https://admin.asaplocal.pro` on the admin
   project. Unlike the `NEXT_PUBLIC_*_URL` vars, this one is *not* shared —
   Auth.js uses it to validate callback URLs for that specific deployment.
 
@@ -74,9 +74,9 @@ all import `@asaplocal/db` / `@asaplocal/core`. Set these per project:
 
 Create two webhook endpoints in the Stripe dashboard:
 
-1. `https://asaplocal.app/api/webhooks/stripe` — events:
+1. `https://asaplocal.pro/api/webhooks/stripe` — events:
    `checkout.session.completed`, `charge.refunded` (booking payments).
-2. `https://business.asaplocal.app/api/webhooks/stripe` — events:
+2. `https://business.asaplocal.pro/api/webhooks/stripe` — events:
    `checkout.session.completed`, `customer.subscription.updated`,
    `customer.subscription.deleted` (lead purchases, credit top-ups,
    subscriptions).
@@ -86,7 +86,7 @@ Copy each endpoint's signing secret into that project's
 
 ## 6. Post-deploy checklist
 
-- [ ] Log into the admin app and confirm the seeded `admin@asaplocal.app`
+- [ ] Log into the admin app and confirm the seeded `admin@asaplocal.pro`
       account works (change its password / re-seed with a real account for
       production).
 - [ ] Verify a test business end-to-end: register on the provider app →

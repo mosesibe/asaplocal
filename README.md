@@ -11,9 +11,9 @@ Turborepo monorepo, pnpm workspaces.
 
 ```
 apps/
-  web/        customer app        (asaplocal.app)            — Next.js 15, port 3000
-  provider/   business app        (business.asaplocal.app)   — Next.js 15, port 3001
-  admin/      admin + dispatcher  (admin.asaplocal.app)       — Next.js 15, port 3002
+  web/        customer app        (asaplocal.pro)            — Next.js 15, port 3000
+  provider/   business app        (business.asaplocal.pro)   — Next.js 15, port 3001
+  admin/      admin + dispatcher  (admin.asaplocal.pro)       — Next.js 15, port 3002
 packages/
   db/         Prisma schema, client singleton, seed data
   core/       shared business logic: lead marketplace engine, Stripe, S3,
@@ -53,7 +53,7 @@ implementation of "how does a lead get priced/purchased/refunded", not three.
    - **claim** it against their monthly subscription allowance, or
    - **spend a purchased lead credit** from their wallet.
    Whichever they use, `LeadAccess` records who has it and how they paid;
-   a DB-level unique constraint stops double-acquisition under concurrency.
+   a DB-level unique onconstraint stops double-acquisition under concurrency.
 4. Each provider works their own pipeline on that lead — `NEW → CONTACTED →
    QUOTED → WON/LOST` — independently of other providers who also bought it.
 5. If a lead turns out bogus (wrong area, spam, duplicate, unresponsive
@@ -115,8 +115,8 @@ pnpm dev                 # runs all three apps via Turborepo (web:3000, provider
 ```
 
 Seeded logins (password not set — use `prisma studio` to set a bcrypt hash,
-or sign up fresh and re-seed): `admin@asaplocal.app`,
-`dispatcher@asaplocal.app`, `customer1@example.com`,
+or sign up fresh and re-seed): `admin@asaplocal.pro`,
+`dispatcher@asaplocal.pro`, `customer1@example.com`,
 `sparkle.cleaning@example.com` (provider).
 
 Docker: `docker compose up` brings up Postgres + Redis + all three apps.
