@@ -16,12 +16,16 @@ export default function VerifyPage() {
   const [notice, setNotice] = useState<string | null>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  // Twilio isn't set up yet — phone verification isn't enforced for now.
+  // Flip NEXT_PUBLIC_REQUIRE_PHONE_VERIFICATION back once it is.
+  const requirePhone = process.env.NEXT_PUBLIC_REQUIRE_PHONE_VERIFICATION !== "false";
   const emailVerified = session?.user?.isEmailVerified ?? false;
   const phoneVerified = session?.user?.isPhoneVerified ?? false;
+  const ready = emailVerified && (!requirePhone || phoneVerified);
 
   useEffect(() => {
     if (status !== "authenticated") return;
-    if (emailVerified && phoneVerified) {
+    if (ready) {
       router.replace("/onboarding");
       return;
     }
@@ -31,7 +35,7 @@ export default function VerifyPage() {
     return () => {
       if (pollRef.current) clearInterval(pollRef.current);
     };
-  }, [status, emailVerified, phoneVerified, router, update]);
+  }, [status, ready, router, update]);
 
   async function onVerifyCode(e: React.FormEvent) {
     e.preventDefault();
@@ -81,7 +85,9 @@ export default function VerifyPage() {
   return (
     <div className="mx-auto max-w-sm px-4 py-16 sm:px-6">
       <h1 className="text-2xl font-bold">Verify your account</h1>
-      <p className="mt-2 text-muted-foreground">Confirm your email and phone to unlock your dashboard.</p>
+      <p className="mt-2 text-muted-foreground">
+        {requirePhone ? "Confirm your email and phone to unlock your dashboard." : "Confirm your email to unlock your dashboard."}
+      </p>
 
       <Card className="mt-6 space-y-2 p-6">
         <div className="flex items-center gap-2">
@@ -100,12 +106,13 @@ export default function VerifyPage() {
         )}
       </Card>
 
-      <Card className="mt-4 space-y-3 p-6">
+      <Card className={`mt-4 space-y-3 p-6 ${!requirePhone ? "opacity-60" : ""}`}>
         <div className="flex items-center gap-2">
           {phoneVerified ? <CheckCircle2 size={18} className="text-brand-600" /> : <span className="h-[18px] w-[18px] rounded-full border-2 border-muted-foreground" />}
           <span className="font-medium">Phone {phoneVerified ? "verified" : "not verified"}</span>
+          {!requirePhone && !phoneVerified && <span className="text-xs text-muted-foreground">(not required yet)</span>}
         </div>
-        {!phoneVerified && (
+        {!phoneVerified && requirePhone && (
           <>
             <p className="text-sm text-muted-foreground">Enter the 6-digit code we texted you.</p>
             <form onSubmit={onVerifyCode} className="flex gap-2">
