@@ -11,6 +11,7 @@ export * from "./avatar";
 export * from "./bottom-nav";
 export * from "./top-bar";
 export * from "./sheet";
+export * from "./dialog";
 export * from "./logo";
 export * from "./theme-script";
 export * from "./theme-provider";

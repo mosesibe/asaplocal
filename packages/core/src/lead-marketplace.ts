@@ -26,7 +26,7 @@
  */
 import { prisma } from "@asaplocal/db";
 import type { Business, JobRequest, Lead } from "@prisma/client";
-import { milesBetween } from "./geo";
+import { milesBetween, jitterLocation } from "./geo";
 import { stripe, PLAN_LEAD_ALLOWANCE } from "./stripe";
 import { writeAuditLog } from "./audit";
 import { notify } from "./notify";
@@ -116,6 +116,85 @@ export async function findEligibleProviders(jobRequest: JobRequest & { category?
       (area) => milesBetween(Number(area.lat), Number(area.lng), Number(jobRequest.lat), Number(jobRequest.lng)) <= area.radiusMiles
     ) || milesBetween(Number(biz.lat), Number(biz.lng), Number(jobRequest.lat), Number(jobRequest.lng)) <= biz.baseRadiusMiles
   );
+}
+
+export interface NearbyLead {
+  id: string;
+  title: string;
+  description: string;
+  city: string;
+  categoryName: string;
+  distanceMiles: number;
+  budgetMinPence: number | null;
+  budgetMaxPence: number | null;
+  leadPricePence: number;
+  salesCount: number;
+  maxLeadSales: number;
+  alreadyAcquired: boolean;
+  /** Approximate position only — see jitterLocation(). Never the job's true lat/lng. */
+  jitteredLat: number;
+  jitteredLng: number;
+}
+
+/**
+ * Available leads within range of a business — same "any service area, or
+ * the base radius" eligibility as findEligibleProviders() above, just
+ * inverted (business → nearby leads instead of job → eligible businesses).
+ * Single source of truth for both the /leads marketplace list and the
+ * dashboard radar map, so the two can't disagree about what's "in range".
+ */
+export async function getLeadsNearBusiness(businessId: string, opts: { limit?: number } = {}): Promise<NearbyLead[]> {
+  const business = await prisma.business.findUnique({
+    where: { id: businessId },
+    include: { serviceAreas: true, services: { select: { categoryId: true } } },
+  });
+  if (!business) return [];
+
+  const categoryIds = [...new Set(business.services.map((s) => s.categoryId))];
+  if (categoryIds.length === 0) return [];
+
+  const candidateLeads = await prisma.lead.findMany({
+    where: {
+      status: "AVAILABLE",
+      jobRequest: { categoryId: { in: categoryIds }, status: { in: ["OPEN", "MATCHING", "QUOTED"] } },
+    },
+    include: { jobRequest: { include: { category: true } }, accesses: { where: { businessId } } },
+    orderBy: { createdAt: "desc" },
+    take: opts.limit ?? 40,
+  });
+
+  const bizLat = Number(business.lat);
+  const bizLng = Number(business.lng);
+
+  return candidateLeads
+    .map((l): NearbyLead | null => {
+      const jobLat = Number(l.jobRequest.lat);
+      const jobLng = Number(l.jobRequest.lng);
+      const inAnyServiceArea = business.serviceAreas.some(
+        (area) => milesBetween(Number(area.lat), Number(area.lng), jobLat, jobLng) <= area.radiusMiles
+      );
+      const inBaseRadius = milesBetween(bizLat, bizLng, jobLat, jobLng) <= business.baseRadiusMiles;
+      if (!inAnyServiceArea && !inBaseRadius) return null;
+
+      const jittered = jitterLocation(jobLat, jobLng, l.id);
+      return {
+        id: l.id,
+        title: l.jobRequest.title,
+        description: l.jobRequest.description,
+        city: l.jobRequest.city,
+        categoryName: l.jobRequest.category.name,
+        distanceMiles: milesBetween(bizLat, bizLng, jobLat, jobLng),
+        budgetMinPence: l.jobRequest.budgetMinPence,
+        budgetMaxPence: l.jobRequest.budgetMaxPence,
+        leadPricePence: l.jobRequest.leadPricePence,
+        salesCount: l.salesCount,
+        maxLeadSales: l.jobRequest.maxLeadSales,
+        alreadyAcquired: l.accesses.length > 0,
+        jitteredLat: jittered.lat,
+        jitteredLng: jittered.lng,
+      };
+    })
+    .filter((l): l is NearbyLead => l !== null);
 }
 
 export class LeadUnavailableError extends Error {
@@ -326,6 +405,54 @@ export async function getLeadConversionAnalytics(businessId: string) {
     wonRevenuePence,
     avgTimeToContactMins,
     roi,
+  };
+}
+
+const EARNING_PAYMENT_TYPES = ["BOOKING_DEPOSIT", "BOOKING_FULL"] as const;
+
+function startOfWeek(date: Date): Date {
+  const d = new Date(date);
+  const day = d.getDay(); // 0 = Sunday
+  const diffToMonday = day === 0 ? -6 : 1 - day;
+  d.setDate(d.getDate() + diffToMonday);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+/**
+ * "Earnings" = money the business actually earned from booked jobs
+ * (BOOKING_DEPOSIT/BOOKING_FULL), not what it spent acquiring leads
+ * (LEAD_PURCHASE/LEAD_CREDIT_TOPUP/SUBSCRIPTION are costs, not earnings).
+ */
+export async function getEarningsSummary(businessId: string) {
+  const weekStart = startOfWeek(new Date());
+
+  const [weekPayments, allTimeAgg] = await Promise.all([
+    prisma.payment.findMany({
+      where: { businessId, status: "SUCCEEDED", type: { in: [...EARNING_PAYMENT_TYPES] }, createdAt: { gte: weekStart } },
+      select: { amountPence: true, createdAt: true },
+    }),
+    prisma.payment.aggregate({
+      where: { businessId, status: "SUCCEEDED", type: { in: [...EARNING_PAYMENT_TYPES] } },
+      _sum: { amountPence: true },
+    }),
+  ]);
+
+  const dailyBreakdown: { date: string; amountPence: number }[] = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(weekStart);
+    d.setDate(d.getDate() + i);
+    const dateStr = d.toISOString().slice(0, 10);
+    const amountPence = weekPayments
+      .filter((p) => p.createdAt.toISOString().slice(0, 10) === dateStr)
+      .reduce((sum, p) => sum + p.amountPence, 0);
+    dailyBreakdown.push({ date: dateStr, amountPence });
+  }
+
+  return {
+    weekTotalPence: dailyBreakdown.reduce((sum, d) => sum + d.amountPence, 0),
+    allTimePence: allTimeAgg._sum.amountPence ?? 0,
+    dailyBreakdown,
   };
 }
 

@@ -1,3 +1,27 @@
+function hashSeed(seed: string): number {
+  let h = 0;
+  for (let i = 0; i < seed.length; i++) {
+    h = (h << 5) - h + seed.charCodeAt(i);
+    h |= 0;
+  }
+  return Math.abs(h);
+}
+
+/**
+ * Deterministic small offset (100-400m) so a location can be shown on a map
+ * (e.g. an unpurchased lead's approximate position) without ever exposing
+ * the true point — a provider dashboard "radar" pin, not a real address.
+ * Deterministic per `seed` so the same lead's pin stays stable across polls
+ * instead of visibly jumping around.
+ */
+export function jitterLocation(lat: number, lng: number, seed: string): { lat: number; lng: number } {
+  const angle = (hashSeed(`${seed}:angle`) % 360) * (Math.PI / 180);
+  const distanceMeters = 100 + (hashSeed(`${seed}:dist`) % 300);
+  const latOffset = (distanceMeters * Math.cos(angle)) / 111_320;
+  const lngOffset = (distanceMeters * Math.sin(angle)) / (111_320 * Math.cos((lat * Math.PI) / 180));
+  return { lat: lat + latOffset, lng: lng + lngOffset };
+}
+
 /** Haversine distance in miles between two lat/lng points. */
 export function milesBetween(lat1: number, lng1: number, lat2: number, lng2: number): number {
   const R = 3958.8;
