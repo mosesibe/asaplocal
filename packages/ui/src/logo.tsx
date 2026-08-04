@@ -1,29 +1,24 @@
-/** Brand mark: a monogram "A" (AsapLocal) on the terracotta badge used across favicons/app icons. */
-export function LogoMark({ className }: { className?: string }) {
+/** Brand mark: rounded terracotta badge with a bold "A" glyph and a peach accent dot. */
+export function LogoMark({ className = "h-8 w-8" }: { className?: string }) {
   return (
-    <svg viewBox="0 0 64 64" className={className} aria-hidden="true">
-      <defs>
-        <linearGradient id="asaplocal-badge" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#d97b3d" />
-          <stop offset="1" stopColor="#9c4a20" />
-        </linearGradient>
-      </defs>
-      <rect x="2" y="2" width="60" height="60" rx="18" fill="url(#asaplocal-badge)" />
-      <path d="M32 15 L17 47" fill="none" stroke="#f3eae3" strokeWidth="5.5" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M32 15 L45 47 L52 47" fill="none" stroke="#f3eae3" strokeWidth="5.5" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M23.5 35 L40.5 35" fill="none" stroke="#f3eae3" strokeWidth="5.5" strokeLinecap="round" />
+    <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className={className} aria-hidden="true">
+      <rect width="40" height="40" rx="12" className="fill-brand-500" />
+      <path
+        d="M12 27L18.5 12h3.2L28 27h-3.6l-1.4-3.6h-6L15.6 27H12zm5-6.4h4.3L19.1 15l-2.1 5.6z"
+        fill="white"
+      />
+      <circle cx="29.5" cy="12" r="3" className="fill-brand-200" />
     </svg>
   );
 }
 
-/** Full lockup: mark + wordmark, split between a dispatch-precise "ASAP" and a warm, neighbourly "local". */
+/** Full lockup: mark + wordmark, "Asap" in espresso, "Local" in brand terracotta. */
 export function Logo({ className, markClassName = "h-8 w-8" }: { className?: string; markClassName?: string }) {
   return (
-    <span className={`inline-flex items-center gap-2 ${className ?? ""}`}>
+    <span className={`inline-flex items-center gap-2.5 font-extrabold tracking-tight ${className ?? ""}`}>
       <LogoMark className={markClassName} />
-      <span className="inline-flex items-baseline text-xl leading-none">
-        <span className="font-mono font-bold tracking-wide text-espresso-900 dark:text-espresso-50">ASAP</span>
-        <span className="font-serif italic font-medium text-brand-600 dark:text-brand-300">local</span>
+      <span className="text-espresso-900 dark:text-espresso-50">
+        Asap<span className="text-brand-500 dark:text-brand-300">Local</span>
       </span>
     </span>
   );

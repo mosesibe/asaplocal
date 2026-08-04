@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { LayoutDashboard, Users, Flag, ListTree, CreditCard, Truck, ClipboardCheck, RefreshCcw, ShieldCheck } from "lucide-react";
+import { Logo } from "@asaplocal/ui";
 import { SignOutButton } from "./sign-out-button";
 import type { Role } from "@asaplocal/db";
 
@@ -24,8 +25,9 @@ export function AdminShell({ role, children }: { role: Role; children: React.Rea
   return (
     <div className="flex min-h-screen">
       <aside className="hidden w-64 shrink-0 border-r border-border bg-surface p-4 md:block">
-        <Link href="/" className="mb-8 block text-xl font-bold text-brand-700">
-          Local<span className="text-brand-500">Connect</span> <span className="text-sm font-normal text-muted-foreground">{role === "ADMIN" ? "Admin" : "Dispatch"}</span>
+        <Link href="/" className="mb-8 flex items-center gap-2">
+          <Logo markClassName="h-7 w-7" />
+          <span className="text-sm font-normal text-muted-foreground">{role === "ADMIN" ? "Admin" : "Dispatch"}</span>
         </Link>
         <nav className="space-y-1">
           {nav.map(({ href, label, icon: Icon }) => (

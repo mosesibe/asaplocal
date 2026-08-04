@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { cn, ThemeToggle } from "@asaplocal/ui";
+import { cn, Logo, ThemeToggle } from "@asaplocal/ui";
 import { PRIMARY_NAV, SECONDARY_NAV } from "@/lib/nav";
 import { SignOutButton } from "./sign-out-button";
 import { ProviderBottomNav } from "./provider-bottom-nav";
@@ -20,8 +20,9 @@ export function ProviderShell({ children }: { children: React.ReactNode }) {
     <div className="flex min-h-screen">
       <aside className="hidden w-64 shrink-0 border-r border-border bg-surface p-4 md:block">
         <div className="mb-8 flex items-center justify-between">
-          <Link href="/dashboard" className="text-xl font-bold text-brand-700">
-            Local<span className="text-brand-500">Connect</span> <span className="text-sm font-normal text-muted-foreground">Business</span>
+          <Link href="/dashboard" className="flex items-center gap-2">
+            <Logo markClassName="h-7 w-7" />
+            <span className="text-sm font-normal text-muted-foreground">Business</span>
           </Link>
           <ThemeToggle />
         </div>
