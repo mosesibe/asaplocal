@@ -26,7 +26,10 @@ export default function VerifyPage() {
   useEffect(() => {
     if (status !== "authenticated") return;
     if (ready) {
-      router.replace("/onboarding");
+      // /dashboard redirects to /onboarding itself if this account hasn't
+      // created a business yet, so this correctly handles both a brand-new
+      // signup and a returning already-onboarded provider.
+      router.replace("/dashboard");
       return;
     }
     // Email verification happens out-of-band (a link click, possibly in
