@@ -2,8 +2,15 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { SessionProvider } from "next-auth/react";
 import { useState } from "react";
+import { ThemeProvider } from "@asaplocal/ui";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(() => new QueryClient());
-  return <SessionProvider><QueryClientProvider client={queryClient}>{children}</QueryClientProvider></SessionProvider>;
+  return (
+    <SessionProvider>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider>{children}</ThemeProvider>
+      </QueryClientProvider>
+    </SessionProvider>
+  );
 }

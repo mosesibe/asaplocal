@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
 import { auth } from "@asaplocal/auth";
+import { ThemeScript } from "@asaplocal/ui";
 import { AdminShell } from "@/components/admin-shell";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
@@ -16,8 +17,19 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const session = await auth();
   return (
     <html lang="en-GB" suppressHydrationWarning>
+      <head>
+        <ThemeScript />
+      </head>
       <body className={`${inter.variable} font-sans`}>
-        <Providers>{session?.user ? <AdminShell role={session.user.role}>{children}</AdminShell> : children}</Providers>
+        <Providers>
+          {session?.user ? (
+            <AdminShell role={session.user.role} name={session.user.name} email={session.user.email}>
+              {children}
+            </AdminShell>
+          ) : (
+            children
+          )}
+        </Providers>
       </body>
     </html>
   );
