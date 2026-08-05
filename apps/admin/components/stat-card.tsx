@@ -6,7 +6,7 @@ import { Card, cn } from "@asaplocal/ui";
 
 const ACCENTS = {
   brand: { badge: "bg-brand-500 text-white", hex: "#c15f2a" },
-  espresso: { badge: "bg-espresso-600 text-white", hex: "#402b1c" },
+  violet: { badge: "bg-violet-500 text-white", hex: "#8b5cf6" },
   emerald: { badge: "bg-emerald-500 text-white", hex: "#10b981" },
   sky: { badge: "bg-sky-500 text-white", hex: "#0ea5e9" },
   amber: { badge: "bg-amber-500 text-white", hex: "#f59e0b" },
@@ -33,12 +33,12 @@ export function StatCard({
   const points = sparkline?.map((value) => ({ value })) ?? [];
 
   return (
-    <Card className="relative overflow-hidden p-5">
+    <Card className="relative overflow-hidden rounded-none border-border p-5 shadow-none">
       <div className="relative z-10 flex items-start gap-3">
         <div className={cn("flex h-11 w-11 shrink-0 items-center justify-center rounded-full", badge)}>{icon}</div>
         <div className="min-w-0 pt-0.5">
           <div className="flex flex-wrap items-end gap-x-2 gap-y-1">
-            <p className="text-2xl font-bold leading-none tracking-tight">{value}</p>
+            <p className="text-[26px] font-bold leading-none tracking-tight">{value}</p>
             {delta && (
               <span
                 className={cn(

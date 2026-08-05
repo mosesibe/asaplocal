@@ -17,7 +17,7 @@ export function DonutStat({
   segments: { label: string; value: number; color: string }[];
 }) {
   return (
-    <Card className="flex h-full flex-col p-5">
+    <Card className="flex h-full flex-col rounded-none border-border p-5 shadow-none">
       <h3 className="text-sm font-semibold">{title}</h3>
       {subtitle && <p className="mt-1 text-xs text-muted-foreground">{subtitle}</p>}
       <div className="relative mx-auto mt-4 h-36 w-36">

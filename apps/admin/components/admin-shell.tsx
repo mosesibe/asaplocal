@@ -37,11 +37,11 @@ function NavLinks({ nav, pathname, onNavigate }: { nav: NavItem[]; pathname: str
             href={href}
             onClick={onNavigate}
             className={cn(
-              "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
-              active ? "bg-white/10 text-white" : "text-white/55 hover:bg-white/5 hover:text-white/85"
+              "flex items-center gap-3 px-3 py-2.5 text-sm font-medium transition-colors",
+              active ? "bg-brand-700 text-white shadow-sm" : "text-white/55 hover:bg-white/5 hover:text-white/85"
             )}
           >
-            <Icon size={18} className={active ? "text-brand-300" : "text-white/40"} />
+            <Icon size={18} className={active ? "text-white" : "text-white/40"} />
             {label}
           </Link>
         );
@@ -112,12 +112,12 @@ export function AdminShell({
 
   return (
     <div className="flex min-h-screen">
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 shrink-0 bg-espresso-950 lg:block">
+      <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 shrink-0 bg-brand-900 lg:block">
         <SidebarContent role={role} displayName={displayName} email={email} nav={nav} pathname={pathname} />
       </aside>
 
       <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-        <SheetContent side="left" className="w-64 border-0 bg-espresso-950 p-0">
+        <SheetContent side="left" className="w-64 border-0 bg-brand-900 p-0">
           <SheetTitle className="sr-only">Navigation</SheetTitle>
           <SidebarContent
             role={role}

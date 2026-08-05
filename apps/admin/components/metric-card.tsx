@@ -14,7 +14,7 @@ export function MetricCard({
   className?: string;
 }) {
   return (
-    <Card className={cn("flex flex-col p-5", className)}>
+    <Card className={cn("flex flex-col rounded-none border-border p-5 shadow-none", className)}>
       <div>
         <h3 className="text-sm font-semibold">{title}</h3>
         {subtitle && <p className="mt-1 text-xs text-muted-foreground">{subtitle}</p>}

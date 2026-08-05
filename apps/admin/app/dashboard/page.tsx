@@ -67,18 +67,32 @@ export default async function FinancialDashboard() {
   for (const s of subs) planCounts.set(s.plan, (planCounts.get(s.plan) ?? 0) + 1);
   const planData = Array.from(planCounts.entries()).map(([plan, count]) => ({ plan, count }));
 
+  const today = new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+
   return (
     <div>
-      <div className="flex flex-wrap items-end justify-between gap-4">
+      <div className="flex flex-wrap items-end justify-between gap-4 border-b border-border pb-4">
         <div>
           <h1 className="text-2xl font-bold">Platform financials</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Revenue, subscriptions, and lead marketplace health.</p>
+          <p className="mt-1 text-sm text-muted-foreground">Revenue, subscriptions, and lead marketplace health — {today}.</p>
         </div>
       </div>
 
-      <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <nav className="flex gap-6 border-b border-border text-sm">
+        <a href="#overview" className="relative -mb-px border-b-2 border-brand-500 px-1 py-3 font-semibold text-foreground">
+          Overview
+        </a>
+        <a href="#leads" className="relative -mb-px border-b-2 border-transparent px-1 py-3 text-muted-foreground hover:text-foreground">
+          Lead marketplace
+        </a>
+        <a href="#subscriptions" className="relative -mb-px border-b-2 border-transparent px-1 py-3 text-muted-foreground hover:text-foreground">
+          Subscriptions
+        </a>
+      </nav>
+
+      <div id="overview" className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard icon={<Wallet size={20} />} accent="brand" label="MRR" value={formatPence(mrrPence)} />
-        <StatCard icon={<TrendingUp size={20} />} accent="espresso" label="ARR" value={formatPence(arrPence)} />
+        <StatCard icon={<TrendingUp size={20} />} accent="violet" label="ARR" value={formatPence(arrPence)} />
         <StatCard
           icon={<PoundSterling size={20} />}
           accent="emerald"
@@ -90,7 +104,7 @@ export default async function FinancialDashboard() {
         <StatCard icon={<Users size={20} />} accent="sky" label="Active users" value={activeUsers.toLocaleString()} />
       </div>
 
-      <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-3">
+      <div id="leads" className="mt-3 grid grid-cols-1 gap-3 scroll-mt-20 xl:grid-cols-3">
         <MetricCard title="Lead status breakdown" subtitle="Every lead access ever issued, by current status." className="xl:col-span-2">
           <ListBreakdown items={leadStatusItems} />
         </MetricCard>
@@ -106,7 +120,7 @@ export default async function FinancialDashboard() {
         />
       </div>
 
-      <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-3">
+      <div id="subscriptions" className="mt-3 grid scroll-mt-20 grid-cols-1 gap-3 xl:grid-cols-3">
         <MetricCard
           title="Revenue trend"
           subtitle="Successful payments over the last 6 months."
@@ -133,6 +147,11 @@ export default async function FinancialDashboard() {
             items={planData.map((p) => ({ label: p.plan, value: p.count, color: PLAN_COLOR[p.plan] ?? "bg-brand-500" }))}
           />
         </MetricCard>
+      </div>
+
+      <div className="mt-8 flex flex-wrap items-center justify-between gap-2 border-t border-border py-4 text-xs text-muted-foreground">
+        <span>© {new Date().getFullYear()} AsapLocal Admin</span>
+        <span>Staff portal — internal use only</span>
       </div>
     </div>
   );
