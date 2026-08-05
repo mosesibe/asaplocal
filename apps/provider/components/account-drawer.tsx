@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { ArrowLeft, ChevronRight, X } from "lucide-react";
-import { Avatar, Badge, Card, Logo, Sheet, SheetContent, SheetClose } from "@asaplocal/ui";
+import { Avatar, Badge, Card, Logo, Sheet, SheetContent, SheetClose, ThemeToggle } from "@asaplocal/ui";
 import { ACCOUNT_DRAWER_SECTIONS, DrawerPanelId } from "@/lib/nav";
 import { SignOutButton } from "./sign-out-button";
 import { AccountSettingsPanel } from "./account-settings-panel";
@@ -72,12 +72,15 @@ export function AccountDrawer({
           ) : (
             <>
               <Logo markClassName="h-7 w-7" />
-              <SheetClose
-                aria-label="Close"
-                className="rounded-full p-1 text-muted-foreground hover:bg-muted hover:text-foreground focus:outline-none"
-              >
-                <X size={16} />
-              </SheetClose>
+              <div className="flex items-center gap-1">
+                <ThemeToggle />
+                <SheetClose
+                  aria-label="Close"
+                  className="rounded-full p-1 text-muted-foreground hover:bg-muted hover:text-foreground focus:outline-none"
+                >
+                  <X size={16} />
+                </SheetClose>
+              </div>
             </>
           )}
         </div>
