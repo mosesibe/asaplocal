@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowUp, Loader2, Sparkles } from "lucide-react";
@@ -16,7 +16,14 @@ interface Category {
 
 type Step = "describe" | "confirm";
 
-export function AiJobRequest({ categories }: { categories: Category[] }) {
+export function AiJobRequest({
+  categories,
+  prefillDescription,
+}: {
+  categories: Category[];
+  /** Set by AI Buddy's handoff — bump `nonce` (not just `text`) to retrigger even with identical text. */
+  prefillDescription?: { text: string; nonce: number };
+}) {
   const parentCategories = categories.filter((c) => !c.parentId);
   const childrenByParent = new Map<string, Category[]>();
   for (const c of categories) {
@@ -57,8 +64,9 @@ export function AiJobRequest({ categories }: { categories: Category[] }) {
     }
   }
 
-  async function handleSuggest() {
-    if (description.trim().length < 10) {
+  async function handleSuggest(overrideDescription?: string) {
+    const desc = overrideDescription ?? description;
+    if (desc.trim().length < 10) {
       setSuggestError("Tell us a bit more so we can find the right pro.");
       return;
     }
@@ -68,13 +76,13 @@ export function AiJobRequest({ categories }: { categories: Category[] }) {
       const res = await fetch("/api/jobs/suggest", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ description }),
+        body: JSON.stringify({ description: desc }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message ?? "Something went wrong — please try again.");
       setCategoryId(data.categoryId ?? "");
       setTitle(data.title ?? "");
-      setConfirmDescription(data.description ?? description);
+      setConfirmDescription(data.description ?? desc);
       setStep("confirm");
     } catch (e) {
       setSuggestError(e instanceof Error ? e.message : "Something went wrong");
@@ -82,6 +90,15 @@ export function AiJobRequest({ categories }: { categories: Category[] }) {
       setSuggesting(false);
     }
   }
+
+  // Handoff from AI Buddy: prefill the description and jump straight to the
+  // suggest call, same as if the user typed it and hit send.
+  useEffect(() => {
+    if (!prefillDescription) return;
+    setDescription(prefillDescription.text);
+    handleSuggest(prefillDescription.text);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [prefillDescription?.nonce]);
 
   async function handlePost() {
     setPostError(null);
@@ -150,7 +167,7 @@ export function AiJobRequest({ categories }: { categories: Category[] }) {
             <Button
               size="icon"
               className="absolute bottom-2.5 right-2.5 h-9 w-9 rounded-full"
-              onClick={handleSuggest}
+              onClick={() => handleSuggest()}
               disabled={suggesting || description.trim().length === 0}
               aria-label="Find my pro"
             >

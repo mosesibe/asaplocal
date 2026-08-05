@@ -30,6 +30,24 @@ async function chatJSON<T>(system: string, user: string, fallback: T): Promise<T
   }
 }
 
+/** Like chatJSON, but carries a full multi-turn conversation instead of a single user message. */
+async function chatJSONMultiTurn<T>(system: string, messages: { role: "user" | "assistant"; content: string }[], fallback: T): Promise<T> {
+  if (!openai) return fallback;
+  try {
+    const completion = await openai.chat.completions.create({
+      model: MODEL,
+      temperature: 0.4,
+      response_format: { type: "json_object" },
+      messages: [{ role: "system", content: system }, ...messages],
+    });
+    const text = completion.choices[0]?.message?.content;
+    return text ? (JSON.parse(text) as T) : fallback;
+  } catch (err) {
+    console.error("[ai] chatJSONMultiTurn failed", err);
+    return fallback;
+  }
+}
+
 /** Suggests a category for a raw customer job description ("my boiler is leaking" → Plumbers). */
 export async function categoriseJobRequest(description: string, categories: { id: string; name: string }[]) {
   return chatJSON<{ categoryId: string | null; categoryName: string | null; confidence: number }>(
@@ -83,6 +101,34 @@ export async function moderateReview(comment: string, rating: number) {
     `You moderate customer reviews on a local-services marketplace. Flag reviews that are spam, contain profanity/hate speech, look like a competitor attack, or seem fabricated (generic, incentivized, or bot-like). Respond as JSON: {"flagged": boolean, "reason": string|null, "category": "SPAM"|"PROFANITY"|"COMPETITOR_ATTACK"|"FAKE"|"NONE"}.`,
     `Rating: ${rating}/5\nReview: "${comment}"`,
     { flagged: false, reason: null, category: "NONE" }
+  );
+}
+
+const AI_BUDDY_SYSTEM_PROMPT = `You are "AI Buddy", a friendly, safety-conscious DIY assistant for a UK home-services marketplace. A customer describes a problem with their home; your job is to figure out whether it's safe for an ordinary homeowner to fix themselves, and if so, help them do it.
+
+Rules:
+- If the problem involves gas (boilers, gas appliances, gas smells), mains/high-voltage electrical work (rewiring, consumer units, anything not a simple like-for-like socket/bulb swap), structural work, roofing, working at height, or anything else a UK homeowner legally or safely should not attempt themselves — set needsPro=true, do NOT give a step-by-step plan, and explain briefly why it needs a licensed professional (e.g. Gas Safe engineer for gas work).
+- Otherwise, if it's a genuinely simple, safe DIY task (unblocking a drain, tightening a fitting, minor touch-ups, assembling furniture, etc.), set needsPro=false and give a short, clear plan.
+- Keep "reply" conversational and warm, 1-3 sentences — the toolkit/steps (when present) carry the detail, don't repeat them in reply.
+- Only populate "toolkit" and "steps" on a message where you're actually giving a concrete plan (typically your first substantive reply on a solvable problem). On follow-up messages (answering a clarifying question, confirming something worked), leave them null unless you're revising the plan.
+- If the customer's message doesn't have enough detail to assess safely, ask one clarifying question (needsPro=false, toolkit/steps null).
+- Never invent specifics the customer didn't mention.
+
+Respond as JSON: {"reply": string, "needsPro": boolean, "toolkit": string[]|null, "steps": string[]|null}.`;
+
+const AI_BUDDY_FALLBACK = { reply: "Something went wrong — please try again in a moment.", needsPro: false, toolkit: null, steps: null };
+
+export interface AiBuddyMessage {
+  role: "user" | "assistant";
+  content: string;
+}
+
+/** Multi-turn DIY-vs-needs-a-pro triage chat for the customer homepage. */
+export async function askAiBuddy(messages: AiBuddyMessage[]) {
+  return chatJSONMultiTurn<{ reply: string; needsPro: boolean; toolkit: string[] | null; steps: string[] | null }>(
+    AI_BUDDY_SYSTEM_PROMPT,
+    messages,
+    AI_BUDDY_FALLBACK
   );
 }
 

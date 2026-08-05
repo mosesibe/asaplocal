@@ -1,7 +1,7 @@
 import { LayoutDashboard, Target, CalendarDays, MessageSquare, CreditCard, Store, BarChart3, Star, ShieldCheck } from "lucide-react";
 
 export const PRIMARY_NAV = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/dashboard", label: "Home", icon: LayoutDashboard },
   { href: "/leads", label: "Lead marketplace", icon: Target },
   { href: "/calendar", label: "Calendar", icon: CalendarDays },
   { href: "/messages", label: "Messages", icon: MessageSquare },
