@@ -7,6 +7,8 @@ import { AccountDrawer } from "@/components/account-drawer";
 interface DashboardTopBarProps {
   name: string;
   email: string;
+  firstName: string;
+  lastName: string;
   avatarUrl?: string | null;
   city: string;
   verificationStatus: string;

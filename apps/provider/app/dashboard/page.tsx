@@ -56,6 +56,8 @@ export default async function ProviderDashboard() {
       <DashboardTopBar
         name={displayName}
         email={session.user.email ?? ""}
+        firstName={profile?.firstName ?? ""}
+        lastName={profile?.lastName ?? ""}
         avatarUrl={profile?.avatarUrl}
         city={business.city}
         verificationStatus={business.verificationStatus}
