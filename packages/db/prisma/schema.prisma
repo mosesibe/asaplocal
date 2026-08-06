@@ -222,6 +222,8 @@ enum NotificationType {
   DISPATCHER_ASSIGNMENT
   APPROVAL_DECISION
   SYSTEM
+  STAFF_STATUS_UPDATE
+  STAFF_ASSIGNED
 }
 
 enum ApprovalActionType {
@@ -245,14 +247,14 @@ enum AccountDeletionRequestStatus {
 }
 
 model AccountDeletionRequest {
-  id           String                        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId       String                        @db.Uuid
-  reason       String?                       @db.Text
-  status       AccountDeletionRequestStatus  @default(PENDING)
-  reviewedById String?                       @db.Uuid
+  id           String                       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId       String                       @db.Uuid
+  reason       String?                      @db.Text
+  status       AccountDeletionRequestStatus @default(PENDING)
+  reviewedById String?                      @db.Uuid
   reviewedAt   DateTime?
   reviewNote   String?
-  createdAt    DateTime                      @default(now())
+  createdAt    DateTime                     @default(now())
 
   user       User  @relation("AccountDeletionRequester", fields: [userId], references: [id], onDelete: Cascade)
   reviewedBy User? @relation("AccountDeletionReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
@@ -317,6 +319,7 @@ model User {
   deletionRequestsMade     AccountDeletionRequest[]  @relation("AccountDeletionRequester")
   deletionRequestsReviewed AccountDeletionRequest[]  @relation("AccountDeletionReviewer")
   payoutsRecorded          Payout[]                  @relation("PayoutRecorder")
+  staffMemberReviews       StaffMember[]             @relation("StaffMemberReviewer")
 
   @@index([role])
   @@index([status])
@@ -596,6 +599,7 @@ model Business {
   dispatcherAssignments DispatcherAssignment[]         @relation("AssignedBusiness")
   identityVerification  IdentityVerification?
   verificationDocuments BusinessVerificationDocument[]
+  staffMembers          StaffMember[]
   qualifications        Qualification[]
   insurancePolicies     InsurancePolicy[]
   portfolioItems        PortfolioItem[]
@@ -658,6 +662,37 @@ model BusinessVerificationDocument {
   business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
 
   @@index([businessId])
+}
+
+// Company-side field staff (e.g. a Limited Company's employees) that get
+// dispatched to bookings. Sole traders / self-employed providers don't use
+// this — see packages/core/src/business-type.ts#canHaveStaff. Records only,
+// no login/auth account — managed by the business owner, approved by Admin.
+model StaffMember {
+  id              String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  businessId      String             @db.Uuid
+  fullName        String
+  jobTitle        String?
+  phone           String
+  email           String?
+  profilePhotoUrl String
+  idFrontImageUrl String
+  idBackImageUrl  String
+  approvalStatus  VerificationStatus @default(PENDING)
+  reviewNote      String?
+  isActive        Boolean            @default(true)
+  submittedAt     DateTime           @default(now())
+  reviewedAt      DateTime?
+  reviewedById    String?            @db.Uuid
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  business   Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  reviewedBy User?     @relation("StaffMemberReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+  bookings   Booking[] @relation("AssignedStaff")
+
+  @@index([businessId])
+  @@index([approvalStatus])
 }
 
 model Qualification {
@@ -964,19 +999,23 @@ model Booking {
   cancelledReason    String?
   cancelledAt        DateTime?
   completedAt        DateTime?
+  assignedStaffId    String?       @db.Uuid
+  assignedAt         DateTime?
   createdAt          DateTime      @default(now())
   updatedAt          DateTime      @updatedAt
 
-  customer     User          @relation("CustomerBookings", fields: [customerId], references: [id], onDelete: Cascade)
-  business     Business      @relation("ProviderBookings", fields: [businessId], references: [id], onDelete: Cascade)
-  service      Service?      @relation(fields: [serviceId], references: [id], onDelete: SetNull)
-  jobRequest   JobRequest?   @relation(fields: [jobRequestId], references: [id], onDelete: SetNull)
-  quote        Quote?        @relation(fields: [quoteId], references: [id], onDelete: SetNull)
-  payments     Payment[]
-  review       Review?
-  conversation Conversation?
+  customer      User          @relation("CustomerBookings", fields: [customerId], references: [id], onDelete: Cascade)
+  business      Business      @relation("ProviderBookings", fields: [businessId], references: [id], onDelete: Cascade)
+  service       Service?      @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+  jobRequest    JobRequest?   @relation(fields: [jobRequestId], references: [id], onDelete: SetNull)
+  quote         Quote?        @relation(fields: [quoteId], references: [id], onDelete: SetNull)
+  assignedStaff StaffMember?  @relation("AssignedStaff", fields: [assignedStaffId], references: [id], onDelete: SetNull)
+  payments      Payment[]
+  review        Review?
+  conversation  Conversation?
 
   @@index([customerId])
+  @@index([assignedStaffId])
   @@index([businessId])
   @@index([status])
   @@index([scheduledDate])

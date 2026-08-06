@@ -1,7 +1,9 @@
 import { redirect } from "next/navigation";
 import { auth } from "@asaplocal/auth";
 import { prisma } from "@asaplocal/db";
+import { canHaveStaff } from "@asaplocal/core";
 import { Badge, Card } from "@asaplocal/ui";
+import { AssignStaffSelect } from "./assign-staff-select";
 
 export default async function CalendarPage() {
   const session = await auth();
@@ -9,11 +11,18 @@ export default async function CalendarPage() {
   const business = await prisma.business.findUnique({ where: { ownerId: session.user.id } });
   if (!business) redirect("/onboarding");
 
-  const upcoming = await prisma.booking.findMany({
-    where: { businessId: business.id, status: { in: ["CONFIRMED", "PENDING", "IN_PROGRESS"] } },
-    orderBy: { scheduledDate: "asc" },
-    include: { customer: { include: { profile: true } } },
-  });
+  const staffAssignable = canHaveStaff(business.businessType);
+
+  const [upcoming, staffOptions] = await Promise.all([
+    prisma.booking.findMany({
+      where: { businessId: business.id, status: { in: ["CONFIRMED", "PENDING", "IN_PROGRESS"] } },
+      orderBy: { scheduledDate: "asc" },
+      include: { customer: { include: { profile: true } }, assignedStaff: true },
+    }),
+    staffAssignable
+      ? prisma.staffMember.findMany({ where: { businessId: business.id, approvalStatus: "VERIFIED", isActive: true } })
+      : Promise.resolve([]),
+  ]);
 
   return (
     <div>
@@ -29,7 +38,12 @@ export default async function CalendarPage() {
               <p className="font-medium">{b.customer.profile?.firstName} {b.customer.profile?.lastName}</p>
               <p className="text-xs text-muted-foreground">{b.scheduledDate.toLocaleString("en-GB")} · {b.addressLine}, {b.city}</p>
             </div>
-            <Badge variant="outline" className="w-fit">{b.status}</Badge>
+            <div className="flex flex-wrap items-center gap-2">
+              {staffAssignable && (b.status === "CONFIRMED" || b.status === "IN_PROGRESS") && (
+                <AssignStaffSelect bookingId={b.id} assignedStaffId={b.assignedStaffId} staffOptions={staffOptions} />
+              )}
+              <Badge variant="outline" className="w-fit">{b.status}</Badge>
+            </div>
           </Card>
         ))}
         {upcoming.length === 0 && <p className="text-muted-foreground">No upcoming jobs scheduled.</p>}

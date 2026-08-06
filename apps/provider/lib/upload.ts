@@ -6,7 +6,10 @@ type UploadPurpose =
   | "portfolio-media"
   | "review-photo"
   | "verification-doc"
-  | "message-attachment";
+  | "message-attachment"
+  | "staff-profile-photo"
+  | "staff-id-front"
+  | "staff-id-back";
 
 /** Requests a presigned S3 URL, PUTs the file directly to S3, and returns its public URL. */
 export async function uploadFile(file: File, purpose: UploadPurpose): Promise<string> {
