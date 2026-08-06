@@ -3,7 +3,7 @@ import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { Button, Card, Input } from "@asaplocal/ui";
+import { Button, Card, Input, PasswordInput } from "@asaplocal/ui";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -34,7 +34,7 @@ export default function LoginPage() {
           </div>
           <div>
             <label className="text-sm font-medium">Password</label>
-            <Input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} className="mt-1" />
+            <PasswordInput required value={password} onChange={(e) => setPassword(e.target.value)} className="mt-1" />
           </div>
           {error && <p className="text-sm text-red-600">{error}</p>}
           <Button type="submit" className="w-full" disabled={loading}>{loading ? "Signing in…" : "Log in"}</Button>

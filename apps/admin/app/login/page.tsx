@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
-import { Button, Card } from "@asaplocal/ui";
+import { Button, Card, Input, PasswordInput } from "@asaplocal/ui";
 
 export default function LoginPage() {
   const params = useSearchParams();
@@ -34,8 +34,8 @@ export default function LoginPage() {
       <p className="mt-1 text-sm text-muted-foreground">Admin &amp; dispatcher sign-in.</p>
       <Card className="mt-6 p-6">
         <form onSubmit={onSubmit} className="space-y-4">
-          <input type="email" required placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full rounded-lg border border-border bg-background p-2.5 text-sm" />
-          <input type="password" required placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full rounded-lg border border-border bg-background p-2.5 text-sm" />
+          <Input type="email" required placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
+          <PasswordInput required placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} />
           {error && <p className="text-sm text-red-600">{error}</p>}
           <Button type="submit" className="w-full" disabled={loading}>{loading ? "Signing in…" : "Log in"}</Button>
         </form>

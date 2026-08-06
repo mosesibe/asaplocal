@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
-import { Button, Card, Input } from "@asaplocal/ui";
+import { Button, Card, Input, PasswordInput } from "@asaplocal/ui";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -70,7 +70,7 @@ export default function RegisterPage() {
           </div>
           <Input required type="email" placeholder="Email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
           <Input required type="tel" placeholder="Phone number" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
-          <Input required type="password" placeholder="Password (min 8 characters)" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
+          <PasswordInput required placeholder="Password (min 8 characters)" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
           {error && <p className="text-sm text-red-600">{error}</p>}
           <Button type="submit" className="w-full" disabled={loading}>{loading ? "Creating account…" : "Sign up"}</Button>
         </form>

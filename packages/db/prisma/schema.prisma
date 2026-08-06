@@ -155,6 +155,7 @@ enum BookingStatus {
   PENDING
   CONFIRMED
   IN_PROGRESS
+  AWAITING_APPROVAL
   COMPLETED
   CANCELLED
   DISPUTED
@@ -224,6 +225,8 @@ enum NotificationType {
   SYSTEM
   STAFF_STATUS_UPDATE
   STAFF_ASSIGNED
+  BOOKING_AWAITING_APPROVAL
+  BOOKING_COMPLETED
 }
 
 enum ApprovalActionType {
@@ -998,27 +1001,44 @@ model Booking {
   notes              String?       @db.Text
   cancelledReason    String?
   cancelledAt        DateTime?
+  startedAt          DateTime?
   completedAt        DateTime?
+  durationMinutes    Int?
   assignedStaffId    String?       @db.Uuid
   assignedAt         DateTime?
   createdAt          DateTime      @default(now())
   updatedAt          DateTime      @updatedAt
 
-  customer      User          @relation("CustomerBookings", fields: [customerId], references: [id], onDelete: Cascade)
-  business      Business      @relation("ProviderBookings", fields: [businessId], references: [id], onDelete: Cascade)
-  service       Service?      @relation(fields: [serviceId], references: [id], onDelete: SetNull)
-  jobRequest    JobRequest?   @relation(fields: [jobRequestId], references: [id], onDelete: SetNull)
-  quote         Quote?        @relation(fields: [quoteId], references: [id], onDelete: SetNull)
-  assignedStaff StaffMember?  @relation("AssignedStaff", fields: [assignedStaffId], references: [id], onDelete: SetNull)
-  payments      Payment[]
-  review        Review?
-  conversation  Conversation?
+  customer        User            @relation("CustomerBookings", fields: [customerId], references: [id], onDelete: Cascade)
+  business        Business        @relation("ProviderBookings", fields: [businessId], references: [id], onDelete: Cascade)
+  service         Service?        @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+  jobRequest      JobRequest?     @relation(fields: [jobRequestId], references: [id], onDelete: SetNull)
+  quote           Quote?          @relation(fields: [quoteId], references: [id], onDelete: SetNull)
+  assignedStaff   StaffMember?    @relation("AssignedStaff", fields: [assignedStaffId], references: [id], onDelete: SetNull)
+  payments        Payment[]
+  review          Review?
+  conversation    Conversation?
+  jobSheetEntries JobSheetEntry[]
 
   @@index([customerId])
   @@index([assignedStaffId])
   @@index([businessId])
   @@index([status])
   @@index([scheduledDate])
+}
+
+// A running log of what the provider actually did during a booking — added
+// to while Booking.status is IN_PROGRESS, shown to the customer as part of
+// the "who did what" record before they accept completion.
+model JobSheetEntry {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  bookingId   String   @db.Uuid
+  description String   @db.Text
+  loggedAt    DateTime @default(now())
+
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@index([bookingId])
 }
 
 // ── Reviews & Favourites ─────────────────────────────────────────────────

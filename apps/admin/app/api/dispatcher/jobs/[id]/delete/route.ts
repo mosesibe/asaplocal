@@ -14,7 +14,10 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
   if (!jobRequest) return NextResponse.json({ message: "Job not found" }, { status: 404 });
 
   if (session.user.role === "ADMIN") {
-    await prisma.jobRequest.update({ where: { id: jobRequestId }, data: { status: "CANCELLED" } });
+    await prisma.$transaction([
+      prisma.jobRequest.update({ where: { id: jobRequestId }, data: { status: "CANCELLED" } }),
+      prisma.lead.updateMany({ where: { jobRequestId }, data: { status: "CLOSED" } }),
+    ]);
     await writeAuditLog({ actorId: session.user.id, actorRole: "ADMIN", action: "dispatcher.job.cancel.direct", targetType: "JobRequest", targetId: jobRequestId });
     await notify(jobRequest.customerId, "SYSTEM", "Your job request was cancelled", jobRequest.title);
     return NextResponse.json({ id: jobRequestId, status: "APPLIED" });

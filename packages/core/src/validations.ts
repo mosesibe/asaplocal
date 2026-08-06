@@ -1,6 +1,8 @@
 import { z } from "zod";
 
-export const jobRequestSchema = z.object({
+// Plain object shape (no .refine()) so it can be `.partial()`'d for edits —
+// see jobRequestEditSchema below.
+export const jobRequestBaseSchema = z.object({
   categoryId: z.string().uuid(),
   title: z.string().min(8).max(120),
   description: z.string().min(20).max(2000),
@@ -14,7 +16,19 @@ export const jobRequestSchema = z.object({
   postcode: z.string().max(12).optional(),
   lat: z.number().min(-90).max(90),
   lng: z.number().min(-180).max(180),
-}).refine((d) => !d.budgetMinPence || !d.budgetMaxPence || d.budgetMinPence <= d.budgetMaxPence, {
+});
+
+const budgetRangeRefinement = (d: { budgetMinPence?: number; budgetMaxPence?: number }) =>
+  !d.budgetMinPence || !d.budgetMaxPence || d.budgetMinPence <= d.budgetMaxPence;
+
+export const jobRequestSchema = jobRequestBaseSchema.refine(budgetRangeRefinement, {
+  message: "budgetMinPence must be <= budgetMaxPence",
+  path: ["budgetMaxPence"],
+});
+
+// Same fields, all optional — used to PATCH an existing job (only while it's
+// still OPEN/MATCHING/QUOTED, enforced in the route, not here).
+export const jobRequestEditSchema = jobRequestBaseSchema.partial().refine(budgetRangeRefinement, {
   message: "budgetMinPence must be <= budgetMaxPence",
   path: ["budgetMaxPence"],
 });
