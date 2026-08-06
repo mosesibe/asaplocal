@@ -62,6 +62,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       }
       case "JOB_DELETE": {
         await tx.jobRequest.update({ where: { id: approval.jobRequestId }, data: { status: "CANCELLED" } });
+        await tx.lead.updateMany({ where: { jobRequestId: approval.jobRequestId }, data: { status: "CLOSED" } });
         break;
       }
       case "JOB_UPDATE":

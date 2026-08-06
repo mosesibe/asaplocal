@@ -2,8 +2,11 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { auth } from "@asaplocal/auth";
 import { prisma } from "@asaplocal/db";
-import { Badge, Card, MobileTopBar, formatPence } from "@asaplocal/ui";
+import { Badge, Button, Card, MobileTopBar, formatPence } from "@asaplocal/ui";
 import { AcceptQuoteButton } from "./accept-quote-button";
+import { DeleteJobButton } from "./delete-job-button";
+
+const EDITABLE_STATUSES = ["OPEN", "MATCHING", "QUOTED"];
 
 export default async function JobStatusPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -36,7 +39,17 @@ export default async function JobStatusPage({ params }: { params: Promise<{ id: 
     <div className="mx-auto max-w-3xl md:px-6 md:py-10">
       <MobileTopBar backHref="/dashboard" linkAs={Link} title="Job request" className="md:hidden" />
       <div className="px-4 py-6 md:p-0">
-        <Badge variant="secondary">{job.status.replace("_", " ")}</Badge>
+        <div className="flex items-center justify-between">
+          <Badge variant="secondary">{job.status.replace("_", " ")}</Badge>
+          {EDITABLE_STATUSES.includes(job.status) && (
+            <div className="flex gap-2">
+              <Link href={`/jobs/${id}/edit`}>
+                <Button size="sm" variant="outline">Edit</Button>
+              </Link>
+              <DeleteJobButton jobId={job.id} />
+            </div>
+          )}
+        </div>
         <h1 className="mt-3 text-2xl font-bold">{job.title}</h1>
         <p className="mt-1 text-muted-foreground">{statusCopy[job.status]}</p>
         <Card className="mt-6 p-5">

@@ -4,20 +4,24 @@ import { auth } from "@asaplocal/auth";
 import { prisma } from "@asaplocal/db";
 import { Avatar, Badge, Card, MobileTopBar, formatPence } from "@asaplocal/ui";
 import { LeaveReviewForm } from "./leave-review-form";
+import { AcceptCompletionButton } from "./accept-completion-button";
 
 export default async function BookingDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const session = await auth();
   if (!session?.user) redirect(`/login?callbackUrl=/bookings/${id}`);
 
-  const booking = await prisma.booking.findUnique({ where: { id }, include: { business: true, review: true, assignedStaff: true } });
+  const booking = await prisma.booking.findUnique({
+    where: { id },
+    include: { business: true, review: true, assignedStaff: true, jobSheetEntries: { orderBy: { loggedAt: "asc" } } },
+  });
   if (!booking || booking.customerId !== session.user.id) notFound();
 
   return (
     <div className="mx-auto max-w-2xl md:px-6 md:py-10">
       <MobileTopBar backHref="/dashboard" linkAs={Link} title="Booking" className="md:hidden" />
       <div className="px-4 py-6 md:p-0">
-        <Badge variant={booking.status === "COMPLETED" ? "success" : "secondary"}>{booking.status}</Badge>
+        <Badge variant={booking.status === "COMPLETED" ? "success" : "secondary"}>{booking.status.replace(/_/g, " ")}</Badge>
         <h1 className="mt-3 text-2xl font-bold">Booking with {booking.business.name}</h1>
         <Card className="mt-6 space-y-2 p-6">
           <div className="flex justify-between text-sm"><span>Scheduled</span><span>{booking.scheduledDate.toLocaleDateString("en-GB")}</span></div>
@@ -46,6 +50,29 @@ export default async function BookingDetailPage({ params }: { params: Promise<{ 
                 <img src={booking.assignedStaff.idBackImageUrl} alt={`${booking.assignedStaff.fullName}'s company ID — back`} className="rounded-lg border border-border object-cover" />
               </div>
             </div>
+          </Card>
+        )}
+
+        {booking.jobSheetEntries.length > 0 && (
+          <Card className="mt-6 space-y-3 p-6">
+            <div className="flex items-center justify-between">
+              <h2 className="font-semibold">Job sheet</h2>
+              {booking.durationMinutes != null && <span className="text-sm text-muted-foreground">{booking.durationMinutes} min</span>}
+            </div>
+            <div className="space-y-2">
+              {booking.jobSheetEntries.map((entry) => (
+                <div key={entry.id} className="rounded-lg border border-border p-3">
+                  <p className="text-sm">{entry.description}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">{entry.loggedAt.toLocaleString("en-GB")}</p>
+                </div>
+              ))}
+            </div>
+            {booking.status === "AWAITING_APPROVAL" && (
+              <div className="pt-2">
+                <p className="mb-2 text-sm text-muted-foreground">{booking.business.name} has marked this job as done — review the work above and confirm.</p>
+                <AcceptCompletionButton bookingId={booking.id} />
+              </div>
+            )}
           </Card>
         )}
 

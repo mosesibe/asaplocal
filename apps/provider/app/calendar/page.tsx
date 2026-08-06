@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@asaplocal/auth";
 import { prisma } from "@asaplocal/db";
@@ -15,7 +16,7 @@ export default async function CalendarPage() {
 
   const [upcoming, staffOptions] = await Promise.all([
     prisma.booking.findMany({
-      where: { businessId: business.id, status: { in: ["CONFIRMED", "PENDING", "IN_PROGRESS"] } },
+      where: { businessId: business.id, status: { in: ["CONFIRMED", "PENDING", "IN_PROGRESS", "AWAITING_APPROVAL"] } },
       orderBy: { scheduledDate: "asc" },
       include: { customer: { include: { profile: true } }, assignedStaff: true },
     }),
@@ -42,7 +43,12 @@ export default async function CalendarPage() {
               {staffAssignable && (b.status === "CONFIRMED" || b.status === "IN_PROGRESS") && (
                 <AssignStaffSelect bookingId={b.id} assignedStaffId={b.assignedStaffId} staffOptions={staffOptions} />
               )}
-              <Badge variant="outline" className="w-fit">{b.status}</Badge>
+              {(b.status === "CONFIRMED" || b.status === "IN_PROGRESS" || b.status === "AWAITING_APPROVAL") && (
+                <Link href={`/calendar/${b.id}`} className="text-sm font-medium text-brand-700 hover:underline">
+                  Job sheet
+                </Link>
+              )}
+              <Badge variant="outline" className="w-fit">{b.status.replace(/_/g, " ")}</Badge>
             </div>
           </Card>
         ))}
