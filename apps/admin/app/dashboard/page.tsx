@@ -1,17 +1,10 @@
-import dynamic from "next/dynamic";
 import { prisma } from "@asaplocal/db";
 import { formatPence } from "@asaplocal/ui";
 import { Wallet, TrendingUp, PoundSterling, Users } from "lucide-react";
 import { StatCard } from "@/components/stat-card";
 import { MetricCard } from "@/components/metric-card";
 import { ListBreakdown } from "@/components/list-breakdown";
-
-// Chart-only components render client-side only — recharts' internal id
-// counter (used for gradient/clipPath ids) can differ between the server
-// render and the client's first render when several charts share a page,
-// which React flags as a hydration mismatch. See stat-card.tsx for the same fix.
-const DonutStat = dynamic(() => import("@/components/donut-stat").then((m) => m.DonutStat), { ssr: false });
-const RevenueChart = dynamic(() => import("./revenue-chart").then((m) => m.RevenueChart), { ssr: false });
+import { DonutStat, RevenueChart } from "./no-ssr-charts";
 
 const PLAN_PRICE_PENCE: Record<string, number> = { FREE: 0, PRO: 2900, PREMIUM: 7900, ENTERPRISE: 0 };
 

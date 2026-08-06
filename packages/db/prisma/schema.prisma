@@ -238,6 +238,28 @@ enum ApprovalRequestStatus {
   REJECTED
 }
 
+enum AccountDeletionRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model AccountDeletionRequest {
+  id           String                        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId       String                        @db.Uuid
+  reason       String?                       @db.Text
+  status       AccountDeletionRequestStatus  @default(PENDING)
+  reviewedById String?                       @db.Uuid
+  reviewedAt   DateTime?
+  reviewNote   String?
+  createdAt    DateTime                      @default(now())
+
+  user       User  @relation("AccountDeletionRequester", fields: [userId], references: [id], onDelete: Cascade)
+  reviewedBy User? @relation("AccountDeletionReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+
+  @@index([status])
+}
+
 // ── Core identity ───────────────────────────────────────────────────────
 
 model User {
@@ -292,6 +314,9 @@ model User {
   referralsSent            Referral[]                @relation("Referrer")
   referralReceived         Referral?                 @relation("Referee")
   accountCredits           AccountCredit[]
+  deletionRequestsMade     AccountDeletionRequest[]  @relation("AccountDeletionRequester")
+  deletionRequestsReviewed AccountDeletionRequest[]  @relation("AccountDeletionReviewer")
+  payoutsRecorded          Payout[]                  @relation("PayoutRecorder")
 
   @@index([role])
   @@index([status])
@@ -575,12 +600,32 @@ model Business {
   insurancePolicies     InsurancePolicy[]
   portfolioItems        PortfolioItem[]
   references            BusinessReference[]
+  payouts               Payout[]
 
   @@index([city])
   @@index([verificationStatus])
   @@index([isFeatured])
   @@index([lat, lng])
   @@index([trustTier])
+}
+
+// Admin-recorded ledger of payouts made to providers outside Stripe Connect
+// (e.g. manual bank transfer) — there's no automated Stripe Transfer sync
+// yet, so this is how the platform tracks what's actually been paid out.
+model Payout {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  businessId  String   @db.Uuid
+  amountPence Int
+  method      String? // e.g. "Bank transfer"
+  reference   String?
+  paidAt      DateTime @default(now())
+  createdById String   @db.Uuid
+  createdAt   DateTime @default(now())
+
+  business  Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  createdBy User     @relation("PayoutRecorder", fields: [createdById], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
 }
 
 model IdentityVerification {

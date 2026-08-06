@@ -15,6 +15,7 @@ import { PreferencesRows } from "@/components/account/preferences";
 import { ReferralCard } from "@/components/account/referral-card";
 import { AddressesSection } from "@/components/account/addresses-section";
 import { SecuritySection } from "@/components/account/security-section";
+import { DeleteAccountSection } from "@/components/account/delete-account-section";
 
 export default async function CustomerDashboard() {
   const session = await auth();
@@ -116,6 +117,11 @@ export default async function CustomerDashboard() {
           <SectionRow as={Link} href="/terms" icon={FileText} label="Terms of service" />
           <SectionRow as={Link} href="/privacy" icon={Shield} label="Privacy policy" />
         </SectionCard>
+      </div>
+
+      {/* Section 6 — danger zone */}
+      <div className="mt-8">
+        <DeleteAccountSection />
       </div>
     </div>
   );

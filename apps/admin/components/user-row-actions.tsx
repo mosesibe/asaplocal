@@ -18,7 +18,7 @@ export function UserRowActions({ userId, status, businessId }: { userId: string;
   return (
     <div className="flex gap-2">
       {businessId && (
-        <Link href={`/verification/${businessId}`}>
+        <Link href={`/operations/verification/${businessId}`}>
           <Button size="sm" variant="outline">View verification →</Button>
         </Link>
       )}

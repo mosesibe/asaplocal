@@ -21,3 +21,4 @@ export * from "./stripe-identity";
 export * from "./stripe-connect";
 export * from "./referral";
 export * from "./account-stats";
+export * from "./account-deletion";

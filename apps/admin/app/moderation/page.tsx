@@ -36,7 +36,7 @@ export default async function ModerationPage() {
         <h2 className="mb-3 text-lg font-semibold">Businesses pending verification ({pendingBusinesses.length})</h2>
         <div className="space-y-2">
           {pendingBusinesses.map((b) => (
-            <Link key={b.id} href={`/verification/${b.id}`}>
+            <Link key={b.id} href={`/operations/verification/${b.id}`}>
               <Card className="flex items-center justify-between p-4 transition-shadow hover:shadow-card">
                 <p className="font-medium">{b.name}</p>
                 <Badge variant="warning">PENDING</Badge>

@@ -7,6 +7,10 @@ import {
   Menu,
   LayoutDashboard,
   Users,
+  User,
+  Briefcase,
+  UserCog,
+  UserX,
   Flag,
   ListTree,
   CreditCard,
@@ -14,11 +18,16 @@ import {
   ClipboardCheck,
   RefreshCcw,
   ShieldCheck,
+  Wrench,
+  Landmark,
+  Banknote,
+  Receipt,
   MessageSquare,
   Bell,
   LogOut,
   Moon,
   Sun,
+  ChevronDown,
   type LucideIcon,
 } from "lucide-react";
 import { LogoMark, Avatar, useTheme, cn } from "@asaplocal/ui";
@@ -27,23 +36,74 @@ import { signOut } from "next-auth/react";
 import { GlobalSearch } from "./global-search";
 import type { Role } from "@asaplocal/db";
 
-type NavItem = { href: string; label: string; icon: LucideIcon };
+type NavItem = { href: string; label: string; icon: LucideIcon; children?: NavItem[] };
+
+const USERS_GROUP_ADMIN: NavItem = {
+  href: "/users",
+  label: "Users",
+  icon: Users,
+  children: [
+    { href: "/users/customers", label: "Customers", icon: User },
+    { href: "/users/providers", label: "Providers", icon: Briefcase },
+    { href: "/users/staff", label: "Staff", icon: UserCog },
+    { href: "/users/deletion-requests", label: "Account Deletion", icon: UserX },
+  ],
+};
+
+const USERS_GROUP_DISPATCHER: NavItem = {
+  href: "/users",
+  label: "Users",
+  icon: Users,
+  children: [
+    { href: "/users/customers", label: "Customers", icon: User },
+    { href: "/users/providers", label: "Providers", icon: Briefcase },
+    { href: "/users/deletion-requests", label: "Account Deletion", icon: UserX },
+  ],
+};
+
+const OPERATIONS_GROUP: NavItem = {
+  href: "/operations",
+  label: "Operations",
+  icon: Wrench,
+  children: [
+    { href: "/operations/services", label: "Services", icon: ListTree },
+    { href: "/operations/verification", label: "Verification queue", icon: ShieldCheck },
+  ],
+};
+
+const FINANCE_GROUP: NavItem = {
+  href: "/finance",
+  label: "Finance",
+  icon: Landmark,
+  children: [
+    { href: "/finance/subscriptions", label: "Subscriptions", icon: CreditCard },
+    { href: "/finance/payouts", label: "Payouts", icon: Banknote },
+    { href: "/finance/invoices", label: "Invoices", icon: Receipt },
+  ],
+};
 
 const ADMIN_NAV: NavItem[] = [
   { href: "/dashboard", label: "Financial dashboard", icon: LayoutDashboard },
-  { href: "/users", label: "Users", icon: Users },
-  { href: "/verification", label: "Verification queue", icon: ShieldCheck },
+  USERS_GROUP_ADMIN,
+  OPERATIONS_GROUP,
   { href: "/moderation", label: "Moderation", icon: Flag },
-  { href: "/categories", label: "Categories", icon: ListTree },
-  { href: "/subscriptions", label: "Subscriptions", icon: CreditCard },
+  FINANCE_GROUP,
   { href: "/refunds", label: "Lead refunds", icon: RefreshCcw },
   { href: "/dispatcher", label: "Dispatch board", icon: Truck },
   { href: "/approvals", label: "Approval queue", icon: ClipboardCheck },
 ];
 
-const DISPATCHER_NAV: NavItem[] = [{ href: "/dispatcher", label: "Dispatch board", icon: Truck }];
+const DISPATCHER_NAV: NavItem[] = [USERS_GROUP_DISPATCHER, { href: "/dispatcher", label: "Dispatch board", icon: Truck }];
 
 const ROLE_LABEL: Partial<Record<Role, string>> = { ADMIN: "Administrator", DISPATCHER: "Dispatcher" };
+
+function isActive(pathname: string, href: string) {
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
+
+function activeGroupHref(nav: NavItem[], pathname: string): string | null {
+  return nav.find((item) => item.children?.some((c) => isActive(pathname, c.href)))?.href ?? null;
+}
 
 function NavLinks({
   nav,
@@ -56,10 +116,68 @@ function NavLinks({
   collapsed?: boolean;
   onNavigate?: () => void;
 }) {
+  const [openGroup, setOpenGroup] = React.useState<string | null>(() => activeGroupHref(nav, pathname));
+
+  React.useEffect(() => {
+    const active = activeGroupHref(nav, pathname);
+    if (active) setOpenGroup(active);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname]);
+
   return (
     <nav className="space-y-1">
-      {nav.map(({ href, label, icon: Icon }) => {
-        const active = pathname === href || pathname.startsWith(`${href}/`);
+      {nav.map((item) => {
+        const { href, label, icon: Icon, children } = item;
+
+        if (children && children.length > 0) {
+          const childActive = children.some((c) => isActive(pathname, c.href));
+          const open = !collapsed && openGroup === href;
+          return (
+            <div key={href}>
+              <button
+                type="button"
+                title={collapsed ? label : undefined}
+                onClick={() => setOpenGroup((g) => (g === href ? null : href))}
+                className={cn(
+                  "flex w-full items-center gap-3 px-3 py-2.5 text-sm font-medium transition-colors",
+                  collapsed && "justify-center px-0",
+                  childActive ? "text-white" : "text-white/55 hover:bg-white/5 hover:text-white/85"
+                )}
+              >
+                <Icon size={18} className={cn("shrink-0", childActive ? "text-brand-300" : "text-white/40")} />
+                {!collapsed && (
+                  <>
+                    <span className="flex-1 text-left">{label}</span>
+                    <ChevronDown size={14} className={cn("shrink-0 transition-transform", open && "rotate-180")} />
+                  </>
+                )}
+              </button>
+              {open && (
+                <div className="mt-0.5 space-y-0.5 border-l border-white/10 py-0.5 pl-3">
+                  {children.map((c) => {
+                    const cActive = isActive(pathname, c.href);
+                    return (
+                      <Link
+                        key={c.href}
+                        href={c.href}
+                        onClick={onNavigate}
+                        className={cn(
+                          "flex items-center gap-2.5 rounded-md px-3 py-2 text-sm transition-colors",
+                          cActive ? "bg-brand-700 text-white" : "text-white/50 hover:bg-white/5 hover:text-white/80"
+                        )}
+                      >
+                        <c.icon size={15} className="shrink-0" />
+                        {c.label}
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          );
+        }
+
+        const active = isActive(pathname, href);
         return (
           <Link
             key={href}
