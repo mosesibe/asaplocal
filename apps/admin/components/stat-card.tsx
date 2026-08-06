@@ -1,8 +1,14 @@
 "use client";
 
 import * as React from "react";
-import { Area, AreaChart, ResponsiveContainer } from "recharts";
+import dynamic from "next/dynamic";
 import { Card, cn } from "@asaplocal/ui";
+
+// recharts assigns each chart instance an incrementing internal id used for
+// gradient/clipPath ids; with several charts on one page that counter can
+// come out differently between the server render and the client's first
+// render, producing a hydration mismatch. Rendering client-only sidesteps it.
+const StatSparkline = dynamic(() => import("./stat-sparkline"), { ssr: false });
 
 const ACCENTS = {
   brand: { badge: "bg-brand-500 text-white", hex: "#c15f2a" },
@@ -56,24 +62,7 @@ export function StatCard({
       </div>
       {points.length > 1 && (
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-10 opacity-25">
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={points} margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
-              <defs>
-                <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor={hex} stopOpacity={0.7} />
-                  <stop offset="100%" stopColor={hex} stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <Area
-                type="monotone"
-                dataKey="value"
-                stroke={hex}
-                strokeWidth={1.5}
-                fill={`url(#${gradientId})`}
-                isAnimationActive={false}
-              />
-            </AreaChart>
-          </ResponsiveContainer>
+          <StatSparkline points={points} hex={hex} gradientId={gradientId} />
         </div>
       )}
     </Card>

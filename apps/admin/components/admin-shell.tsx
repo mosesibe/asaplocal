@@ -3,9 +3,28 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, LayoutDashboard, Users, Flag, ListTree, CreditCard, Truck, ClipboardCheck, RefreshCcw, ShieldCheck, type LucideIcon } from "lucide-react";
-import { LogoMark, Avatar, Badge, ThemeToggle, Sheet, SheetContent, SheetTitle, cn } from "@asaplocal/ui";
-import { SignOutButton } from "./sign-out-button";
+import {
+  Menu,
+  LayoutDashboard,
+  Users,
+  Flag,
+  ListTree,
+  CreditCard,
+  Truck,
+  ClipboardCheck,
+  RefreshCcw,
+  ShieldCheck,
+  MessageSquare,
+  Bell,
+  LogOut,
+  Moon,
+  Sun,
+  type LucideIcon,
+} from "lucide-react";
+import { LogoMark, Avatar, useTheme, cn } from "@asaplocal/ui";
+import { Sheet, SheetContent, SheetTitle } from "@asaplocal/ui";
+import { signOut } from "next-auth/react";
+import { GlobalSearch } from "./global-search";
 import type { Role } from "@asaplocal/db";
 
 type NavItem = { href: string; label: string; icon: LucideIcon };
@@ -26,7 +45,17 @@ const DISPATCHER_NAV: NavItem[] = [{ href: "/dispatcher", label: "Dispatch board
 
 const ROLE_LABEL: Partial<Record<Role, string>> = { ADMIN: "Administrator", DISPATCHER: "Dispatcher" };
 
-function NavLinks({ nav, pathname, onNavigate }: { nav: NavItem[]; pathname: string; onNavigate?: () => void }) {
+function NavLinks({
+  nav,
+  pathname,
+  collapsed,
+  onNavigate,
+}: {
+  nav: NavItem[];
+  pathname: string;
+  collapsed?: boolean;
+  onNavigate?: () => void;
+}) {
   return (
     <nav className="space-y-1">
       {nav.map(({ href, label, icon: Icon }) => {
@@ -36,13 +65,15 @@ function NavLinks({ nav, pathname, onNavigate }: { nav: NavItem[]; pathname: str
             key={href}
             href={href}
             onClick={onNavigate}
+            title={collapsed ? label : undefined}
             className={cn(
               "flex items-center gap-3 px-3 py-2.5 text-sm font-medium transition-colors",
+              collapsed && "justify-center px-0",
               active ? "bg-brand-700 text-white shadow-sm" : "text-white/55 hover:bg-white/5 hover:text-white/85"
             )}
           >
-            <Icon size={18} className={active ? "text-white" : "text-white/40"} />
-            {label}
+            <Icon size={18} className={cn("shrink-0", active ? "text-white" : "text-white/40")} />
+            {!collapsed && label}
           </Link>
         );
       })}
@@ -56,6 +87,7 @@ function SidebarContent({
   email,
   nav,
   pathname,
+  collapsed,
   onNavigate,
 }: {
   role: Role;
@@ -63,32 +95,98 @@ function SidebarContent({
   email?: string | null;
   nav: NavItem[];
   pathname: string;
+  collapsed?: boolean;
   onNavigate?: () => void;
 }) {
   return (
     <div className="flex h-full flex-col">
-      <div className="flex h-16 shrink-0 items-center gap-2.5 px-5">
-        <LogoMark className="h-8 w-8" />
-        <span className="text-base font-extrabold tracking-tight text-white">
-          Asap<span className="text-brand-300">Local</span>
-        </span>
+      <div className={cn("flex h-16 shrink-0 items-center gap-2.5 px-5", collapsed && "justify-center px-0")}>
+        <LogoMark className="h-8 w-8 shrink-0" />
+        {!collapsed && (
+          <span className="text-base font-extrabold tracking-tight text-white">
+            Asap<span className="text-brand-300">Local</span>
+          </span>
+        )}
       </div>
-      <div className="flex items-center gap-3 border-y border-white/10 px-5 py-4">
+      <div className={cn("flex items-center gap-3 border-y border-white/10 px-5 py-4", collapsed && "justify-center px-0")}>
         <Avatar name={displayName} size={36} className="bg-brand-500/25 text-brand-100" />
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-semibold text-white">{displayName}</p>
-          {email && <p className="truncate text-xs text-white/45">{email}</p>}
+        {!collapsed && (
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-semibold text-white">{displayName}</p>
+            {email && <p className="truncate text-xs text-white/45">{email}</p>}
+          </div>
+        )}
+      </div>
+      <div className={cn("flex-1 overflow-y-auto px-3 py-4", collapsed && "px-2")}>
+        {!collapsed && (
+          <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-wider text-white/35">
+            {role === "ADMIN" ? "Admin menu" : "Dispatch menu"}
+          </p>
+        )}
+        <NavLinks nav={nav} pathname={pathname} collapsed={collapsed} onNavigate={onNavigate} />
+      </div>
+      <div className={cn("shrink-0 border-t border-white/10 p-3", collapsed && "px-2")}>
+        <button
+          type="button"
+          title={collapsed ? "Sign out" : undefined}
+          onClick={() => signOut({ callbackUrl: "/login" })}
+          className={cn(
+            "flex w-full items-center gap-3 px-3 py-2.5 text-sm font-medium text-white/55 transition-colors hover:bg-white/5 hover:text-white/85",
+            collapsed && "justify-center px-0"
+          )}
+        >
+          <LogOut size={18} className="shrink-0 text-white/40" />
+          {!collapsed && "Sign out"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function ProfileMenu({ role, displayName, email }: { role: Role; displayName: string; email?: string | null }) {
+  const [open, setOpen] = React.useState(false);
+  const ref = React.useRef<HTMLDivElement>(null);
+  const { theme, toggleTheme } = useTheme();
+
+  React.useEffect(() => {
+    if (!open) return;
+    function onClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", onClick);
+    return () => document.removeEventListener("mousedown", onClick);
+  }, [open]);
+
+  return (
+    <div ref={ref} className="relative">
+      <button type="button" onClick={() => setOpen((v) => !v)} aria-label="Account menu" aria-expanded={open}>
+        <Avatar name={displayName} size={36} />
+      </button>
+      {open && (
+        <div className="absolute right-0 top-full z-30 mt-2 w-60 rounded-xl border border-border bg-surface p-1.5 shadow-card">
+          <div className="border-b border-border px-3 py-2.5">
+            <p className="truncate text-sm font-semibold">{displayName}</p>
+            {email && <p className="truncate text-xs text-muted-foreground">{email}</p>}
+            <p className="mt-1 text-xs text-brand-600 dark:text-brand-300">{ROLE_LABEL[role] ?? role}</p>
+          </div>
+          <button
+            type="button"
+            onClick={toggleTheme}
+            className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-foreground hover:bg-muted"
+          >
+            {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
+            {theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+          </button>
+          <button
+            type="button"
+            onClick={() => signOut({ callbackUrl: "/login" })}
+            className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-foreground hover:bg-muted"
+          >
+            <LogOut size={16} />
+            Sign out
+          </button>
         </div>
-      </div>
-      <div className="flex-1 overflow-y-auto px-3 py-4">
-        <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-wider text-white/35">
-          {role === "ADMIN" ? "Admin menu" : "Dispatch menu"}
-        </p>
-        <NavLinks nav={nav} pathname={pathname} onNavigate={onNavigate} />
-      </div>
-      <div className="shrink-0 border-t border-white/10 p-3">
-        <SignOutButton />
-      </div>
+      )}
     </div>
   );
 }
@@ -97,23 +195,38 @@ export function AdminShell({
   role,
   name,
   email,
+  pendingApprovals = 0,
   children,
 }: {
   role: Role;
   name?: string | null;
   email?: string | null;
+  pendingApprovals?: number;
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = React.useState(false);
+  const [collapsed, setCollapsed] = React.useState(false);
   const nav = role === "ADMIN" ? ADMIN_NAV : DISPATCHER_NAV;
   const displayName = name && name !== email ? name : (email?.split("@")[0] ?? "Staff");
-  const roleLabel = ROLE_LABEL[role] ?? role;
+
+  function onMenuToggle() {
+    if (typeof window !== "undefined" && window.matchMedia("(min-width: 1024px)").matches) {
+      setCollapsed((v) => !v);
+    } else {
+      setMobileOpen(true);
+    }
+  }
 
   return (
     <div className="flex min-h-screen">
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 shrink-0 bg-brand-900 lg:block">
-        <SidebarContent role={role} displayName={displayName} email={email} nav={nav} pathname={pathname} />
+      <aside
+        className={cn(
+          "fixed inset-y-0 left-0 z-30 hidden shrink-0 bg-brand-900 transition-[width] duration-200 lg:block",
+          collapsed ? "w-[68px]" : "w-64"
+        )}
+      >
+        <SidebarContent role={role} displayName={displayName} email={email} nav={nav} pathname={pathname} collapsed={collapsed} />
       </aside>
 
       <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
@@ -130,20 +243,40 @@ export function AdminShell({
         </SheetContent>
       </Sheet>
 
-      <div className="flex min-w-0 flex-1 flex-col lg:pl-64">
-        <header className="sticky top-0 z-20 flex h-16 shrink-0 items-center justify-between border-b border-border bg-surface/90 px-4 backdrop-blur sm:px-6">
+      <div className={cn("flex min-w-0 flex-1 flex-col transition-[padding] duration-200", collapsed ? "lg:pl-[68px]" : "lg:pl-64")}>
+        <header className="sticky top-0 z-20 flex h-16 shrink-0 items-center gap-3 border-b border-border bg-surface/90 px-4 backdrop-blur sm:px-6">
           <button
             type="button"
-            aria-label="Open menu"
-            onClick={() => setMobileOpen(true)}
-            className="-ml-2 flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted lg:hidden"
+            aria-label="Toggle menu"
+            onClick={onMenuToggle}
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted"
           >
             <Menu size={20} />
           </button>
-          <div className="hidden lg:block" />
-          <div className="flex items-center gap-3">
-            <Badge variant="secondary" className="hidden sm:inline-flex">{roleLabel}</Badge>
-            <ThemeToggle />
+
+          <GlobalSearch />
+
+          <div className="ml-auto flex items-center gap-1.5">
+            <button
+              type="button"
+              title="Messages (not available yet)"
+              className="flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground/60 cursor-default"
+            >
+              <MessageSquare size={19} />
+            </button>
+            <Link
+              href="/approvals"
+              aria-label={pendingApprovals > 0 ? `${pendingApprovals} pending approvals` : "Approvals"}
+              className="relative flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted"
+            >
+              <Bell size={19} />
+              {pendingApprovals > 0 && (
+                <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-red-500 ring-2 ring-surface" />
+              )}
+            </Link>
+            <div className="ml-1">
+              <ProfileMenu role={role} displayName={displayName} email={email} />
+            </div>
           </div>
         </header>
         <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-8 sm:px-6">{children}</main>

@@ -6,7 +6,16 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
   const { q } = await searchParams;
 
   const users = await prisma.user.findMany({
-    where: q ? { email: { contains: q, mode: "insensitive" } } : {},
+    where: q
+      ? {
+          OR: [
+            { email: { contains: q, mode: "insensitive" } },
+            { profile: { firstName: { contains: q, mode: "insensitive" } } },
+            { profile: { lastName: { contains: q, mode: "insensitive" } } },
+            { business: { name: { contains: q, mode: "insensitive" } } },
+          ],
+        }
+      : {},
     include: { profile: true, business: true },
     orderBy: { createdAt: "desc" },
     take: 50,
@@ -16,7 +25,7 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
     <div>
       <h1 className="text-2xl font-bold">Users</h1>
       <form className="mt-4" action="/users">
-        <input name="q" defaultValue={q} placeholder="Search by email…" className="w-full max-w-sm rounded-lg border border-border bg-background p-2.5 text-sm" />
+        <input name="q" defaultValue={q} placeholder="Search by name, email, or business…" className="w-full max-w-sm rounded-lg border border-border bg-background p-2.5 text-sm" />
       </form>
       <div className="mt-6 space-y-2">
         {users.map((u) => (
