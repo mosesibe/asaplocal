@@ -1,11 +1,10 @@
 "use client";
 import { useState } from "react";
 import { signIn } from "next-auth/react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { Button, Card } from "@asaplocal/ui";
 
 export default function LoginPage() {
-  const router = useRouter();
   const params = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -18,8 +17,15 @@ export default function LoginPage() {
     setError(null);
     const res = await signIn("credentials", { email, password, redirect: false });
     setLoading(false);
-    if (res?.error) setError("Incorrect email or password, or this account isn't staff.");
-    else router.push(params.get("callbackUrl") ?? "/");
+    if (res?.error) {
+      setError("Incorrect email or password, or this account isn't staff.");
+    } else {
+      // The root layout reads the session server-side (for AdminShell) — a
+      // client-side router.push() here can leave Next.js's client router
+      // cache serving the pre-login (shell-less) render of that layout. A
+      // full navigation guarantees the layout re-renders with the new session.
+      window.location.href = params.get("callbackUrl") ?? "/";
+    }
   }
 
   return (

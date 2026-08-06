@@ -89,11 +89,10 @@ const ADMIN_NAV: NavItem[] = [
   { href: "/moderation", label: "Moderation", icon: Flag },
   FINANCE_GROUP,
   { href: "/refunds", label: "Lead refunds", icon: RefreshCcw },
-  { href: "/dispatcher", label: "Dispatch board", icon: Truck },
   { href: "/approvals", label: "Approval queue", icon: ClipboardCheck },
 ];
 
-const DISPATCHER_NAV: NavItem[] = [USERS_GROUP_DISPATCHER, { href: "/dispatcher", label: "Dispatch board", icon: Truck }];
+const DISPATCHER_NAV: NavItem[] = [USERS_GROUP_DISPATCHER];
 
 const ROLE_LABEL: Partial<Record<Role, string>> = { ADMIN: "Administrator", DISPATCHER: "Dispatcher" };
 
@@ -261,6 +260,31 @@ function SidebarContent({
   );
 }
 
+function AdminDispatchToggle({ isDispatch }: { isDispatch: boolean }) {
+  return (
+    <div className="flex items-center gap-0.5 rounded-lg border border-border bg-muted/40 p-0.5">
+      <Link
+        href="/dashboard"
+        className={cn(
+          "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition-colors",
+          !isDispatch ? "bg-surface text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+        )}
+      >
+        <LayoutDashboard size={14} /> <span className="hidden sm:inline">Admin</span>
+      </Link>
+      <Link
+        href="/dispatch"
+        className={cn(
+          "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition-colors",
+          isDispatch ? "bg-surface text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+        )}
+      >
+        <Truck size={14} /> <span className="hidden sm:inline">Dispatch</span>
+      </Link>
+    </div>
+  );
+}
+
 function ProfileMenu({ role, displayName, email }: { role: Role; displayName: string; email?: string | null }) {
   const [open, setOpen] = React.useState(false);
   const ref = React.useRef<HTMLDivElement>(null);
@@ -323,6 +347,7 @@ export function AdminShell({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const isDispatch = pathname.startsWith("/dispatch");
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const [collapsed, setCollapsed] = React.useState(false);
   const nav = role === "ADMIN" ? ADMIN_NAV : DISPATCHER_NAV;
@@ -338,43 +363,54 @@ export function AdminShell({
 
   return (
     <div className="flex min-h-screen">
-      <aside
-        className={cn(
-          "fixed inset-y-0 left-0 z-30 hidden shrink-0 bg-brand-900 transition-[width] duration-200 lg:block",
-          collapsed ? "w-[68px]" : "w-64"
-        )}
-      >
-        <SidebarContent role={role} displayName={displayName} email={email} nav={nav} pathname={pathname} collapsed={collapsed} />
-      </aside>
+      {!isDispatch && (
+        <aside
+          className={cn(
+            "fixed inset-y-0 left-0 z-30 hidden shrink-0 bg-brand-900 transition-[width] duration-200 lg:block",
+            collapsed ? "w-[68px]" : "w-64"
+          )}
+        >
+          <SidebarContent role={role} displayName={displayName} email={email} nav={nav} pathname={pathname} collapsed={collapsed} />
+        </aside>
+      )}
 
-      <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-        <SheetContent side="left" className="w-64 border-0 bg-brand-900 p-0">
-          <SheetTitle className="sr-only">Navigation</SheetTitle>
-          <SidebarContent
-            role={role}
-            displayName={displayName}
-            email={email}
-            nav={nav}
-            pathname={pathname}
-            onNavigate={() => setMobileOpen(false)}
-          />
-        </SheetContent>
-      </Sheet>
+      {!isDispatch && (
+        <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+          <SheetContent side="left" className="w-64 border-0 bg-brand-900 p-0">
+            <SheetTitle className="sr-only">Navigation</SheetTitle>
+            <SidebarContent
+              role={role}
+              displayName={displayName}
+              email={email}
+              nav={nav}
+              pathname={pathname}
+              onNavigate={() => setMobileOpen(false)}
+            />
+          </SheetContent>
+        </Sheet>
+      )}
 
-      <div className={cn("flex min-w-0 flex-1 flex-col transition-[padding] duration-200", collapsed ? "lg:pl-[68px]" : "lg:pl-64")}>
+      <div className={cn("flex min-w-0 flex-1 flex-col transition-[padding] duration-200", !isDispatch && (collapsed ? "lg:pl-[68px]" : "lg:pl-64"))}>
         <header className="sticky top-0 z-20 flex h-16 shrink-0 items-center gap-3 border-b border-border bg-surface/90 px-4 backdrop-blur sm:px-6">
-          <button
-            type="button"
-            aria-label="Toggle menu"
-            onClick={onMenuToggle}
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted"
-          >
-            <Menu size={20} />
-          </button>
+          {isDispatch ? (
+            <Link href="/dashboard" className="flex shrink-0 items-center gap-2">
+              <LogoMark className="h-8 w-8" />
+            </Link>
+          ) : (
+            <button
+              type="button"
+              aria-label="Toggle menu"
+              onClick={onMenuToggle}
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted"
+            >
+              <Menu size={20} />
+            </button>
+          )}
 
           <GlobalSearch />
 
           <div className="ml-auto flex items-center gap-1.5">
+            {role === "ADMIN" && <AdminDispatchToggle isDispatch={isDispatch} />}
             <button
               type="button"
               title="Messages (not available yet)"
@@ -397,7 +433,7 @@ export function AdminShell({
             </div>
           </div>
         </header>
-        <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-8 sm:px-6">{children}</main>
+        <main className={cn("flex-1", isDispatch ? "w-full px-4 py-6 sm:px-6" : "mx-auto w-full max-w-7xl px-4 py-8 sm:px-6")}>{children}</main>
       </div>
     </div>
   );

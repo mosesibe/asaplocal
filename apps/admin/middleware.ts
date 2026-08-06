@@ -4,7 +4,7 @@ import { authMiddleware as auth } from "@asaplocal/auth";
 const PUBLIC_PREFIXES = ["/login", "/api/auth"];
 
 /** Routes a DISPATCHER may access. Everything else is ADMIN-only. */
-const DISPATCHER_ALLOWED_PREFIXES = ["/dispatcher", "/jobs", "/api/dispatcher", "/api/jobs"];
+const DISPATCHER_ALLOWED_PREFIXES = ["/dispatch", "/users", "/api/dispatcher", "/api/jobs", "/api/users"];
 
 export default auth((req) => {
   const { pathname } = req.nextUrl;
@@ -22,7 +22,7 @@ export default auth((req) => {
   }
 
   if (user.role === "DISPATCHER" && !DISPATCHER_ALLOWED_PREFIXES.some((p) => pathname.startsWith(p)) && pathname !== "/") {
-    return NextResponse.redirect(new URL("/dispatcher", req.nextUrl.origin));
+    return NextResponse.redirect(new URL("/dispatch", req.nextUrl.origin));
   }
 
   if (user.status === "SUSPENDED" || user.status === "DEACTIVATED") {

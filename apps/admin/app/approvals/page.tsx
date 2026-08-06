@@ -6,7 +6,7 @@ import { ApprovalActions } from "./approval-actions";
 
 export default async function ApprovalsPage() {
   const session = await auth();
-  if (!session?.user || session.user.role !== "ADMIN") redirect("/dispatcher");
+  if (!session?.user || session.user.role !== "ADMIN") redirect("/dispatch");
 
   const pending = await prisma.approvalRequest.findMany({
     where: { status: "PENDING" },
