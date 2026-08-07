@@ -2,10 +2,11 @@ import { S3Client, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { randomUUID } from "crypto";
 
-const s3 = new S3Client({ region: process.env.AWS_REGION ?? "eu-west-2" });
+const REGION = process.env.AWS_REGION ?? "eu-west-2";
+const s3 = new S3Client({ region: REGION });
 const BUCKET = process.env.AWS_S3_BUCKET ?? "asaplocal-uploads";
 
-type UploadPurpose =
+export type UploadPurpose =
   | "job-photo"
   | "business-logo"
   | "business-cover"
@@ -50,7 +51,7 @@ export async function createPresignedUpload(opts: { purpose: UploadPurpose; cont
   });
 
   const url = await getSignedUrl(s3, command, { expiresIn: 120 });
-  const publicUrl = `https://${BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
+  const publicUrl = `https://${BUCKET}.s3.${REGION}.amazonaws.com/${key}`;
   return { uploadUrl: url, publicUrl, key, maxBytes };
 }
 
