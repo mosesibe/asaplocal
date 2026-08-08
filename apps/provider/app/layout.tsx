@@ -31,7 +31,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       email: session.user.email ?? "",
       firstName: profile?.firstName ?? "",
       lastName: profile?.lastName ?? "",
-      avatarUrl: profile?.avatarUrl,
+      avatarUrl: profile?.avatarUrl ?? session.user.image,
       city: business?.city ?? profile?.city ?? "",
       verificationStatus: business?.verificationStatus ?? "UNVERIFIED",
       trustTier: business?.trustTier ?? "BRONZE",

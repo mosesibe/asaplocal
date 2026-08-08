@@ -16,8 +16,12 @@ export const metadata: Metadata = {
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
-  const pendingApprovals =
-    session?.user?.role === "ADMIN" ? await prisma.approvalRequest.count({ where: { status: "PENDING" } }) : 0;
+  const [pendingApprovals, profile] = session?.user
+    ? await Promise.all([
+        session.user.role === "ADMIN" ? prisma.approvalRequest.count({ where: { status: "PENDING" } }) : 0,
+        prisma.profile.findUnique({ where: { userId: session.user.id }, select: { avatarUrl: true } }),
+      ])
+    : [0, null];
 
   return (
     <html lang="en-GB" suppressHydrationWarning>
@@ -27,7 +31,13 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body className={`${inter.variable} font-sans`}>
         <Providers>
           {session?.user ? (
-            <AdminShell role={session.user.role} name={session.user.name} email={session.user.email} pendingApprovals={pendingApprovals}>
+            <AdminShell
+              role={session.user.role}
+              name={session.user.name}
+              email={session.user.email}
+              avatarUrl={profile?.avatarUrl ?? session.user.image}
+              pendingApprovals={pendingApprovals}
+            >
               {children}
             </AdminShell>
           ) : (

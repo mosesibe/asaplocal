@@ -1,16 +1,4 @@
-type UploadPurpose =
-  | "job-photo"
-  | "business-logo"
-  | "business-cover"
-  | "business-photo"
-  | "portfolio-media"
-  | "review-photo"
-  | "verification-doc"
-  | "message-attachment"
-  | "staff-profile-photo"
-  | "staff-id-front"
-  | "staff-id-back"
-  | "user-avatar";
+import type { UploadPurpose } from "@asaplocal/core";
 
 /** Requests a presigned S3 URL, PUTs the file directly to S3, and returns its public URL. */
 export async function uploadFile(file: File, purpose: UploadPurpose): Promise<string> {

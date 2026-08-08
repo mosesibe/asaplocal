@@ -1,12 +1,11 @@
 "use client";
 import { useState } from "react";
 import { signIn } from "next-auth/react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button, Card, Input, PasswordInput } from "@asaplocal/ui";
 
 export default function LoginPage() {
-  const router = useRouter();
   const params = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -19,8 +18,15 @@ export default function LoginPage() {
     setError(null);
     const res = await signIn("credentials", { email, password, redirect: false });
     setLoading(false);
-    if (res?.error) setError("Incorrect email or password");
-    else router.push(params.get("callbackUrl") ?? "/dashboard");
+    if (res?.error) {
+      setError("Incorrect email or password");
+    } else {
+      // The root layout reads the session server-side (for SiteHeader) — a
+      // client-side router.push() here can leave Next.js's client router
+      // cache serving the pre-login (signed-out) render of that layout. A
+      // full navigation guarantees the layout re-renders with the new session.
+      window.location.href = params.get("callbackUrl") ?? "/dashboard";
+    }
   }
 
   return (

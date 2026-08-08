@@ -4,9 +4,7 @@ import { prisma } from "@asaplocal/db";
 import { z } from "zod";
 
 const schema = z.object({
-  firstName: z.string().min(1).max(60),
-  lastName: z.string().min(1).max(60),
-  avatarUrl: z.string().url().optional(),
+  avatarUrl: z.string().url(),
 });
 
 export async function PATCH(req: NextRequest) {
@@ -16,9 +14,13 @@ export async function PATCH(req: NextRequest) {
   const parsed = schema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ message: "Invalid input", issues: parsed.error.flatten() }, { status: 422 });
 
-  const profile = await prisma.profile.update({
+  // OAuth-only sign-ins may not have a Profile row yet (only the register
+  // form creates one) — upsert rather than assume it exists.
+  const [firstName, ...rest] = (session.user.name ?? "").trim().split(/\s+/).filter(Boolean);
+  const profile = await prisma.profile.upsert({
     where: { userId: session.user.id },
-    data: parsed.data,
+    update: parsed.data,
+    create: { userId: session.user.id, firstName: firstName ?? "", lastName: rest.join(" "), ...parsed.data },
   });
 
   return NextResponse.json({ profile });

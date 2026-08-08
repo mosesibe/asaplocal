@@ -17,7 +17,8 @@ export type UploadPurpose =
   | "message-attachment"
   | "staff-profile-photo"
   | "staff-id-front"
-  | "staff-id-back";
+  | "staff-id-back"
+  | "user-avatar";
 
 const ALLOWED_MIME = new Set(["image/jpeg", "image/png", "image/webp", "image/heic", "application/pdf"]);
 const DEFAULT_MAX_BYTES = 10 * 1024 * 1024; // 10MB

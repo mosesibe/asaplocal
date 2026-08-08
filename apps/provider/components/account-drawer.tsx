@@ -146,7 +146,7 @@ export function AccountDrawer({
 
         {panel === "account-settings" && (
           <div className="flex-1 overflow-y-auto">
-            <AccountSettingsPanel firstName={firstName} lastName={lastName} email={email} />
+            <AccountSettingsPanel firstName={firstName} lastName={lastName} email={email} avatarUrl={avatarUrl} />
           </div>
         )}
 

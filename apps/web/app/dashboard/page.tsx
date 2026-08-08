@@ -57,7 +57,7 @@ export default async function CustomerDashboard() {
       <div className="mt-6">
         <ProfileCard
           name={name}
-          avatarUrl={user.image ?? user.profile?.avatarUrl}
+          avatarUrl={user.profile?.avatarUrl ?? user.image}
           contact={contact}
           status={user.status}
           memberSince={user.createdAt}

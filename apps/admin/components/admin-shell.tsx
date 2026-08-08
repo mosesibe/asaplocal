@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   Menu,
   LayoutDashboard,
@@ -28,6 +28,8 @@ import {
   LogOut,
   Moon,
   Sun,
+  Camera,
+  Loader2,
   ChevronDown,
   type LucideIcon,
 } from "lucide-react";
@@ -35,6 +37,7 @@ import { LogoMark, Avatar, useTheme, cn } from "@asaplocal/ui";
 import { Sheet, SheetContent, SheetTitle } from "@asaplocal/ui";
 import { signOut } from "next-auth/react";
 import { GlobalSearch } from "./global-search";
+import { uploadFile } from "@/lib/upload";
 import type { Role } from "@asaplocal/db";
 
 type NavItem = { href: string; label: string; icon: LucideIcon; children?: NavItem[] };
@@ -204,6 +207,7 @@ function SidebarContent({
   role,
   displayName,
   email,
+  avatarUrl,
   nav,
   pathname,
   collapsed,
@@ -212,6 +216,7 @@ function SidebarContent({
   role: Role;
   displayName: string;
   email?: string | null;
+  avatarUrl?: string | null;
   nav: NavItem[];
   pathname: string;
   collapsed?: boolean;
@@ -228,7 +233,7 @@ function SidebarContent({
         )}
       </div>
       <div className={cn("flex items-center gap-3 border-y border-white/10 px-5 py-4", collapsed && "justify-center px-0")}>
-        <Avatar name={displayName} size={36} className="bg-brand-500/25 text-brand-100" />
+        <Avatar src={avatarUrl} name={displayName} size={36} className="bg-brand-500/25 text-brand-100" />
         {!collapsed && (
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-semibold text-white">{displayName}</p>
@@ -287,9 +292,14 @@ function AdminDispatchToggle({ isDispatch }: { isDispatch: boolean }) {
   );
 }
 
-function ProfileMenu({ role, displayName, email }: { role: Role; displayName: string; email?: string | null }) {
+function ProfileMenu({ role, displayName, email, avatarUrl }: { role: Role; displayName: string; email?: string | null; avatarUrl?: string | null }) {
+  const router = useRouter();
   const [open, setOpen] = React.useState(false);
+  const [src, setSrc] = React.useState(avatarUrl ?? null);
+  const [uploading, setUploading] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
   const ref = React.useRef<HTMLDivElement>(null);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
   const { theme, toggleTheme } = useTheme();
 
   React.useEffect(() => {
@@ -301,10 +311,33 @@ function ProfileMenu({ role, displayName, email }: { role: Role; displayName: st
     return () => document.removeEventListener("mousedown", onClick);
   }, [open]);
 
+  async function onPickPhoto(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setUploading(true);
+    setError(null);
+    try {
+      const url = await uploadFile(file, "user-avatar");
+      const res = await fetch("/api/account/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ avatarUrl: url }),
+      });
+      if (!res.ok) throw new Error((await res.json().catch(() => ({}))).message ?? "Couldn't save your photo");
+      setSrc(url);
+      router.refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Photo upload failed");
+    } finally {
+      setUploading(false);
+    }
+  }
+
   return (
     <div ref={ref} className="relative">
       <button type="button" onClick={() => setOpen((v) => !v)} aria-label="Account menu" aria-expanded={open}>
-        <Avatar name={displayName} size={36} />
+        <Avatar src={src} name={displayName} size={36} />
       </button>
       {open && (
         <div className="absolute right-0 top-full z-30 mt-2 w-60 rounded-xl border border-border bg-surface p-1.5 shadow-card">
@@ -313,6 +346,17 @@ function ProfileMenu({ role, displayName, email }: { role: Role; displayName: st
             {email && <p className="truncate text-xs text-muted-foreground">{email}</p>}
             <p className="mt-1 text-xs text-brand-600 dark:text-brand-300">{ROLE_LABEL[role] ?? role}</p>
           </div>
+          <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={onPickPhoto} />
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
+            className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-foreground hover:bg-muted disabled:opacity-50"
+          >
+            {uploading ? <Loader2 size={16} className="animate-spin" /> : <Camera size={16} />}
+            {uploading ? "Uploading…" : "Change photo"}
+          </button>
+          {error && <p className="px-3 pb-1 text-xs text-red-600">{error}</p>}
           <button
             type="button"
             onClick={toggleTheme}
@@ -339,12 +383,14 @@ export function AdminShell({
   role,
   name,
   email,
+  avatarUrl,
   pendingApprovals = 0,
   children,
 }: {
   role: Role;
   name?: string | null;
   email?: string | null;
+  avatarUrl?: string | null;
   pendingApprovals?: number;
   children: React.ReactNode;
 }) {
@@ -372,7 +418,7 @@ export function AdminShell({
             collapsed ? "w-[68px]" : "w-64"
           )}
         >
-          <SidebarContent role={role} displayName={displayName} email={email} nav={nav} pathname={pathname} collapsed={collapsed} />
+          <SidebarContent role={role} displayName={displayName} email={email} avatarUrl={avatarUrl} nav={nav} pathname={pathname} collapsed={collapsed} />
         </aside>
       )}
 
@@ -384,6 +430,7 @@ export function AdminShell({
               role={role}
               displayName={displayName}
               email={email}
+              avatarUrl={avatarUrl}
               nav={nav}
               pathname={pathname}
               onNavigate={() => setMobileOpen(false)}
@@ -431,7 +478,7 @@ export function AdminShell({
               )}
             </Link>
             <div className="ml-1">
-              <ProfileMenu role={role} displayName={displayName} email={email} />
+              <ProfileMenu role={role} displayName={displayName} email={email} avatarUrl={avatarUrl} />
             </div>
           </div>
         </header>

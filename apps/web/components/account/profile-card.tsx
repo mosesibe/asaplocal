@@ -1,4 +1,5 @@
-import { Avatar, Badge, Card, formatPence } from "@asaplocal/ui";
+import { Badge, Card, formatPence } from "@asaplocal/ui";
+import { AvatarUpload } from "./avatar-upload";
 
 const STATUS_LABEL: Record<string, { label: string; variant: "success" | "warning" | "destructive" | "outline" }> = {
   ACTIVE: { label: "Active", variant: "success" },
@@ -29,7 +30,7 @@ export function ProfileCard({
     <Card className="p-5">
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-3">
-          <Avatar src={avatarUrl} name={name} size={56} />
+          <AvatarUpload avatarUrl={avatarUrl} name={name} size={56} />
           <div>
             <p className="text-lg font-semibold">{name}</p>
             <p className="text-sm text-muted-foreground">{contact}</p>
