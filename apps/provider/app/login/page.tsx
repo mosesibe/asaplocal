@@ -34,6 +34,9 @@ export default function LoginPage() {
           <Button type="submit" className="w-full" disabled={loading}>{loading ? "Signing in…" : "Log in"}</Button>
         </form>
         <p className="mt-4 text-center text-sm text-muted-foreground">
+          <Link href="/forgot-password" className="hover:underline">Forgot password?</Link>
+        </p>
+        <p className="mt-2 text-center text-sm text-muted-foreground">
           New provider? <Link href="/register" className="font-medium text-brand-700 hover:underline">List your business</Link>
         </p>
       </Card>

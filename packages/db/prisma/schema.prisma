@@ -316,6 +316,7 @@ model User {
   addresses                Address[]
   authenticators           Authenticator[]
   phoneVerificationCodes   PhoneVerificationCode[]
+  passwordResetTokens      PasswordResetToken[]
   referralsSent            Referral[]                @relation("Referrer")
   referralReceived         Referral?                 @relation("Referee")
   accountCredits           AccountCredit[]
@@ -355,6 +356,21 @@ model PhoneVerificationCode {
   code      String
   attempts  Int      @default(0)
   expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// Single-use, short-lived token for the forgot-password email link. Kept
+// separate from VerificationToken (used for email-verify links) so a token
+// minted for one flow can never be replayed against the other.
+model PasswordResetToken {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String   @db.Uuid
+  token     String   @unique
+  expires   DateTime
   createdAt DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)

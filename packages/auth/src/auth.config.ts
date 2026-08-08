@@ -58,7 +58,7 @@ export const authConfig = {
   callbacks: {
     authorized({ auth, request }) {
       const isLoggedIn = !!auth?.user;
-      const isOnAuthPages = ["/login", "/register", "/forgot-password"].some((p) =>
+      const isOnAuthPages = ["/login", "/register", "/forgot-password", "/reset-password"].some((p) =>
         request.nextUrl.pathname.startsWith(p)
       );
       if (isOnAuthPages) return true;

@@ -13,9 +13,7 @@ const schema = z.object({
   yearsInBusiness: z.coerce.number().int().min(0).max(150).optional(),
   description: z.string().min(20),
   website: z.string().optional(),
-  phone: z.string().optional(),
-  email: z.string().email().optional(),
-  addressLine: z.string().optional(),
+  addressLine: z.string().min(1, "Add your business address"),
   city: z.string().min(2),
   postcode: z.string().optional(),
   baseRadiusMiles: z.coerce.number().int().min(1).max(100).default(15),
@@ -29,6 +27,9 @@ export async function POST(req: NextRequest) {
 
   const existing = await prisma.business.findUnique({ where: { ownerId: session.user.id } });
   if (existing) return NextResponse.json({ message: "Business already exists" }, { status: 409 });
+
+  const user = await prisma.user.findUnique({ where: { id: session.user.id }, select: { email: true, phone: true } });
+  if (!user) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
 
   const parsed = schema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ message: parsed.error.issues[0]?.message ?? "Invalid input", issues: parsed.error.flatten() }, { status: 422 });
@@ -53,8 +54,8 @@ export async function POST(req: NextRequest) {
       companyRegistrationNumber: data.companyRegistrationNumber,
       yearsInBusiness: data.yearsInBusiness,
       website: data.website,
-      phone: data.phone,
-      email: data.email,
+      phone: user.phone,
+      email: user.email,
       utrNumber: data.utrNumber,
       vatNumber: data.vatNumber,
       businessInfoCompletedAt: new Date(),

@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { Button, Card, Input, PasswordInput } from "@asaplocal/ui";
 
 export default function LoginPage() {
@@ -39,6 +40,9 @@ export default function LoginPage() {
           {error && <p className="text-sm text-red-600">{error}</p>}
           <Button type="submit" className="w-full" disabled={loading}>{loading ? "Signing in…" : "Log in"}</Button>
         </form>
+        <p className="mt-4 text-center text-sm text-muted-foreground">
+          <Link href="/forgot-password" className="hover:underline">Forgot password?</Link>
+        </p>
       </Card>
     </div>
   );

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { authMiddleware as auth } from "@asaplocal/auth";
 
-const PUBLIC_PREFIXES = ["/login", "/api/auth"];
+const PUBLIC_PREFIXES = ["/login", "/forgot-password", "/reset-password", "/api/auth"];
 
 /** Routes a DISPATCHER may access. Everything else is ADMIN-only. */
 const DISPATCHER_ALLOWED_PREFIXES = ["/dispatch", "/users", "/api/dispatcher", "/api/jobs", "/api/users"];

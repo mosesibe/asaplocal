@@ -27,8 +27,9 @@ export const emailTemplates = {
     <p>This link expires in 24 hours.</p>`,
   passwordReset: (link: string) => `
     <h2>Reset your password</h2>
+    <p>Click the link below to choose a new password:</p>
     <p><a href="${link}">${link}</a></p>
-    <p>If you didn't request this, you can ignore this email.</p>`,
+    <p>This link expires in 1 hour. If you didn't request this, you can ignore this email.</p>`,
   newLeadAvailable: (businessName: string, jobTitle: string, city: string, link: string) => `
     <h2>New lead near you, ${businessName}</h2>
     <p><strong>${jobTitle}</strong> — ${city}</p>

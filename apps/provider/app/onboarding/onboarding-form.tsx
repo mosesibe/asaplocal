@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button, Card, Input, Select, Textarea } from "@asaplocal/ui";
+import { LocationPicker, type LocationValue } from "@/components/location-picker";
 
 interface Category {
   id: string;
@@ -20,7 +21,7 @@ const BUSINESS_TYPES = [
 
 type Step = 1 | 2;
 
-export function OnboardingForm({ categories }: { categories: Category[] }) {
+export function OnboardingForm({ categories, contactEmail, contactPhone }: { categories: Category[]; contactEmail: string; contactPhone: string }) {
   const router = useRouter();
   const [step, setStep] = useState<Step>(1);
   const [error, setError] = useState<string | null>(null);
@@ -35,11 +36,7 @@ export function OnboardingForm({ categories }: { categories: Category[] }) {
   const [description, setDescription] = useState("");
   const [website, setWebsite] = useState("");
 
-  const [phone, setPhone] = useState("");
-  const [email, setEmail] = useState("");
-  const [addressLine, setAddressLine] = useState("");
-  const [city, setCity] = useState("");
-  const [postcode, setPostcode] = useState("");
+  const [location, setLocation] = useState<LocationValue | null>(null);
   const [baseRadiusMiles, setBaseRadiusMiles] = useState(15);
   const [utrNumber, setUtrNumber] = useState("");
   const [vatNumber, setVatNumber] = useState("");
@@ -52,7 +49,17 @@ export function OnboardingForm({ categories }: { categories: Category[] }) {
   }
 
   function toggleCategory(slug: string) {
-    setCategorySlugs((prev) => (prev.includes(slug) ? prev.filter((s) => s !== slug) : [...prev, slug]));
+    setCategorySlugs((prev) => {
+      const selecting = !prev.includes(slug);
+      const category = categories.find((c) => c.slug === slug);
+      const isParent = category && !category.parentId;
+      if (isParent) {
+        const childSlugs = (childrenByParent.get(category.id) ?? []).map((c) => c.slug);
+        const withoutGroup = prev.filter((s) => s !== slug && !childSlugs.includes(s));
+        return selecting ? [...withoutGroup, slug, ...childSlugs] : withoutGroup;
+      }
+      return selecting ? [...prev, slug] : prev.filter((s) => s !== slug);
+    });
   }
 
   function onNext(e: React.FormEvent) {
@@ -76,6 +83,10 @@ export function OnboardingForm({ categories }: { categories: Category[] }) {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    if (!location) {
+      setError("Add your business address");
+      return;
+    }
     setLoading(true);
     const res = await fetch("/api/onboarding", {
       method: "POST",
@@ -89,11 +100,9 @@ export function OnboardingForm({ categories }: { categories: Category[] }) {
         yearsInBusiness: yearsInBusiness ? Number(yearsInBusiness) : undefined,
         description,
         website: website || undefined,
-        phone: phone || undefined,
-        email: email || undefined,
-        addressLine: addressLine || undefined,
-        city,
-        postcode: postcode || undefined,
+        addressLine: location.addressLine,
+        city: location.city,
+        postcode: location.postcode || undefined,
         baseRadiusMiles,
         utrNumber: utrNumber || undefined,
         vatNumber: vatNumber || undefined,
@@ -159,13 +168,14 @@ export function OnboardingForm({ categories }: { categories: Category[] }) {
     <Card className="mt-6 space-y-4 p-6">
       <form onSubmit={onSubmit} className="space-y-4">
         <p className="text-sm font-medium text-muted-foreground">Contact information</p>
-        <Input placeholder="Business phone" value={phone} onChange={(e) => setPhone(e.target.value)} />
-        <Input type="email" placeholder="Business email" value={email} onChange={(e) => setEmail(e.target.value)} />
-        <Input placeholder="Address line" value={addressLine} onChange={(e) => setAddressLine(e.target.value)} />
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <Input required placeholder="City" value={city} onChange={(e) => setCity(e.target.value)} />
-          <Input placeholder="Postcode" value={postcode} onChange={(e) => setPostcode(e.target.value)} />
-        </div>
+        <p className="text-sm text-foreground">
+          We'll use the email and phone from your account — {contactEmail}
+          {contactPhone ? ` · ${contactPhone}` : ""}
+        </p>
+
+        <p className="pt-2 text-sm font-medium text-muted-foreground">Business address</p>
+        <LocationPicker value={location} onChange={setLocation} />
+
         <div>
           <label className="text-sm font-medium">Service radius: {baseRadiusMiles} miles</label>
           <input type="range" min={1} max={50} value={baseRadiusMiles} onChange={(e) => setBaseRadiusMiles(Number(e.target.value))} className="w-full" />

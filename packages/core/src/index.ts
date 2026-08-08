@@ -15,6 +15,7 @@ export * from "./ai";
 export * from "./csrf";
 export * from "./sms";
 export * from "./phone-verification";
+export * from "./password-reset";
 export * from "./trust-tier";
 export * from "./companies-house";
 export * from "./stripe-identity";
