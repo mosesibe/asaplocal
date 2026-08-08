@@ -38,6 +38,7 @@ export function ProfileForm({ business }: { business: BusinessProfile }) {
     targetResponseMins: business.targetResponseMins ?? "",
   });
   const [saved, setSaved] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [uploadingCover, setUploadingCover] = useState(false);
@@ -96,7 +97,8 @@ export function ProfileForm({ business }: { business: BusinessProfile }) {
   async function save() {
     setLoading(true);
     setSaved(false);
-    await fetch("/api/business", {
+    setError(null);
+    const res = await fetch("/api/business", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -112,8 +114,13 @@ export function ProfileForm({ business }: { business: BusinessProfile }) {
         workingHours: form.workingHours,
         targetResponseMins: form.targetResponseMins ? Number(form.targetResponseMins) : undefined,
       }),
-    });
+    }).catch(() => null);
     setLoading(false);
+    if (!res || !res.ok) {
+      const body = await res?.json().catch(() => ({}));
+      setError(body?.message ?? "Something went wrong — your changes weren't saved.");
+      return;
+    }
     setSaved(true);
   }
 
@@ -219,6 +226,7 @@ export function ProfileForm({ business }: { business: BusinessProfile }) {
       </div>
 
       {saved && <p className="text-sm text-emerald-700">Saved.</p>}
+      {error && <p className="text-sm text-red-600">{error}</p>}
       <Button onClick={save} disabled={loading}>{loading ? "Saving…" : "Save changes"}</Button>
     </Card>
   );

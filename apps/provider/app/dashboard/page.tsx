@@ -8,7 +8,6 @@ import { DashboardStat } from "@/components/dashboard-stat";
 import { EarningsWidget } from "./earnings-widget";
 import { WeekCalendarStrip } from "./week-calendar-strip";
 import { RadarMap } from "./radar-map";
-import { DashboardTopBar } from "./dashboard-top-bar";
 
 function startOfWeek(date: Date): Date {
   const d = new Date(date);
@@ -23,13 +22,10 @@ export default async function ProviderDashboard() {
   const session = await auth();
   if (!session?.user) redirect("/login");
 
-  const [business, profile] = await Promise.all([
-    prisma.business.findUnique({
-      where: { ownerId: session.user.id },
-      include: { subscription: true, leadCreditWallet: true, serviceAreas: true },
-    }),
-    prisma.profile.findUnique({ where: { userId: session.user.id } }),
-  ]);
+  const business = await prisma.business.findUnique({
+    where: { ownerId: session.user.id },
+    include: { subscription: true, leadCreditWallet: true, serviceAreas: true },
+  });
   if (!business) redirect("/onboarding");
 
   const weekStart = startOfWeek(new Date());
@@ -49,21 +45,8 @@ export default async function ProviderDashboard() {
 
   const bookingDates = weekBookings.map((b) => b.scheduledDate.toISOString().slice(0, 10));
 
-  const displayName = profile ? `${profile.firstName} ${profile.lastName}` : business.name;
-
   return (
     <div>
-      <DashboardTopBar
-        name={displayName}
-        email={session.user.email ?? ""}
-        firstName={profile?.firstName ?? ""}
-        lastName={profile?.lastName ?? ""}
-        avatarUrl={profile?.avatarUrl}
-        city={business.city}
-        verificationStatus={business.verificationStatus}
-        trustTier={business.trustTier}
-      />
-
       <div className="space-y-4">
         <EarningsWidget earnings={earnings} />
         <WeekCalendarStrip bookingDates={bookingDates} />

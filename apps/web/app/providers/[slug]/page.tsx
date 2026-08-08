@@ -37,12 +37,23 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   };
 }
 
-export default async function ProviderProfilePage({ params }: { params: Promise<{ slug: string }> }) {
+export default async function ProviderProfilePage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<{ preview?: string }>;
+}) {
   const { slug } = await params;
+  const { preview } = await searchParams;
   const biz = await getBusiness(slug);
   if (!biz) notFound();
 
-  await prisma.business.update({ where: { id: biz.id }, data: { profileViews: { increment: 1 } } }).catch(() => {});
+  // The provider app links here with ?preview=1 so an owner checking their
+  // own listing doesn't inflate their own profile view count.
+  if (preview !== "1") {
+    await prisma.business.update({ where: { id: biz.id }, data: { profileViews: { increment: 1 } } }).catch(() => {});
+  }
 
   const badges = computeBadges(biz);
 

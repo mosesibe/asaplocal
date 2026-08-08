@@ -6,6 +6,7 @@ import { cn, Logo, ThemeToggle } from "@asaplocal/ui";
 import { PRIMARY_NAV, SECONDARY_NAV } from "@/lib/nav";
 import { SignOutButton } from "./sign-out-button";
 import { ProviderBottomNav } from "./provider-bottom-nav";
+import { ProviderTopBar } from "./provider-top-bar";
 
 const NAV = [...PRIMARY_NAV, ...SECONDARY_NAV];
 
@@ -13,7 +14,18 @@ function isActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-export function ProviderShell({ children }: { children: React.ReactNode }) {
+interface AccountSummary {
+  name: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  avatarUrl?: string | null;
+  city: string;
+  verificationStatus: string;
+  trustTier: string;
+}
+
+export function ProviderShell({ children, account }: { children: React.ReactNode; account: AccountSummary }) {
   const pathname = usePathname();
 
   return (
@@ -48,7 +60,10 @@ export function ProviderShell({ children }: { children: React.ReactNode }) {
         </div>
       </aside>
       <div className="flex-1">
-        <main className="mx-auto max-w-6xl px-4 py-8 pb-20 sm:px-6 md:pb-8">{children}</main>
+        <main className="mx-auto max-w-6xl px-4 py-8 pb-20 sm:px-6 md:pb-8">
+          <ProviderTopBar {...account} />
+          {children}
+        </main>
       </div>
       <ProviderBottomNav pathname={pathname} />
     </div>

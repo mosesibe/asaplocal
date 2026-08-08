@@ -36,7 +36,13 @@ export async function PATCH(req: NextRequest) {
   const business = await prisma.business.findUnique({ where: { ownerId: session.user.id } });
   if (!business) return NextResponse.json({ message: "Not found" }, { status: 404 });
 
-  const parsed = schema.safeParse(await req.json().catch(() => null));
+  const body = await req.json().catch(() => null);
+  // A bare domain like "mybusiness.co.uk" (no protocol) is the most common
+  // real-world input here and would otherwise fail z.string().url() silently.
+  if (body && typeof body.website === "string" && body.website.trim() && !/^https?:\/\//i.test(body.website.trim())) {
+    body.website = `https://${body.website.trim()}`;
+  }
+  const parsed = schema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ message: "Invalid input", issues: parsed.error.flatten() }, { status: 422 });
   const data = parsed.data;
 
