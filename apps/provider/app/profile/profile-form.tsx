@@ -52,9 +52,12 @@ export function ProfileForm({ business }: { business: BusinessProfile }) {
     e.target.value = "";
     if (!file) return;
     setUploadingLogo(true);
+    setError(null);
     try {
       const url = await uploadFile(file, "business-logo");
       setForm((f) => ({ ...f, logoUrl: url }));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Logo upload failed");
     } finally {
       setUploadingLogo(false);
     }
@@ -65,9 +68,12 @@ export function ProfileForm({ business }: { business: BusinessProfile }) {
     e.target.value = "";
     if (!file) return;
     setUploadingCover(true);
+    setError(null);
     try {
       const url = await uploadFile(file, "business-cover");
       setForm((f) => ({ ...f, coverImageUrl: url }));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Cover image upload failed");
     } finally {
       setUploadingCover(false);
     }
@@ -78,9 +84,12 @@ export function ProfileForm({ business }: { business: BusinessProfile }) {
     e.target.value = "";
     if (!file) return;
     setUploadingPhoto(true);
+    setError(null);
     try {
       const url = await uploadFile(file, "business-photo");
       setForm((f) => ({ ...f, photoUrls: [...f.photoUrls, url] }));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Photo upload failed");
     } finally {
       setUploadingPhoto(false);
     }
