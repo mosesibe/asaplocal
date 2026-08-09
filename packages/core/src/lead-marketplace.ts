@@ -146,7 +146,9 @@ export interface NearbyLead {
 export async function getLeadsNearBusiness(businessId: string, opts: { limit?: number } = {}): Promise<NearbyLead[]> {
   const business = await prisma.business.findUnique({
     where: { id: businessId },
-    include: { serviceAreas: true, services: { select: { categoryId: true } } },
+    // Only active services count — a paused service must stop surfacing leads
+    // here, matching the `isActive: true` filter in findEligibleProviders().
+    include: { serviceAreas: true, services: { where: { isActive: true }, select: { categoryId: true } } },
   });
   if (!business) return [];
 

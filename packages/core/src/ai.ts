@@ -60,6 +60,22 @@ export async function categoriseJobRequest(description: string, categories: { id
   });
 }
 
+/**
+ * Estimates how long a service typically takes on site, shown to providers as
+ * guidance on their services page. Returns null rather than a guess when AI
+ * isn't configured, so the UI can simply omit the hint.
+ */
+export async function suggestServiceDuration(serviceTitle: string, categoryName: string) {
+  return chatJSON<{ durationMins: number | null }>(
+    `You estimate how long a UK home-service job typically takes on site, for a single average job. Respond as JSON: {"durationMins": number}. Give one realistic figure in minutes between 15 and 1440. Do not explain.`,
+    `Category: ${categoryName}\nService: "${serviceTitle}"`,
+    { durationMins: null }
+  ).then((r) => {
+    if (typeof r.durationMins !== "number" || !Number.isFinite(r.durationMins)) return { durationMins: null };
+    return { durationMins: Math.min(1440, Math.max(15, Math.round(r.durationMins))) };
+  });
+}
+
 /** Drafts a quote message + suggested price band for a provider responding to a lead. */
 export async function generateQuoteTemplate(opts: {
   businessName: string;

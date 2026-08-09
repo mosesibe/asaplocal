@@ -1,0 +1,804 @@
+<title>AsapLocal — Company Brief</title>
+<style>
+  :root {
+    --ground: #FBFAF9;
+    --surface: #FFFFFF;
+    --surface-2: #F2F4F6;
+    --ink: #15181D;
+    --ink-2: #4B5563;
+    --ink-3: #7A8493;
+    --rule: #E1E4E8;
+    --rule-strong: #C6CCD3;
+    --brand: #C15F2A;
+    --brand-ink: #96421A;
+    --brand-wash: #FAF0E9;
+    --t-bronze: #A9713F;
+    --t-silver: #8B96A3;
+    --t-gold: #B8891F;
+    --t-plat: #4F7593;
+    --pos: #2F7A55;
+    --neg: #A93A2C;
+
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --mono: ui-monospace, "SF Mono", SFMono-Regular, "Cascadia Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #0E1114;
+      --surface: #161A1F;
+      --surface-2: #1C2128;
+      --ink: #E9EBEE;
+      --ink-2: #A3ACB8;
+      --ink-3: #77818E;
+      --rule: #262C34;
+      --rule-strong: #39414B;
+      --brand: #E4823F;
+      --brand-ink: #F0A06A;
+      --brand-wash: #241710;
+      --t-bronze: #C08B57;
+      --t-silver: #A3AEBB;
+      --t-gold: #D6A63C;
+      --t-plat: #6E97B5;
+      --pos: #58A87C;
+      --neg: #D2705F;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground: #0E1114;
+    --surface: #161A1F;
+    --surface-2: #1C2128;
+    --ink: #E9EBEE;
+    --ink-2: #A3ACB8;
+    --ink-3: #77818E;
+    --rule: #262C34;
+    --rule-strong: #39414B;
+    --brand: #E4823F;
+    --brand-ink: #F0A06A;
+    --brand-wash: #241710;
+    --t-bronze: #C08B57;
+    --t-silver: #A3AEBB;
+    --t-gold: #D6A63C;
+    --t-plat: #6E97B5;
+    --pos: #58A87C;
+    --neg: #D2705F;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .sheet {
+    max-width: 60rem;
+    margin: 0 auto;
+    padding: 4rem 2rem 6rem;
+  }
+
+  /* ── Margin-rail layout ───────────────────────────────── */
+  .row {
+    display: grid;
+    grid-template-columns: 6.5rem minmax(0, 1fr);
+    gap: 2.5rem;
+    align-items: start;
+  }
+  @media (max-width: 720px) {
+    .row { grid-template-columns: 1fr; gap: 0.75rem; }
+    .sheet { padding: 2.5rem 1.25rem 4rem; }
+  }
+
+  .rail {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    padding-top: 0.55rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .rail b {
+    display: block;
+    color: var(--brand);
+    font-size: 1.05rem;
+    letter-spacing: 0.02em;
+    font-weight: 700;
+  }
+
+  section {
+    border-top: 1px solid var(--rule);
+    padding-top: 2.25rem;
+    margin-top: 3.25rem;
+  }
+
+  h1, h2, h3 { text-wrap: balance; margin: 0; }
+
+  h1 {
+    font-size: clamp(2.6rem, 6.5vw, 4.1rem);
+    line-height: 1.02;
+    letter-spacing: -0.035em;
+    font-weight: 800;
+  }
+  h2 {
+    font-size: clamp(1.5rem, 3vw, 2rem);
+    line-height: 1.15;
+    letter-spacing: -0.025em;
+    font-weight: 800;
+  }
+  h3 {
+    font-size: 1rem;
+    letter-spacing: -0.005em;
+    font-weight: 700;
+    margin-bottom: 0.3rem;
+  }
+
+  p { margin: 0 0 1rem; max-width: 65ch; color: var(--ink-2); }
+  p.lede { font-size: 1.15rem; line-height: 1.5; color: var(--ink); }
+  p:last-child { margin-bottom: 0; }
+  strong { color: var(--ink); font-weight: 650; }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--brand);
+    margin: 0 0 1.1rem;
+  }
+
+  /* ── Cover ────────────────────────────────────────────── */
+  .cover { border-top: 3px solid var(--brand); padding-top: 2rem; }
+  .cover h1 { margin-bottom: 1.25rem; }
+  .cover .lede { max-width: 44ch; }
+  .metaline {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.75rem;
+    margin-top: 2.5rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--rule);
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+  .metaline span b { color: var(--ink); font-weight: 600; display: block; letter-spacing: 0.02em; }
+
+  /* ── Two-up ───────────────────────────────────────────── */
+  .duo {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+    gap: 1.5rem;
+    margin-top: 1.75rem;
+  }
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    padding: 1.4rem;
+  }
+  .panel .tag {
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    display: block;
+    margin-bottom: 0.6rem;
+  }
+  .panel p { font-size: 0.94rem; margin-bottom: 0.65rem; }
+
+  /* ── Trust ladder ─────────────────────────────────────── */
+  .ladder { margin-top: 1.75rem; display: flex; flex-direction: column; gap: 0; }
+  .rung {
+    display: grid;
+    grid-template-columns: 9.5rem minmax(0, 1fr);
+    gap: 1.5rem;
+    padding: 1.15rem 0;
+    border-top: 1px solid var(--rule);
+    align-items: start;
+  }
+  .rung:last-child { border-bottom: 1px solid var(--rule); }
+  @media (max-width: 640px) {
+    .rung { grid-template-columns: 1fr; gap: 0.4rem; }
+  }
+  .tier {
+    font-family: var(--mono);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding-top: 0.1rem;
+  }
+  .chip {
+    width: 0.7rem; height: 0.7rem;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .t1 { color: var(--t-bronze); } .t1 .chip { background: var(--t-bronze); }
+  .t2 { color: var(--t-silver); } .t2 .chip { background: var(--t-silver); }
+  .t3 { color: var(--t-gold); }   .t3 .chip { background: var(--t-gold); }
+  .t4 { color: var(--t-plat); }   .t4 .chip { background: var(--t-plat); }
+  .rung p { font-size: 0.94rem; margin: 0; }
+  .rung .req {
+    font-family: var(--mono);
+    font-size: 0.74rem;
+    color: var(--ink-3);
+    margin-top: 0.45rem;
+    letter-spacing: 0.01em;
+  }
+
+  /* ── Numbered edges ───────────────────────────────────── */
+  .edges { margin-top: 1.75rem; display: flex; flex-direction: column; gap: 0; }
+  .edge {
+    display: grid;
+    grid-template-columns: 2.5rem minmax(0, 1fr);
+    gap: 1.25rem;
+    padding: 1.3rem 0;
+    border-top: 1px solid var(--rule);
+  }
+  .edge:last-child { border-bottom: 1px solid var(--rule); }
+  .edge .n {
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--brand);
+    font-variant-numeric: tabular-nums;
+    padding-top: 0.15rem;
+  }
+  .edge p { font-size: 0.94rem; margin: 0; }
+  .edge .vs {
+    display: block;
+    margin-top: 0.55rem;
+    padding-left: 0.85rem;
+    border-left: 2px solid var(--rule-strong);
+    font-size: 0.88rem;
+    color: var(--ink-3);
+  }
+  .edge .vs b {
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    font-weight: 600;
+    display: block;
+    margin-bottom: 0.15rem;
+  }
+
+  /* ── Data figures ─────────────────────────────────────── */
+  .figures {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+    margin-top: 1.75rem;
+  }
+  .fig { background: var(--surface); padding: 1.1rem 1.15rem; }
+  .fig b {
+    display: block;
+    font-family: var(--mono);
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+    line-height: 1.1;
+  }
+  .fig span {
+    display: block;
+    margin-top: 0.3rem;
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+
+  /* ── Flow ─────────────────────────────────────────────── */
+  .flow {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-top: 1.5rem;
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .flow i {
+    font-style: normal;
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    padding: 0.45rem 0.7rem;
+    color: var(--ink-2);
+  }
+  .flow i.own { border-color: var(--brand); color: var(--brand-ink); background: var(--brand-wash); }
+  .flow u { text-decoration: none; color: var(--ink-3); align-self: center; }
+
+  /* ── Table ────────────────────────────────────────────── */
+  .tablewrap { overflow-x: auto; margin-top: 1.75rem; border: 1px solid var(--rule); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.9rem; min-width: 34rem; }
+  th, td { text-align: left; padding: 0.75rem 1rem; border-bottom: 1px solid var(--rule); }
+  th {
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    font-weight: 600;
+    background: var(--surface-2);
+  }
+  td { color: var(--ink-2); background: var(--surface); }
+  td:first-child { color: var(--ink); font-weight: 600; }
+  td.num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+  tr:last-child td { border-bottom: none; }
+
+  /* ── Fill-in marker ───────────────────────────────────── */
+  .fill {
+    font-family: var(--mono);
+    font-size: 0.82rem;
+    background: var(--brand-wash);
+    border: 1px dashed var(--brand);
+    color: var(--brand-ink);
+    padding: 0.12rem 0.45rem;
+    white-space: nowrap;
+  }
+  .note {
+    margin-top: 1.5rem;
+    padding: 1rem 1.15rem;
+    background: var(--surface-2);
+    border-left: 3px solid var(--brand);
+    font-size: 0.88rem;
+    color: var(--ink-2);
+  }
+  .note b { color: var(--ink); }
+
+  ul.plain { margin: 0.75rem 0 0; padding-left: 1.1rem; color: var(--ink-2); max-width: 65ch; }
+  ul.plain li { margin-bottom: 0.45rem; font-size: 0.94rem; }
+  ul.plain li::marker { color: var(--brand); }
+
+  footer {
+    margin-top: 4rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--rule);
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  /* ── Print ────────────────────────────────────────────── */
+  @page { size: A4; margin: 16mm 14mm; }
+
+  @media print {
+    /* Must out-specify the dark-scheme rule above (`:root:not(...)`), which
+       still matches when printing from a dark-mode device — otherwise the
+       dark palette leaks onto white paper. */
+    :root,
+    :root:not([data-theme="light"]),
+    :root[data-theme="dark"] {
+      --ground: #FFFFFF; --surface: #FFFFFF; --surface-2: #F4F5F7;
+      --ink: #15181D; --ink-2: #3F4854; --ink-3: #6B7480;
+      --rule: #D5DAE0; --rule-strong: #B4BBC3;
+      --brand: #B0521F; --brand-ink: #8A3C15; --brand-wash: #FBF2EC;
+      --t-bronze: #96622F; --t-silver: #6F7B89; --t-gold: #9C7415; --t-plat: #3F6482;
+    }
+    body { font-size: 10.5pt; line-height: 1.5; background: #fff; }
+    .sheet { max-width: none; padding: 0; }
+    .row { grid-template-columns: 5rem minmax(0, 1fr); gap: 1.5rem; }
+    h1 { font-size: 30pt; }
+    h2 { font-size: 15pt; }
+    section { break-inside: auto; page-break-inside: auto; margin-top: 2rem; padding-top: 1.25rem; }
+    .panel, .rung, .edge, .fig, .note, tr { break-inside: avoid; page-break-inside: avoid; }
+    h2, h3 { break-after: avoid; page-break-after: avoid; }
+    .cover { break-after: page; page-break-after: always; }
+    .figures { break-inside: avoid; }
+    * { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+  }
+</style>
+
+<div class="sheet">
+
+  <!-- ═══════════════ COVER ═══════════════ -->
+  <header class="cover">
+    <p class="eyebrow">AsapLocal · Company Brief</p>
+    <h1>Trust,<br />engineered.</h1>
+    <p class="lede">
+      Every local-services marketplace says its tradespeople are vetted.
+      We are the one that can prove it — continuously, in code, and on a
+      ladder a provider cannot type their way up.
+    </p>
+    <div class="metaline">
+      <span><b>United Kingdom</b>Market</span>
+      <span><b>10 trades</b>Categories live</span>
+      <span><b>4 tiers</b>Verification ladder</span>
+      <span><b>5 lines</b>Revenue model</span>
+    </div>
+  </header>
+
+  <!-- ═══════════════ 01 ═══════════════ -->
+  <section class="row">
+    <div class="rail"><b>01</b>Problem</div>
+    <div>
+      <h2>Both sides of this market distrust the middle.</h2>
+      <p>
+        Local services is one of the last large consumer categories where the
+        intermediary is the least-trusted party in the transaction. That
+        distrust is earned, and it comes from two directions at once.
+      </p>
+      <div class="duo">
+        <div class="panel">
+          <span class="tag">Homeowner's problem</span>
+          <p>
+            A "verified" badge usually means a form was completed once, at
+            sign-up, possibly years ago. Insurance certificates are collected
+            as a PDF and never looked at again.
+          </p>
+          <p><strong>The homeowner carries a risk they were told was handled.</strong></p>
+        </div>
+        <div class="panel">
+          <span class="tag">Tradesperson's problem</span>
+          <p>
+            They buy introductions, not outcomes. A single job is resold to as
+            many buyers as the platform can find, so the same work gets quoted
+            into the ground.
+          </p>
+          <p><strong>Bad leads — wrong area, wrong trade, no answer — are treated as the operator's cost, not the platform's.</strong></p>
+        </div>
+      </div>
+      <p style="margin-top:1.5rem">
+        These are the same problem seen from opposite ends: <strong>trust in
+        this category is asserted rather than proven.</strong> Whoever closes
+        that gap earns the right to sit in the middle.
+      </p>
+    </div>
+  </section>
+
+  <!-- ═══════════════ 02 ═══════════════ -->
+  <section class="row">
+    <div class="rail"><b>02</b>Thesis</div>
+    <div>
+      <h2>Trust should be computed, not claimed.</h2>
+      <p class="lede">
+        Every trust signal on AsapLocal is derived from a verifiable external
+        source and recomputed whenever the underlying facts change.
+      </p>
+      <p>
+        A provider does not apply for a badge and wait for a human to agree.
+        Their standing is a function of what can actually be checked: a
+        government-ID match, a live Companies House record, an insurance
+        policy with a real expiry date, a trade qualification in a regulated
+        category. Change any input and the standing recalculates.
+      </p>
+      <p>
+        This is the difference between a directory that <em>lists</em> vetted
+        tradespeople and a platform that <em>maintains</em> them.
+      </p>
+    </div>
+  </section>
+
+  <!-- ═══════════════ 03 ═══════════════ -->
+  <section class="row">
+    <div class="rail"><b>03</b>System</div>
+    <div>
+      <h2>Three surfaces, one spine.</h2>
+      <div class="duo">
+        <div class="panel">
+          <span class="tag">Customer app</span>
+          <p>Post a job in minutes with address autocomplete and AI category matching. Compare quotes, book, pay a deposit, sign off the work, leave a review.</p>
+        </div>
+        <div class="panel">
+          <span class="tag">Provider app</span>
+          <p>A business tool, not a lead inbox: lead marketplace, calendar, job sheets, staff management, portfolio, verification centre, earnings and lead-ROI analytics.</p>
+        </div>
+        <div class="panel">
+          <span class="tag">Operations console</span>
+          <p>Dispatch board, verification queue, approval workflow, refunds, finance and a full audit trail. The layer that lets us <em>run</em> jobs, not just list them.</p>
+        </div>
+      </div>
+      <p style="margin-top:1.75rem">
+        Critically, we own the entire job — not the introduction:
+      </p>
+      <div class="flow">
+        <i class="own">Post</i><u>→</u>
+        <i class="own">Match</i><u>→</u>
+        <i class="own">Quote</i><u>→</u>
+        <i class="own">Book</i><u>→</u>
+        <i class="own">Deposit</i><u>→</u>
+        <i class="own">Work log</i><u>→</u>
+        <i class="own">Sign-off</i><u>→</u>
+        <i class="own">Review</i><u>→</u>
+        <i class="own">Payout</i>
+      </div>
+      <p style="margin-top:1.25rem">
+        Most of the category stops after <em>Match</em>. Everything downstream
+        of that is where the data, the retention and the second revenue line
+        actually live.
+      </p>
+    </div>
+  </section>
+
+  <!-- ═══════════════ 04 ═══════════════ -->
+  <section class="row">
+    <div class="rail"><b>04</b>Trust ladder</div>
+    <div>
+      <h2>Four rungs. Every one of them externally sourced.</h2>
+      <p>
+        Tier is never set by hand except at the top, and it is recalculated
+        after every verification event.
+      </p>
+      <div class="ladder">
+        <div class="rung">
+          <div class="tier t1"><span class="chip"></span>Bronze</div>
+          <div>
+            <p><strong>Registered.</strong> Account created and business profile completed. Visible on the marketplace, no trust claims made on their behalf.</p>
+          </div>
+        </div>
+        <div class="rung">
+          <div class="tier t2"><span class="chip"></span>Silver</div>
+          <div>
+            <p><strong>Verified.</strong> Identity confirmed against government ID, business confirmed against the public company register, and public-liability cover confirmed as genuine and in date.</p>
+            <div class="req">Stripe Identity · Companies House record + director match · verified PL policy, expiry in future</div>
+          </div>
+        </div>
+        <div class="rung">
+          <div class="tier t3"><span class="chip"></span>Gold</div>
+          <div>
+            <p><strong>Qualified.</strong> Everything in Silver, plus a verified trade qualification wherever the category is regulated, plus real portfolio work on file.</p>
+            <div class="req">Regulated categories carry suggested bodies (e.g. NICEIC · NAPIT · ECA for electrical)</div>
+          </div>
+        </div>
+        <div class="rung">
+          <div class="tier t4"><span class="chip"></span>Platinum</div>
+          <div>
+            <p><strong>Partner.</strong> Manual override, reserved for businesses we have worked with directly and stand behind ourselves.</p>
+          </div>
+        </div>
+      </div>
+      <div class="note">
+        <b>The part competitors structurally cannot copy quickly:</b> insurance
+        is stored with its expiry date, not as an image. A policy that lapses
+        drops the provider's tier automatically and triggers a renewal prompt.
+        There is no "verified once, verified forever" state anywhere in the system.
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ 05 ═══════════════ -->
+  <section class="row">
+    <div class="rail"><b>05</b>Lead economics</div>
+    <div>
+      <h2>Deliberately scarce, priced to the job, refundable.</h2>
+      <p>
+        The single loudest complaint in this category is lead quality and lead
+        flooding. We designed the marketplace around fixing exactly that.
+      </p>
+      <div class="figures">
+        <div class="fig"><b>£5–£20</b><span>Lead price band</span></div>
+        <div class="fig"><b>5</b><span>Max buyers per job</span></div>
+        <div class="fig"><b>7 days</b><span>Lead expiry</span></div>
+        <div class="fig"><b>100–400m</b><span>Pre-purchase blur</span></div>
+      </div>
+      <ul class="plain">
+        <li><strong>Price scales with job value.</strong> Lead cost is computed from the customer's stated budget, so a £60 job never costs the same to win as a £3,000 one.</li>
+        <li><strong>Hard cap of five.</strong> Once five providers hold a job, it closes to the market. The sixth quote never exists, so the five who paid keep a real chance.</li>
+        <li><strong>Four ways to acquire.</strong> Monthly plan allowance, prepaid credits, single card purchase, or a free claim — providers pick their own risk posture.</li>
+        <li><strong>Refunds with named reasons.</strong> Out of area, duplicate, spam, unresponsive customer, wrong category. An approved refund reverses the exact charge <em>and</em> returns the slot to the market.</li>
+        <li><strong>Address privacy before payment.</strong> The map pin is deterministically offset 100–400m until a provider commits, so nobody harvests customer addresses by browsing.</li>
+      </ul>
+      <p style="margin-top:1.25rem">
+        The strategic point: scarcity is a <em>feature we sell to providers</em>.
+        It costs us short-term lead revenue per job and buys the supply-side
+        loyalty that the incumbents have spent a decade burning.
+      </p>
+    </div>
+  </section>
+
+  <!-- ═══════════════ 06 ═══════════════ -->
+  <section class="row">
+    <div class="rail"><b>06</b>Our edge</div>
+    <div>
+      <h2>Six places we win, and why they are hard to answer.</h2>
+      <div class="edges">
+
+        <div class="edge">
+          <div class="n">01</div>
+          <div>
+            <h3>Verification is computed, not claimed</h3>
+            <p>Identity, company record and insurance all come from external systems of record, and tier recalculates when any of them change.</p>
+            <span class="vs"><b>Why it's hard to copy</b>Retrofitting this means re-verifying an entire existing supply base and telling a large share of them they just lost their badge.</span>
+          </div>
+        </div>
+
+        <div class="edge">
+          <div class="n">02</div>
+          <div>
+            <h3>Insurance that is still valid today</h3>
+            <p>Policies are stored as structured records with type, status and expiry — not a scanned certificate in a folder — with automated renewal reminders.</p>
+            <span class="vs"><b>Why it's hard to copy</b>It is an ongoing operational commitment, not a feature ship. It only works if you have been tracking expiry from day one.</span>
+          </div>
+        </div>
+
+        <div class="edge">
+          <div class="n">03</div>
+          <div>
+            <h3>Scarcity by design</h3>
+            <p>Five buyers maximum, priced to job value, with a real refund path. Providers can calculate their return instead of guessing.</p>
+            <span class="vs"><b>Why it's hard to copy</b>It is a direct revenue cut per job. An incumbent with lead-volume targets cannot match it without repricing its whole book.</span>
+          </div>
+        </div>
+
+        <div class="edge">
+          <div class="n">04</div>
+          <div>
+            <h3>Privacy before purchase</h3>
+            <p>Customer location is blurred until a provider commits, so posting a job never exposes an address to casual browsing.</p>
+            <span class="vs"><b>Why it's hard to copy</b>Easy to build, but it caps the "browse free leads" funnel that many competitors rely on for provider acquisition.</span>
+          </div>
+        </div>
+
+        <div class="edge">
+          <div class="n">05</div>
+          <div>
+            <h3>We own the whole job</h3>
+            <p>Quote, booking, deposit, an itemised work log the customer signs off, review, and payout to the provider's connected account.</p>
+            <span class="vs"><b>Why it's hard to copy</b>Owning completion is what makes reviews trustworthy and payouts possible. A referral-only competitor has no hook to attach either to.</span>
+          </div>
+        </div>
+
+        <div class="edge">
+          <div class="n">06</div>
+          <div>
+            <h3>An operator layer, not just a listing</h3>
+            <p>Dispatch console, approval workflow for sensitive actions, and an audit log across the platform — so we can run managed and assisted jobs, not only passive matching.</p>
+            <span class="vs"><b>Why it's hard to copy</b>This is the wedge into commercial, insurance and property-management contracts that pure self-serve marketplaces cannot service.</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ 07 ═══════════════ -->
+  <section class="row">
+    <div class="rail"><b>07</b>Model</div>
+    <div>
+      <h2>Five revenue lines, deliberately not one.</h2>
+      <p>
+        Single-line lead marketplaces are fragile: the moment lead quality
+        dips, revenue and trust fail together. Ours are separated.
+      </p>
+      <div class="tablewrap">
+        <table>
+          <thead>
+            <tr><th>Line</th><th>Mechanism</th><th>Paid by</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Lead sales</td><td class="num">£5–£20 per lead, capped at 5 buyers</td><td>Provider</td></tr>
+            <tr><td>Subscriptions</td><td>Free · Pro (15 leads/mo) · Premium (40/mo) · Enterprise</td><td>Provider</td></tr>
+            <tr><td>Credit packs</td><td>Prepaid lead credits, small and large bundles</td><td>Provider</td></tr>
+            <tr><td>Booking rail</td><td class="num">20% deposit taken at acceptance, payouts via connected accounts</td><td>Customer</td></tr>
+            <tr><td>Featured placement</td><td>Time-boxed promoted position in search</td><td>Provider</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p style="margin-top:1.25rem">
+        Subscriptions and the booking rail are the durable lines. Lead sales
+        are the acquisition wedge that gets a provider to their first paid
+        outcome quickly.
+      </p>
+    </div>
+  </section>
+
+  <!-- ═══════════════ 08 ═══════════════ -->
+  <section class="row">
+    <div class="rail"><b>08</b>Wedge</div>
+    <div>
+      <h2>Emergency work first, then everything around it.</h2>
+      <p>
+        Ten categories are live — cleaning, plumbing, electrical, gardening,
+        handyman, painting, removals, tutoring, beauty and pet services — but
+        the entry point is narrower than that on purpose.
+      </p>
+      <p>
+        Emergency jobs are tagged distinctly across the taxonomy: emergency
+        plumbing, leak repair, drain unblocking, emergency electrician, boiler
+        faults. They are the ideal wedge because they are
+        <strong>urgent, high-intent, comparatively price-insensitive — and the exact
+        moment a homeowner cares most whether the person arriving is real,
+        insured and qualified.</strong>
+      </p>
+      <p>
+        That is precisely where a computed trust ladder converts best. We win
+        the highest-anxiety job first, then hold the household for the
+        scheduled, lower-margin work that follows.
+      </p>
+    </div>
+  </section>
+
+  <!-- ═══════════════ 09 ═══════════════ -->
+  <section class="row">
+    <div class="rail"><b>09</b>Traction</div>
+    <div>
+      <h2>Where we are.</h2>
+      <div class="note" style="margin-top:0">
+        <b>Complete before circulating.</b> The figures below are intentionally
+        blank. Every other claim in this brief describes capability that is
+        built and running; these are the only numbers that require your own
+        verified data, and they should never be estimated.
+      </div>
+      <div class="figures">
+        <div class="fig"><b><span class="fill">—</span></b><span>Providers onboarded</span></div>
+        <div class="fig"><b><span class="fill">—</span></b><span>Verified to Silver+</span></div>
+        <div class="fig"><b><span class="fill">—</span></b><span>Jobs posted / mo</span></div>
+        <div class="fig"><b><span class="fill">—</span></b><span>Booking conversion</span></div>
+        <div class="fig"><b><span class="fill">—</span></b><span>Monthly revenue</span></div>
+        <div class="fig"><b><span class="fill">—</span></b><span>Provider retention</span></div>
+      </div>
+      <p style="margin-top:1.5rem">
+        The metrics that matter most for this thesis, and the ones to lead
+        with once populated:
+      </p>
+      <ul class="plain">
+        <li><strong>Share of supply at Silver or above</strong> — proof the ladder is achievable, not decorative.</li>
+        <li><strong>Lead refund rate</strong> — proof lead quality is genuinely better, stated against our own published standard.</li>
+        <li><strong>Quote-to-booking conversion</strong> — proof the five-buyer cap produces real work rather than a race to the bottom.</li>
+        <li><strong>Provider month-3 retention</strong> — the number that decides whether this is a marketplace or a churn treadmill.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ═══════════════ 10 ═══════════════ -->
+  <section class="row">
+    <div class="rail"><b>10</b>Ask</div>
+    <div>
+      <h2>What we are raising, and what it buys.</h2>
+      <p>
+        We are raising <span class="fill">£ AMOUNT</span> to reach
+        <span class="fill">MILESTONE</span> over <span class="fill">N</span> months.
+      </p>
+      <div class="duo">
+        <div class="panel">
+          <span class="tag">Supply density</span>
+          <p>Get to critical provider coverage in the launch region, verified to Silver, so no job posted goes unquoted.</p>
+        </div>
+        <div class="panel">
+          <span class="tag">Demand in emergency</span>
+          <p>Own the urgent-intent channels where trust is the deciding factor and acquisition pays back inside one job.</p>
+        </div>
+        <div class="panel">
+          <span class="tag">Operator contracts</span>
+          <p>Convert the dispatch layer into managed accounts — property managers, insurers, letting agents — for contracted, recurring volume.</p>
+        </div>
+      </div>
+      <p style="margin-top:1.75rem" class="lede">
+        The category's incumbents have distribution. What they do not have is
+        a trust model that survives contact with the truth. That is the one
+        thing we built first.
+      </p>
+    </div>
+  </section>
+
+  <footer>
+    <span>AsapLocal · Company Brief</span>
+    <span>Confidential</span>
+  </footer>
+
+</div>

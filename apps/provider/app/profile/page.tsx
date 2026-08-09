@@ -3,11 +3,15 @@ import Link from "next/link";
 import { auth } from "@asaplocal/auth";
 import { prisma } from "@asaplocal/db";
 import { ProfileForm } from "./profile-form";
+import { AddressesSection } from "./addresses-section";
 
 export default async function BusinessProfilePage() {
   const session = await auth();
   if (!session?.user) redirect("/login");
-  const business = await prisma.business.findUnique({ where: { ownerId: session.user.id }, include: { services: true } });
+  const business = await prisma.business.findUnique({
+    where: { ownerId: session.user.id },
+    include: { services: true, addresses: { orderBy: { createdAt: "asc" } } },
+  });
   if (!business) redirect("/onboarding");
 
   return (
@@ -36,6 +40,19 @@ export default async function BusinessProfilePage() {
             workingHours: (business.workingHours as any) ?? null,
             targetResponseMins: business.targetResponseMins ?? undefined,
           }}
+        />
+      </div>
+      <div className="mt-6">
+        <AddressesSection
+          addresses={business.addresses.map((a) => ({
+            id: a.id,
+            label: a.label,
+            addressLine: a.addressLine,
+            city: a.city,
+            postcode: a.postcode,
+          }))}
+          primary={{ addressLine: business.addressLine, city: business.city, postcode: business.postcode }}
+          isSoleTrader={business.businessType === "SOLE_TRADER"}
         />
       </div>
     </div>

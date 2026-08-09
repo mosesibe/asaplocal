@@ -624,12 +624,58 @@ model Business {
   portfolioItems        PortfolioItem[]
   references            BusinessReference[]
   payouts               Payout[]
+  addresses             BusinessAddress[]
+  supplies              Supply[]
 
   @@index([city])
   @@index([verificationStatus])
   @@index([isFeatured])
   @@index([lat, lng])
   @@index([trustTier])
+}
+
+// Additional trading addresses for a business. The primary address stays
+// inline on Business (it's what lead matching geocodes against); this table
+// is for multi-site operators — limited companies, partnerships and charities
+// with more than one branch. Sole traders normally have none.
+model BusinessAddress {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  businessId  String   @db.Uuid
+  label       String? // e.g. "Head office", "Leeds branch"
+  addressLine String
+  city        String
+  postcode    String?
+  country     String   @default("GB")
+  lat         Decimal? @db.Decimal(9, 6)
+  lng         Decimal? @db.Decimal(9, 6)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
+  @@index([city])
+}
+
+// Products a provider sells alongside their services (e.g. a plumber listing
+// taps and valves). Display-only for now — surfaced on the public listing,
+// not orderable through the platform.
+model Supply {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  businessId  String   @db.Uuid
+  name        String
+  description String?  @db.Text
+  pricePence  Int?
+  unit        String? // e.g. "per metre", "each", "per box"
+  imageUrl    String?
+  inStock     Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@index([businessId])
 }
 
 // Admin-recorded ledger of payouts made to providers outside Stripe Connect
@@ -812,19 +858,26 @@ model ServiceArea {
 }
 
 model Service {
-  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  businessId    String    @db.Uuid
-  categoryId    String    @db.Uuid
-  title         String
-  description   String?   @db.Text
-  priceType     PriceType @default(QUOTE_ONLY)
-  priceMinPence Int?
-  priceMaxPence Int?
-  durationMins  Int?
-  images        String[]
-  isActive      Boolean   @default(true)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id                      String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  businessId              String    @db.Uuid
+  categoryId              String    @db.Uuid
+  title                   String
+  description             String?   @db.Text
+  priceType               PriceType @default(QUOTE_ONLY)
+  priceMinPence           Int?
+  priceMaxPence           Int?
+  durationMins            Int?
+  // AI's estimate of how long this job typically takes, shown to the provider
+  // as guidance on the services page. Kept separate from `durationMins` (the
+  // provider's own figure) so a suggestion never silently overwrites their input.
+  aiSuggestedDurationMins Int?
+  images                  String[]
+  // Providers pause a service they no longer offer — paused services stop
+  // matching leads (see findEligibleProviders / getLeadsNearBusiness) but the
+  // row is kept so pricing and history survive un-pausing.
+  isActive                Boolean   @default(true)
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
 
   business Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
   category Category  @relation(fields: [categoryId], references: [id], onDelete: Restrict)

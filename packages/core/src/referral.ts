@@ -26,6 +26,12 @@ export function referralLink(code: string) {
   return `${base}/register?ref=${code}`;
 }
 
+/** Same code, pointed at provider signup — for tradespeople referring peers. */
+export function providerReferralLink(code: string) {
+  const base = process.env.NEXT_PUBLIC_PROVIDER_URL ?? "http://localhost:3001";
+  return `${base}/register?ref=${code}`;
+}
+
 /** Called at signup when a `ref` code is present. No-ops silently on an invalid/self code. */
 export async function recordReferral(refereeId: string, code: string) {
   const referrer = await prisma.user.findUnique({ where: { referralCode: code } });
@@ -67,8 +73,11 @@ export async function getReferralSummary(userId: string) {
   return {
     code,
     link: referralLink(code),
+    providerLink: providerReferralLink(code),
+    rewardPence: REWARD_PENCE,
     creditBalancePence: credits._sum.amountPence ?? 0,
     referralCount: referrals.length,
     completedCount: referrals.filter((r) => r.status === "COMPLETED").length,
+    pendingCount: referrals.filter((r) => r.status !== "COMPLETED").length,
   };
 }

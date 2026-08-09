@@ -1,0 +1,794 @@
+<title>AsapLocal — Pitch Deck</title>
+<style>
+  :root {
+    --ground: #FBFAF9;
+    --surface: #FFFFFF;
+    --surface-2: #F2F4F6;
+    --ink: #15181D;
+    --ink-2: #4B5563;
+    --ink-3: #7A8493;
+    --rule: #E1E4E8;
+    --rule-strong: #C6CCD3;
+    --brand: #C15F2A;
+    --brand-ink: #96421A;
+    --brand-wash: #FAF0E9;
+    --t-bronze: #A9713F;
+    --t-silver: #8B96A3;
+    --t-gold: #B8891F;
+    --t-plat: #4F7593;
+
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --mono: ui-monospace, "SF Mono", SFMono-Regular, "Cascadia Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #0E1114;
+      --surface: #161A1F;
+      --surface-2: #1C2128;
+      --ink: #E9EBEE;
+      --ink-2: #A3ACB8;
+      --ink-3: #77818E;
+      --rule: #262C34;
+      --rule-strong: #39414B;
+      --brand: #E4823F;
+      --brand-ink: #F0A06A;
+      --brand-wash: #241710;
+      --t-bronze: #C08B57;
+      --t-silver: #A3AEBB;
+      --t-gold: #D6A63C;
+      --t-plat: #6E97B5;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground: #0E1114;
+    --surface: #161A1F;
+    --surface-2: #1C2128;
+    --ink: #E9EBEE;
+    --ink-2: #A3ACB8;
+    --ink-3: #77818E;
+    --rule: #262C34;
+    --rule-strong: #39414B;
+    --brand: #E4823F;
+    --brand-ink: #F0A06A;
+    --brand-wash: #241710;
+    --t-bronze: #C08B57;
+    --t-silver: #A3AEBB;
+    --t-gold: #D6A63C;
+    --t-plat: #6E97B5;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--sans);
+    -webkit-font-smoothing: antialiased;
+    overflow: hidden;
+  }
+
+  /* ── Slide frame ──────────────────────────────────────── */
+  .deck { position: relative; height: 100vh; width: 100vw; }
+
+  .slide {
+    position: absolute;
+    inset: 0;
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    padding: clamp(2rem, 5vw, 5.5rem) clamp(1.5rem, 7vw, 7rem) clamp(4.5rem, 8vw, 6rem);
+    overflow-y: auto;
+  }
+  .slide.on { display: flex; }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .slide.on > * { animation: rise 0.42s cubic-bezier(0.2, 0.7, 0.3, 1) both; }
+    .slide.on > *:nth-child(2) { animation-delay: 0.05s; }
+    .slide.on > *:nth-child(3) { animation-delay: 0.1s; }
+    .slide.on > *:nth-child(4) { animation-delay: 0.15s; }
+  }
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(0.7rem); }
+    to   { opacity: 1; transform: none; }
+  }
+
+  .inner { max-width: 62rem; width: 100%; margin: 0 auto; }
+
+  /* ── Type ─────────────────────────────────────────────── */
+  h1, h2 { margin: 0; text-wrap: balance; }
+  h1 {
+    font-size: clamp(2.8rem, 8vw, 6rem);
+    line-height: 0.98;
+    letter-spacing: -0.04em;
+    font-weight: 800;
+  }
+  h2 {
+    font-size: clamp(1.9rem, 4.6vw, 3.4rem);
+    line-height: 1.06;
+    letter-spacing: -0.032em;
+    font-weight: 800;
+    margin-bottom: 1.5rem;
+  }
+  .kicker {
+    font-family: var(--mono);
+    font-size: clamp(0.65rem, 1.1vw, 0.76rem);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--brand);
+    margin: 0 0 1.4rem;
+  }
+  p {
+    margin: 0 0 1rem;
+    color: var(--ink-2);
+    font-size: clamp(1rem, 1.5vw, 1.22rem);
+    line-height: 1.55;
+    max-width: 46ch;
+  }
+  p.big {
+    font-size: clamp(1.25rem, 2.3vw, 1.85rem);
+    line-height: 1.35;
+    color: var(--ink);
+    max-width: 32ch;
+    letter-spacing: -0.015em;
+  }
+  p:last-child { margin-bottom: 0; }
+  strong { color: var(--ink); font-weight: 650; }
+  em { color: var(--brand-ink); font-style: normal; font-weight: 650; }
+
+  /* ── Grids ────────────────────────────────────────────── */
+  .cols {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+    gap: clamp(1rem, 2.2vw, 2rem);
+  }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    padding: clamp(1.1rem, 2vw, 1.6rem);
+  }
+  .card .tag {
+    display: block;
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin-bottom: 0.7rem;
+  }
+  .card p { font-size: clamp(0.9rem, 1.25vw, 1.02rem); max-width: none; margin-bottom: 0.6rem; }
+
+  /* ── Figures ──────────────────────────────────────────── */
+  .figs {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(10.5rem, 1fr));
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+  }
+  .fig { background: var(--surface); padding: clamp(1rem, 2vw, 1.6rem); }
+  .fig b {
+    display: block;
+    font-family: var(--mono);
+    font-size: clamp(1.5rem, 2.9vw, 2.3rem);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    color: var(--brand);
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+  }
+  .fig span {
+    display: block;
+    margin-top: 0.55rem;
+    font-family: var(--mono);
+    font-size: clamp(0.62rem, 0.95vw, 0.72rem);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+
+  /* ── Ladder ───────────────────────────────────────────── */
+  .ladder { display: flex; flex-direction: column; }
+  .rung {
+    display: grid;
+    grid-template-columns: 8.5rem minmax(0, 1fr);
+    gap: clamp(1rem, 2.5vw, 2rem);
+    padding: clamp(0.8rem, 1.7vw, 1.25rem) 0;
+    border-top: 1px solid var(--rule);
+    align-items: baseline;
+  }
+  .rung:last-child { border-bottom: 1px solid var(--rule); }
+  @media (max-width: 640px) { .rung { grid-template-columns: 1fr; gap: 0.3rem; } }
+  .tier {
+    font-family: var(--mono);
+    font-size: clamp(0.72rem, 1.15vw, 0.86rem);
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+  .chip { width: 0.72rem; height: 0.72rem; border-radius: 50%; flex-shrink: 0; }
+  .t1 { color: var(--t-bronze); } .t1 .chip { background: var(--t-bronze); }
+  .t2 { color: var(--t-silver); } .t2 .chip { background: var(--t-silver); }
+  .t3 { color: var(--t-gold); }   .t3 .chip { background: var(--t-gold); }
+  .t4 { color: var(--t-plat); }   .t4 .chip { background: var(--t-plat); }
+  .rung p { margin: 0; font-size: clamp(0.9rem, 1.3vw, 1.05rem); max-width: 58ch; }
+
+  /* ── Edge list ────────────────────────────────────────── */
+  .edge {
+    display: grid;
+    grid-template-columns: 2.4rem minmax(0, 1fr);
+    gap: 1.1rem;
+    padding: clamp(0.85rem, 1.8vw, 1.3rem) 0;
+    border-top: 1px solid var(--rule);
+  }
+  .edge:last-child { border-bottom: 1px solid var(--rule); }
+  .edge .n {
+    font-family: var(--mono);
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--brand);
+    font-variant-numeric: tabular-nums;
+  }
+  .edge h3 {
+    margin: 0 0 0.3rem;
+    font-size: clamp(1rem, 1.6vw, 1.25rem);
+    letter-spacing: -0.015em;
+    font-weight: 700;
+  }
+  .edge p { margin: 0; font-size: clamp(0.88rem, 1.2vw, 1rem); max-width: 62ch; }
+
+  /* ── Flow ─────────────────────────────────────────────── */
+  .flow {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    align-items: center;
+    font-family: var(--mono);
+    font-size: clamp(0.66rem, 1vw, 0.8rem);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .flow i {
+    font-style: normal;
+    border: 1px solid var(--brand);
+    background: var(--brand-wash);
+    color: var(--brand-ink);
+    padding: 0.5rem 0.8rem;
+  }
+  .flow u { text-decoration: none; color: var(--ink-3); }
+
+  /* ── Table ────────────────────────────────────────────── */
+  .tablewrap { overflow-x: auto; border: 1px solid var(--rule); }
+  table { width: 100%; border-collapse: collapse; min-width: 32rem; }
+  th, td {
+    text-align: left;
+    padding: clamp(0.6rem, 1.2vw, 0.95rem) 1rem;
+    border-bottom: 1px solid var(--rule);
+    font-size: clamp(0.85rem, 1.2vw, 1rem);
+  }
+  th {
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    font-weight: 600;
+    background: var(--surface-2);
+  }
+  td { color: var(--ink-2); background: var(--surface); }
+  td:first-child { color: var(--ink); font-weight: 650; }
+  td.num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+  tr:last-child td { border-bottom: none; }
+
+  .fill {
+    font-family: var(--mono);
+    background: var(--brand-wash);
+    border: 1px dashed var(--brand);
+    color: var(--brand-ink);
+    padding: 0.1rem 0.5rem;
+    font-size: 0.85em;
+    white-space: nowrap;
+  }
+
+  /* ── Chrome ───────────────────────────────────────────── */
+  .chrome {
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.9rem clamp(1.5rem, 7vw, 7rem);
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    background: linear-gradient(to top, var(--ground) 62%, transparent);
+    z-index: 10;
+  }
+  .chrome .brand { color: var(--ink-2); font-weight: 600; }
+  .chrome .spacer { flex: 1; }
+  .chrome .count { font-variant-numeric: tabular-nums; color: var(--ink-2); }
+  .nav {
+    display: flex;
+    gap: 0.3rem;
+  }
+  .nav button {
+    font: inherit;
+    letter-spacing: 0.08em;
+    background: var(--surface);
+    color: var(--ink-2);
+    border: 1px solid var(--rule-strong);
+    padding: 0.35rem 0.7rem;
+    cursor: pointer;
+  }
+  .nav button:hover { border-color: var(--brand); color: var(--brand-ink); }
+  .nav button:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+
+  .progress {
+    position: fixed;
+    left: 0; bottom: 0;
+    height: 2px;
+    background: var(--brand);
+    z-index: 11;
+    transition: width 0.3s ease;
+  }
+  @media (prefers-reduced-motion: reduce) { .progress { transition: none; } }
+
+  .hint {
+    position: fixed;
+    top: 1.1rem; right: clamp(1.5rem, 7vw, 7rem);
+    font-family: var(--mono);
+    font-size: 0.64rem;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    z-index: 10;
+  }
+
+  /* ── Print: every slide its own landscape page ────────── */
+  @page { size: A4 landscape; margin: 12mm; }
+
+  @media print {
+    /* Must out-specify the dark-scheme rule above (`:root:not(...)`), which
+       still matches when printing from a dark-mode device — otherwise the
+       dark palette leaks onto white paper. */
+    :root,
+    :root:not([data-theme="light"]),
+    :root[data-theme="dark"] {
+      --ground: #FFFFFF; --surface: #FFFFFF; --surface-2: #F4F5F7;
+      --ink: #15181D; --ink-2: #3F4854; --ink-3: #6B7480;
+      --rule: #D5DAE0; --rule-strong: #B4BBC3;
+      --brand: #B0521F; --brand-ink: #8A3C15; --brand-wash: #FBF2EC;
+      --t-bronze: #96622F; --t-silver: #6F7B89; --t-gold: #9C7415; --t-plat: #3F6482;
+    }
+    body { overflow: visible; background: #fff; }
+    .deck { height: auto; width: auto; }
+    .chrome, .progress, .hint { display: none !important; }
+    .slide {
+      position: relative;
+      inset: auto;
+      display: flex !important;
+      min-height: 175mm;
+      padding: 8mm 4mm;
+      break-after: page;
+      page-break-after: always;
+      break-inside: avoid;
+      page-break-inside: avoid;
+      animation: none !important;
+    }
+    .slide:last-child { break-after: auto; page-break-after: auto; }
+    .slide.on > * { animation: none !important; }
+    h1 { font-size: 34pt; }
+    h2 { font-size: 21pt; }
+    p { font-size: 11pt; }
+    * { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+  }
+</style>
+
+<div class="progress" id="bar"></div>
+<div class="hint">← → to navigate</div>
+
+<div class="deck" id="deck">
+
+  <!-- 1 ─ Title -->
+  <section class="slide on">
+    <div class="inner">
+      <p class="kicker">AsapLocal · UK Local Services</p>
+      <h1>Trust,<br />engineered.</h1>
+      <p class="big" style="margin-top:1.75rem">
+        Every marketplace says its tradespeople are vetted. We are the one
+        that can prove it — continuously, in code.
+      </p>
+    </div>
+  </section>
+
+  <!-- 2 ─ Problem -->
+  <section class="slide">
+    <div class="inner">
+      <p class="kicker">The problem</p>
+      <h2>Both sides distrust the middle.</h2>
+      <div class="cols">
+        <div class="card">
+          <span class="tag">Homeowner</span>
+          <p>"Verified" usually means a form was filled in once, years ago. Insurance is collected as a PDF and never checked again.</p>
+          <p><strong>They carry a risk they were told was handled.</strong></p>
+        </div>
+        <div class="card">
+          <span class="tag">Tradesperson</span>
+          <p>They buy introductions, not outcomes. One job is resold to as many buyers as the platform can find.</p>
+          <p><strong>Bad leads are treated as their cost, not the platform's.</strong></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3 ─ The gap -->
+  <section class="slide">
+    <div class="inner">
+      <p class="kicker">The gap</p>
+      <h2 style="max-width:18ch">Trust in this category is asserted, never proven.</h2>
+      <p class="big">Whoever closes that gap earns the right to sit in the middle.</p>
+    </div>
+  </section>
+
+  <!-- 4 ─ Thesis -->
+  <section class="slide">
+    <div class="inner">
+      <p class="kicker">Our thesis</p>
+      <h2>Trust should be computed, not claimed.</h2>
+      <p>
+        Every trust signal is derived from a verifiable external source and
+        recomputed whenever the underlying facts change — a government-ID
+        match, a live company record, an insurance policy with a real expiry
+        date, a trade qualification in a regulated category.
+      </p>
+      <p class="big" style="margin-top:1.5rem">
+        A provider cannot <em>type</em> their way to a badge.
+      </p>
+    </div>
+  </section>
+
+  <!-- 5 ─ System -->
+  <section class="slide">
+    <div class="inner">
+      <p class="kicker">The system</p>
+      <h2>Three surfaces, one spine.</h2>
+      <div class="cols">
+        <div class="card">
+          <span class="tag">Customer app</span>
+          <p>Post a job with address lookup and AI category matching. Compare quotes, book, pay, sign off, review.</p>
+        </div>
+        <div class="card">
+          <span class="tag">Provider app</span>
+          <p>A business tool, not a lead inbox — marketplace, calendar, job sheets, staff, portfolio, verification, ROI analytics.</p>
+        </div>
+        <div class="card">
+          <span class="tag">Operations console</span>
+          <p>Dispatch, verification queue, approvals, refunds, finance, full audit trail. The layer that lets us <em>run</em> jobs.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6 ─ Own the job -->
+  <section class="slide">
+    <div class="inner">
+      <p class="kicker">Coverage</p>
+      <h2>We own the whole job — not the introduction.</h2>
+      <div class="flow">
+        <i>Post</i><u>→</u><i>Match</i><u>→</u><i>Quote</i><u>→</u><i>Book</i><u>→</u>
+        <i>Deposit</i><u>→</u><i>Work log</i><u>→</u><i>Sign-off</i><u>→</u><i>Review</i><u>→</u><i>Payout</i>
+      </div>
+      <p style="margin-top:1.75rem">
+        Most of the category stops after <strong>Match</strong>. Everything
+        downstream is where the data, the retention and the second revenue
+        line actually live.
+      </p>
+    </div>
+  </section>
+
+  <!-- 7 ─ Ladder -->
+  <section class="slide">
+    <div class="inner">
+      <p class="kicker">The trust ladder</p>
+      <h2>Four rungs. Every one externally sourced.</h2>
+      <div class="ladder">
+        <div class="rung">
+          <div class="tier t1"><span class="chip"></span>Bronze</div>
+          <p><strong>Registered.</strong> Profile complete. No trust claims made on their behalf.</p>
+        </div>
+        <div class="rung">
+          <div class="tier t2"><span class="chip"></span>Silver</div>
+          <p><strong>Verified.</strong> Government-ID identity check, company register match, and public-liability cover confirmed genuine <em>and in date</em>.</p>
+        </div>
+        <div class="rung">
+          <div class="tier t3"><span class="chip"></span>Gold</div>
+          <p><strong>Qualified.</strong> Silver, plus a verified trade qualification wherever the category is regulated, plus real portfolio work.</p>
+        </div>
+        <div class="rung">
+          <div class="tier t4"><span class="chip"></span>Platinum</div>
+          <p><strong>Partner.</strong> Manual override — businesses we have worked with directly and stand behind ourselves.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 8 ─ Insurance -->
+  <section class="slide">
+    <div class="inner">
+      <p class="kicker">The part that is hard to copy</p>
+      <h2 style="max-width:20ch">Insurance is stored with its expiry date, not as an image.</h2>
+      <p class="big">
+        A policy that lapses drops the provider's tier <em>automatically</em>.
+        There is no "verified once, verified forever" state anywhere in the system.
+      </p>
+      <p style="margin-top:1.5rem">
+        Retrofitting this means re-verifying an entire existing supply base —
+        and telling a large share of them they just lost their badge.
+      </p>
+    </div>
+  </section>
+
+  <!-- 9 ─ Lead economics -->
+  <section class="slide">
+    <div class="inner">
+      <p class="kicker">Lead economics</p>
+      <h2>Deliberately scarce, priced to the job, refundable.</h2>
+      <div class="figs">
+        <div class="fig"><b>£5–£20</b><span>Lead price band</span></div>
+        <div class="fig"><b>5</b><span>Max buyers per job</span></div>
+        <div class="fig"><b>7 days</b><span>Lead expiry</span></div>
+        <div class="fig"><b>100–400m</b><span>Pre-purchase blur</span></div>
+      </div>
+      <p style="margin-top:1.75rem">
+        Price scales with the customer's budget. Once five providers hold a
+        job it closes — the sixth quote never exists. Refunds carry named
+        reasons and return the slot to the market.
+      </p>
+    </div>
+  </section>
+
+  <!-- 10 ─ Scarcity as strategy -->
+  <section class="slide">
+    <div class="inner">
+      <p class="kicker">Why the cap matters</p>
+      <h2 style="max-width:19ch">Scarcity is a feature we sell to providers.</h2>
+      <p class="big">
+        It costs us short-term lead revenue per job and buys the supply-side
+        loyalty incumbents have spent a decade burning.
+      </p>
+      <p style="margin-top:1.5rem">
+        An incumbent with lead-volume targets cannot match it without
+        repricing its entire book.
+      </p>
+    </div>
+  </section>
+
+  <!-- 11 ─ Edge 1-3 -->
+  <section class="slide">
+    <div class="inner">
+      <p class="kicker">Our edge · 1 of 2</p>
+      <h2>Where we win.</h2>
+      <div class="edge">
+        <div class="n">01</div>
+        <div>
+          <h3>Verification is computed, not claimed</h3>
+          <p>Identity, company record and insurance come from external systems of record. Tier recalculates when any of them change.</p>
+        </div>
+      </div>
+      <div class="edge">
+        <div class="n">02</div>
+        <div>
+          <h3>Insurance that is still valid today</h3>
+          <p>Structured policy records with type, status and expiry — plus automated renewal reminders. An ongoing commitment, not a feature ship.</p>
+        </div>
+      </div>
+      <div class="edge">
+        <div class="n">03</div>
+        <div>
+          <h3>Scarcity by design</h3>
+          <p>Five buyers maximum, priced to job value, with a real refund path. Providers can calculate their return instead of guessing.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 12 ─ Edge 4-6 -->
+  <section class="slide">
+    <div class="inner">
+      <p class="kicker">Our edge · 2 of 2</p>
+      <h2>Where we win.</h2>
+      <div class="edge">
+        <div class="n">04</div>
+        <div>
+          <h3>Privacy before purchase</h3>
+          <p>Customer location is blurred until a provider commits, so posting a job never exposes an address to casual browsing.</p>
+        </div>
+      </div>
+      <div class="edge">
+        <div class="n">05</div>
+        <div>
+          <h3>We own the whole job</h3>
+          <p>Owning completion is what makes reviews trustworthy and payouts possible. A referral-only competitor has nothing to attach either to.</p>
+        </div>
+      </div>
+      <div class="edge">
+        <div class="n">06</div>
+        <div>
+          <h3>An operator layer, not just a listing</h3>
+          <p>Dispatch, approvals and audit let us run managed jobs — the wedge into commercial, insurance and property-management contracts.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 13 ─ Model -->
+  <section class="slide">
+    <div class="inner">
+      <p class="kicker">Business model</p>
+      <h2>Five revenue lines, deliberately not one.</h2>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Line</th><th>Mechanism</th><th>Paid by</th></tr></thead>
+          <tbody>
+            <tr><td>Lead sales</td><td class="num">£5–£20 per lead, capped at 5 buyers</td><td>Provider</td></tr>
+            <tr><td>Subscriptions</td><td>Free · Pro 15/mo · Premium 40/mo · Enterprise</td><td>Provider</td></tr>
+            <tr><td>Credit packs</td><td>Prepaid lead credits</td><td>Provider</td></tr>
+            <tr><td>Booking rail</td><td class="num">20% deposit at acceptance, then payout</td><td>Customer</td></tr>
+            <tr><td>Featured placement</td><td>Time-boxed promoted search position</td><td>Provider</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p style="margin-top:1.5rem">
+        Subscriptions and the booking rail are the durable lines. Lead sales
+        are the wedge that gets a provider to their first paid outcome fast.
+      </p>
+    </div>
+  </section>
+
+  <!-- 14 ─ Wedge -->
+  <section class="slide">
+    <div class="inner">
+      <p class="kicker">Go-to-market</p>
+      <h2>Emergency work first.</h2>
+      <p>
+        Ten categories are live, but the entry point is narrower on purpose.
+        Emergency jobs — leaks, drains, boiler faults, emergency electrical —
+        are tagged distinctly across the taxonomy.
+      </p>
+      <p class="big" style="margin-top:1.5rem">
+        Urgent, high-intent, price-insensitive — and the exact moment a
+        homeowner cares most whether the person arriving is
+        <em>real, insured and qualified</em>.
+      </p>
+      <p style="margin-top:1.5rem">
+        Win the highest-anxiety job first, then hold the household for the
+        scheduled work that follows.
+      </p>
+    </div>
+  </section>
+
+  <!-- 15 ─ Traction -->
+  <section class="slide">
+    <div class="inner">
+      <p class="kicker">Traction · complete before presenting</p>
+      <h2>Where we are.</h2>
+      <div class="figs">
+        <div class="fig"><b><span class="fill">—</span></b><span>Providers onboarded</span></div>
+        <div class="fig"><b><span class="fill">—</span></b><span>Verified Silver+</span></div>
+        <div class="fig"><b><span class="fill">—</span></b><span>Jobs posted / mo</span></div>
+        <div class="fig"><b><span class="fill">—</span></b><span>Monthly revenue</span></div>
+      </div>
+      <p style="margin-top:1.75rem">
+        Lead with <strong>share of supply at Silver or above</strong>,
+        <strong>lead refund rate</strong>, <strong>quote-to-booking
+        conversion</strong> and <strong>provider month-3 retention</strong> —
+        the four numbers that prove this thesis rather than describe it.
+      </p>
+    </div>
+  </section>
+
+  <!-- 16 ─ Ask -->
+  <section class="slide">
+    <div class="inner">
+      <p class="kicker">The ask</p>
+      <h2>Raising <span class="fill">£ AMOUNT</span> to reach <span class="fill">MILESTONE</span>.</h2>
+      <div class="cols">
+        <div class="card">
+          <span class="tag">Supply density</span>
+          <p>Critical provider coverage in the launch region, verified to Silver, so no posted job goes unquoted.</p>
+        </div>
+        <div class="card">
+          <span class="tag">Demand in emergency</span>
+          <p>Own the urgent-intent channels where trust decides the click and acquisition pays back inside one job.</p>
+        </div>
+        <div class="card">
+          <span class="tag">Operator contracts</span>
+          <p>Convert the dispatch layer into managed accounts — property managers, insurers, letting agents.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 17 ─ Close -->
+  <section class="slide">
+    <div class="inner">
+      <p class="kicker">In one line</p>
+      <h2 style="max-width:22ch">The incumbents have distribution. They do not have a trust model that survives contact with the truth.</h2>
+      <p class="big">That is the one thing we built first.</p>
+    </div>
+  </section>
+
+</div>
+
+<div class="chrome">
+  <span class="brand">AsapLocal</span>
+  <span class="spacer"></span>
+  <span class="count"><span id="cur">1</span> / <span id="tot">17</span></span>
+  <span class="nav">
+    <button type="button" id="prev" aria-label="Previous slide">Prev</button>
+    <button type="button" id="next" aria-label="Next slide">Next</button>
+  </span>
+</div>
+
+<script>
+  (function () {
+    var slides = Array.prototype.slice.call(document.querySelectorAll(".slide"));
+    var cur = document.getElementById("cur");
+    var tot = document.getElementById("tot");
+    var bar = document.getElementById("bar");
+    var i = 0;
+
+    tot.textContent = slides.length;
+
+    function show(n) {
+      i = Math.max(0, Math.min(slides.length - 1, n));
+      slides.forEach(function (s, k) { s.classList.toggle("on", k === i); });
+      cur.textContent = i + 1;
+      bar.style.width = ((i + 1) / slides.length * 100) + "%";
+      slides[i].scrollTop = 0;
+      if (location.hash !== "#" + (i + 1)) {
+        history.replaceState(null, "", "#" + (i + 1));
+      }
+    }
+
+    document.getElementById("next").addEventListener("click", function () { show(i + 1); });
+    document.getElementById("prev").addEventListener("click", function () { show(i - 1); });
+
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "ArrowRight" || e.key === "PageDown" || e.key === " ") { e.preventDefault(); show(i + 1); }
+      else if (e.key === "ArrowLeft" || e.key === "PageUp") { e.preventDefault(); show(i - 1); }
+      else if (e.key === "Home") { e.preventDefault(); show(0); }
+      else if (e.key === "End") { e.preventDefault(); show(slides.length - 1); }
+    });
+
+    var x0 = null;
+    document.addEventListener("touchstart", function (e) { x0 = e.changedTouches[0].clientX; }, { passive: true });
+    document.addEventListener("touchend", function (e) {
+      if (x0 === null) return;
+      var dx = e.changedTouches[0].clientX - x0;
+      if (Math.abs(dx) > 60) show(dx < 0 ? i + 1 : i - 1);
+      x0 = null;
+    }, { passive: true });
+
+    function fromHash() {
+      var n = parseInt((location.hash || "").replace("#", ""), 10);
+      return isNaN(n) ? 0 : n - 1;
+    }
+
+    // Keeps deep links working when the hash is edited on an already-open
+    // page, not just on a cold load.
+    window.addEventListener("hashchange", function () {
+      var n = fromHash();
+      if (n !== i) show(n);
+    });
+
+    show(fromHash());
+  })();
+</script>

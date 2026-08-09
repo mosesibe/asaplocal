@@ -1,4 +1,4 @@
-import { LayoutDashboard, Target, CalendarDays, MessageSquare, CreditCard, Store, BarChart3, Star, ShieldCheck, Settings, HelpCircle, SlidersHorizontal, Users } from "lucide-react";
+import { LayoutDashboard, Target, CalendarDays, MessageSquare, CreditCard, Store, BarChart3, Star, ShieldCheck, Settings, HelpCircle, SlidersHorizontal, Users, Wrench, Package, Gift } from "lucide-react";
 
 export const PRIMARY_NAV = [
   { href: "/dashboard", label: "Home", icon: LayoutDashboard },
@@ -11,7 +11,10 @@ export const SECONDARY_NAV = [
   { href: "/reviews", label: "Reviews", icon: Star },
   { href: "/analytics", label: "Analytics", icon: BarChart3 },
   { href: "/billing", label: "Billing & credits", icon: CreditCard },
+  { href: "/referrals", label: "Referrals", icon: Gift },
   { href: "/profile", label: "Business profile", icon: Store },
+  { href: "/services", label: "Services", icon: Wrench },
+  { href: "/supplies", label: "Supplies", icon: Package },
   { href: "/staff", label: "Staff", icon: Users },
   { href: "/verification", label: "Verification Center", icon: ShieldCheck },
 ];
@@ -43,7 +46,9 @@ export const ACCOUNT_DRAWER_SECTIONS: { title: string; items: (DrawerLinkItem | 
   {
     title: "Business",
     items: [
-      { href: "/profile", label: "Business profile", icon: Store },
+      { href: "/profile", label: "Profile", icon: Store },
+      { href: "/services", label: "Services", icon: Wrench },
+      { href: "/supplies", label: "Supplies", icon: Package },
       { href: "/staff", label: "Staff", icon: Users },
       { href: "/verification", label: "Verification Center", icon: ShieldCheck },
       { href: "/reviews", label: "Reviews", icon: Star },
@@ -51,7 +56,10 @@ export const ACCOUNT_DRAWER_SECTIONS: { title: string; items: (DrawerLinkItem | 
   },
   {
     title: "Earnings",
-    items: [{ href: "/billing", label: "Billing & credits", icon: CreditCard }],
+    items: [
+      { href: "/billing", label: "Billing & credits", icon: CreditCard },
+      { href: "/referrals", label: "Referrals", icon: Gift },
+    ],
   },
   {
     title: "Analytics",

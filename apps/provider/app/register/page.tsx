@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
 import { Button, Card, Input, PasswordInput } from "@asaplocal/ui";
@@ -9,6 +9,7 @@ type Phase = "form" | "confirm-existing";
 
 export default function RegisterPage() {
   const router = useRouter();
+  const ref = useSearchParams().get("ref");
   const [phase, setPhase] = useState<Phase>("form");
   const [form, setForm] = useState({ firstName: "", lastName: "", email: "", phone: "", password: "" });
   const [termsAccepted, setTermsAccepted] = useState(false);
@@ -19,7 +20,11 @@ export default function RegisterPage() {
   async function submit(body: Record<string, string | boolean>, signInPassword: string) {
     setLoading(true);
     setError(null);
-    const res = await fetch("/api/auth/register", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    const res = await fetch("/api/auth/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...body, ref }),
+    });
     const data = await res.json().catch(() => ({}));
 
     if (!res.ok) {

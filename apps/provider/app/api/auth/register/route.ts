@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
 import { prisma } from "@asaplocal/db";
-import { checkRateLimit, createAndSendVerificationEmail, sendPhoneVerificationCode } from "@asaplocal/core";
+import { checkRateLimit, createAndSendVerificationEmail, sendPhoneVerificationCode, recordReferral } from "@asaplocal/core";
 
 // Bumping this string re-prompts every provider to accept terms again next
 // time they hit a flow that checks termsVersion (none does yet — reserved).
@@ -22,6 +22,7 @@ const schema = z.object({
   // email already belongs to a customer account — proves they own it
   // instead of silently taking over an existing account.
   confirmPassword: z.string().min(1).optional(),
+  ref: z.string().nullish(),
 });
 
 export async function POST(req: NextRequest) {
@@ -100,6 +101,8 @@ export async function POST(req: NextRequest) {
       profile: { create: { firstName: parsed.data.firstName, lastName: parsed.data.lastName } },
     },
   });
+
+  if (parsed.data.ref) await recordReferral(user.id, parsed.data.ref).catch(() => {});
 
   await createAndSendVerificationEmail(user, process.env.NEXT_PUBLIC_PROVIDER_URL!, "Verify your AsapLocal Business account");
   await sendPhoneVerificationCode(user.id, phone);
