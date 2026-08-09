@@ -7,6 +7,7 @@ import { Button, formatPence } from "@asaplocal/ui";
 interface ReferralSummary {
   code: string;
   link: string;
+  rewardPence: number;
   creditBalancePence: number;
   referralCount: number;
   completedCount: number;
@@ -37,7 +38,7 @@ export function ReferralCard() {
         <p className="text-sm font-medium">Refer a friend</p>
         <p className="text-xs text-muted-foreground">
           {summary
-            ? `Give £${(summary.creditBalancePence / 100).toFixed(0)} worth of credit each — you've earned ${formatPence(summary.creditBalancePence)} from ${summary.completedCount} referral${summary.completedCount === 1 ? "" : "s"}.`
+            ? `You both get ${formatPence(summary.rewardPence)} in credit — you've earned ${formatPence(summary.creditBalancePence)} from ${summary.completedCount} referral${summary.completedCount === 1 ? "" : "s"}.`
             : "Share your link — you and your friend both get credit when they book."}
         </p>
         {summary && (
