@@ -3,7 +3,13 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { randomUUID } from "crypto";
 
 const REGION = process.env.AWS_REGION ?? "eu-west-2";
-const s3 = new S3Client({ region: REGION });
+// Newer SDK versions default to auto-attaching a request checksum to S3
+// commands, including presigned PutObject URLs. The presigner has no access
+// to the file body at sign time, so it bakes in the checksum of an empty
+// payload — which then mismatches whatever the browser actually PUTs and
+// S3 rejects the upload. "WHEN_REQUIRED" restores the old opt-in-only
+// behavior, which is what a presigned direct-to-S3 upload needs.
+const s3 = new S3Client({ region: REGION, requestChecksumCalculation: "WHEN_REQUIRED" });
 const BUCKET = process.env.AWS_S3_BUCKET ?? "asaplocal-uploads";
 
 export type UploadPurpose =
