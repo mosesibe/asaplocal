@@ -8,12 +8,14 @@ export function UserRowActions({ userId, status, businessId }: { userId: string;
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
-  async function toggleSuspend() {
+  async function callAction(action: "suspend" | "reactivate" | "deactivate") {
     setLoading(true);
-    await fetch(`/api/users/${userId}/${status === "SUSPENDED" ? "reactivate" : "suspend"}`, { method: "POST" });
+    await fetch(`/api/users/${userId}/${action}`, { method: "POST" });
     setLoading(false);
     router.refresh();
   }
+
+  const isInactive = status === "SUSPENDED" || status === "DEACTIVATED";
 
   return (
     <div className="flex gap-2">
@@ -22,9 +24,20 @@ export function UserRowActions({ userId, status, businessId }: { userId: string;
           <Button size="sm" variant="outline">View verification →</Button>
         </Link>
       )}
-      <Button size="sm" variant={status === "SUSPENDED" ? "outline" : "destructive"} onClick={toggleSuspend} disabled={loading}>
-        {status === "SUSPENDED" ? "Reactivate" : "Suspend"}
-      </Button>
+      {isInactive ? (
+        <Button size="sm" variant="outline" onClick={() => callAction("reactivate")} disabled={loading}>
+          Reactivate
+        </Button>
+      ) : (
+        <>
+          <Button size="sm" variant="outline" onClick={() => callAction("suspend")} disabled={loading}>
+            Suspend
+          </Button>
+          <Button size="sm" variant="destructive" onClick={() => callAction("deactivate")} disabled={loading}>
+            Deactivate
+          </Button>
+        </>
+      )}
     </div>
   );
 }

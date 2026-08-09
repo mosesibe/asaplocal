@@ -5,19 +5,33 @@ import { sendEmail, emailTemplates } from "./email";
 
 const TOKEN_TTL_MS = 60 * 60 * 1000;
 
+async function issuePasswordResetLink(userId: string, email: string, appUrl: string) {
+  await prisma.passwordResetToken.deleteMany({ where: { userId } });
+  const token = randomBytes(32).toString("hex");
+  await prisma.passwordResetToken.create({
+    data: { userId, token, expires: new Date(Date.now() + TOKEN_TTL_MS) },
+  });
+  return `${appUrl}/reset-password?token=${token}&email=${encodeURIComponent(email)}`;
+}
+
 /** Always resolves — never reveals whether the email belongs to an account. */
 export async function createAndSendPasswordResetEmail(email: string, appUrl: string) {
   const user = await prisma.user.findUnique({ where: { email } });
   if (!user || !user.passwordHash) return; // no account, or OAuth-only — nothing to reset
 
-  await prisma.passwordResetToken.deleteMany({ where: { userId: user.id } });
-  const token = randomBytes(32).toString("hex");
-  await prisma.passwordResetToken.create({
-    data: { userId: user.id, token, expires: new Date(Date.now() + TOKEN_TTL_MS) },
-  });
-
-  const link = `${appUrl}/reset-password?token=${token}&email=${encodeURIComponent(email)}`;
+  const link = await issuePasswordResetLink(user.id, email, appUrl);
   await sendEmail({ to: email, subject: "Reset your AsapLocal password", html: emailTemplates.passwordReset(link) }).catch(() => {});
+}
+
+/**
+ * Same single-use-link mechanism as the reset flow, but for an account an
+ * admin just created on someone else's behalf — the recipient has no
+ * password yet, so "reset" copy would be confusing. Reuses the same
+ * /reset-password page to actually set it.
+ */
+export async function createAndSendProviderAccountInviteEmail(userId: string, email: string, appUrl: string) {
+  const link = await issuePasswordResetLink(userId, email, appUrl);
+  await sendEmail({ to: email, subject: "Set up your AsapLocal Business account", html: emailTemplates.providerAccountInvite(link) }).catch(() => {});
 }
 
 export async function consumePasswordResetToken(email: string, token: string, newPassword: string) {

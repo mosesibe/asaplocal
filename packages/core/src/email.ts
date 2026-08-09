@@ -30,6 +30,11 @@ export const emailTemplates = {
     <p>Click the link below to choose a new password:</p>
     <p><a href="${link}">${link}</a></p>
     <p>This link expires in 1 hour. If you didn't request this, you can ignore this email.</p>`,
+  providerAccountInvite: (link: string) => `
+    <h2>An AsapLocal Business account was created for you</h2>
+    <p>Click the link below to set your password and get started:</p>
+    <p><a href="${link}">${link}</a></p>
+    <p>This link expires in 1 hour. Once you've set a password, you'll be able to log in and finish setting up your business profile.</p>`,
   newLeadAvailable: (businessName: string, jobTitle: string, city: string, link: string) => `
     <h2>New lead near you, ${businessName}</h2>
     <p><strong>${jobTitle}</strong> — ${city}</p>
