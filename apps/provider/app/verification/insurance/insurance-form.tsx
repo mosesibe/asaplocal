@@ -45,7 +45,7 @@ function PolicyForm({ type, label, required, existing }: { type: string; label: 
     setUploading(true);
     setError(null);
     try {
-      setDocumentUrl(await uploadFile(file, "verification-doc"));
+      setDocumentUrl(await uploadFile(file, "insurance-doc"));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Upload failed");
     } finally {

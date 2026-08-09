@@ -35,7 +35,7 @@ export function QualificationsForm({ categories, existing }: { categories: { id:
     setUploading(true);
     setError(null);
     try {
-      setDocumentUrl(await uploadFile(file, "verification-doc"));
+      setDocumentUrl(await uploadFile(file, "qualification-doc"));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Upload failed");
     } finally {

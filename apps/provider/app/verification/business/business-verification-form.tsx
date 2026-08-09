@@ -65,7 +65,7 @@ export function BusinessVerificationForm(props: Props) {
     setUploading(pendingDocType);
     setError(null);
     try {
-      const fileUrl = await uploadFile(file, "verification-doc");
+      const fileUrl = await uploadFile(file, "business-verification-doc");
       const res = await fetch("/api/verification/business/documents", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
