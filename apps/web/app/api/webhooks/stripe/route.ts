@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
         await sendEmail({
           to: booking.customer.email,
           subject: "Your AsapLocal booking is confirmed",
-          html: emailTemplates.bookingConfirmed(`${process.env.NEXT_PUBLIC_WEB_URL}/bookings/${booking.id}`),
+          ...emailTemplates.bookingConfirmed(`${process.env.NEXT_PUBLIC_WEB_URL}/bookings/${booking.id}`),
         }).catch(() => {});
       }
       break;

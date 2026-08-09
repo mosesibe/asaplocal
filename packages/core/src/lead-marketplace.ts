@@ -92,7 +92,7 @@ export async function createJobRequestWithLead(input: {
         ? sendEmail({
             to: biz.email,
             subject: `New lead near you: ${jobRequest.title}`,
-            html: emailTemplates.newLeadAvailable(biz.name, jobRequest.title, jobRequest.city, `${process.env.NEXT_PUBLIC_PROVIDER_URL}/leads/${jobRequest.lead!.id}`),
+            ...emailTemplates.newLeadAvailable(biz.name, jobRequest.title, jobRequest.city, `${process.env.NEXT_PUBLIC_PROVIDER_URL}/leads/${jobRequest.lead!.id}`),
           }).catch(() => {})
         : Promise.resolve()
     )

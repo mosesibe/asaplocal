@@ -14,7 +14,7 @@ export async function createAndSendVerificationEmail(
     data: { identifier: user.email, token, expires: new Date(Date.now() + TOKEN_TTL_MS) },
   });
   const link = `${appUrl}/verify-email?token=${token}&email=${encodeURIComponent(user.email)}`;
-  await sendEmail({ to: user.email, subject, html: emailTemplates.verifyEmail(link) }).catch(() => {});
+  await sendEmail({ to: user.email, subject, ...emailTemplates.verifyEmail(link) }).catch(() => {});
 }
 
 export async function consumeEmailVerificationToken(email: string, token: string) {

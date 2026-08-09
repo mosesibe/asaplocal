@@ -1,77 +1,256 @@
 import { Resend } from "resend";
-import { escapeHtml } from "./validations";
+import { docket, letter, type EmailBody } from "./email-layout";
 
-const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+export * from "./email-layout";
+
+const resend = process.env.RESEND_API_KEY
+  ? new Resend(process.env.RESEND_API_KEY)
+  : null;
 const FROM = process.env.EMAIL_FROM ?? "AsapLocal <noreply@asaplocal.pro>";
 
-export async function sendEmail(opts: { to: string; subject: string; html: string }) {
+export async function sendEmail(opts: {
+  to: string;
+  subject: string;
+  html: string;
+  text?: string;
+}) {
   if (!resend) {
-    console.warn(`[email:dev] Skipping send (no RESEND_API_KEY). To=${opts.to} Subject=${opts.subject}`);
+    console.warn(
+      `[email:dev] Skipping send (no RESEND_API_KEY). To=${opts.to} Subject=${opts.subject}`,
+    );
     return;
   }
   // The Resend SDK reports API-level failures (bad key, unverified domain,
   // etc.) via a returned `error` object instead of throwing — a caller that
   // only awaits the call sees no exception and no email, silently. Surface
   // it in logs and throw so upstream `.catch()`s at least know a send failed.
-  const { error } = await resend.emails.send({ from: FROM, to: opts.to, subject: opts.subject, html: opts.html });
+  const { error } = await resend.emails.send({
+    from: FROM,
+    to: opts.to,
+    subject: opts.subject,
+    html: opts.html,
+    // A plain-text alternative measurably helps deliverability; sending
+    // HTML-only looks like bulk mail to most spam filters.
+    ...(opts.text ? { text: opts.text } : {}),
+  });
   if (error) {
-    console.error(`[email] Resend send failed. To=${opts.to} Subject=${opts.subject}`, error);
+    console.error(
+      `[email] Resend send failed. To=${opts.to} Subject=${opts.subject}`,
+      error,
+    );
     throw new Error(error.message ?? "Failed to send email");
   }
 }
 
+/**
+ * Every template returns { html, text } — spread it into sendEmail:
+ *   sendEmail({ to, subject, ...emailTemplates.verifyEmail(link) })
+ *
+ * Auth mail (verify / reset / invite) uses the plainer `letter` shell on
+ * purpose: heavily-branded security email reads as phishing, and plainer
+ * mail lands in the inbox more reliably. Everything else uses `docket`.
+ */
 export const emailTemplates = {
-  verifyEmail: (link: string) => `
-    <h2>Confirm your AsapLocal account</h2>
-    <p>Click the link below to verify your email address:</p>
-    <p><a href="${link}">${link}</a></p>
-    <p>This link expires in 24 hours.</p>`,
-  passwordReset: (link: string) => `
-    <h2>Reset your password</h2>
-    <p>Click the link below to choose a new password:</p>
-    <p><a href="${link}">${link}</a></p>
-    <p>This link expires in 1 hour. If you didn't request this, you can ignore this email.</p>`,
-  // Every field here originates from a user-driven chat, so each one is
-  // escaped rather than interpolated raw — this body must never be able to
-  // carry markup.
-  diyFixGuide: (opts: { summary: string; toolkit: string[]; steps: string[]; ctaUrl: string }) => `
-    <h2>Your fix guide from AI Buddy</h2>
-    <p>${escapeHtml(opts.summary)}</p>
-    ${
-      opts.toolkit.length
-        ? `<h3>What you'll need</h3><ul>${opts.toolkit.map((t) => `<li>${escapeHtml(t)}</li>`).join("")}</ul>`
-        : ""
-    }
-    ${
-      opts.steps.length
-        ? `<h3>Steps</h3><ol>${opts.steps.map((s) => `<li>${escapeHtml(s)}</li>`).join("")}</ol>`
-        : ""
-    }
-    <p style="margin-top:24px">Not going to plan? <a href="${opts.ctaUrl}">Get a quote from a local pro</a>.</p>
-    <p style="color:#6b7280;font-size:12px">This guide is general DIY guidance, not professional advice. If the job involves gas, mains electrics or structural work, use a qualified tradesperson.</p>`,
-  providerAccountInvite: (link: string) => `
-    <h2>An AsapLocal Business account was created for you</h2>
-    <p>Click the link below to set your password and get started:</p>
-    <p><a href="${link}">${link}</a></p>
-    <p>This link expires in 1 hour. Once you've set a password, you'll be able to log in and finish setting up your business profile.</p>`,
-  newLeadAvailable: (businessName: string, jobTitle: string, city: string, link: string) => `
-    <h2>New lead near you, ${businessName}</h2>
-    <p><strong>${jobTitle}</strong> — ${city}</p>
-    <p><a href="${link}">View and claim this lead</a></p>`,
-  quoteReceived: (jobTitle: string, link: string) => `
-    <h2>You've received a new quote</h2>
-    <p>For: <strong>${jobTitle}</strong></p>
-    <p><a href="${link}">View quote</a></p>`,
-  bookingConfirmed: (link: string) => `
-    <h2>Your booking is confirmed</h2>
-    <p><a href="${link}">View booking details</a></p>`,
-  referenceRequest: (businessName: string, refereeName: string, link: string) => `
-    <h2>${businessName} listed you as a reference</h2>
-    <p>Hi ${refereeName}, ${businessName} is building trust on AsapLocal and listed you as someone who can vouch for their work.</p>
-    <p>It only takes a minute — click below to confirm and optionally leave a short note.</p>
-    <p><a href="${link}">Confirm reference</a></p>`,
-  insuranceExpiring: (businessName: string, policyType: string, expiryDate: string, link: string) => `
-    <h2>Your ${policyType} insurance is expiring soon</h2>
-    <p>Hi ${businessName}, your policy expires on ${expiryDate}. Renew and re-upload it to keep your verified status.</p>
-    <p><a href="${link}">Update insurance</a></p>`,
+  verifyEmail: (link: string): EmailBody =>
+    letter({
+      title: "Confirm your email address",
+      greeting: "Welcome to AsapLocal.",
+      blocks: [
+        {
+          kind: "paragraph",
+          text: "You're one step from finishing your account. Use the link below and you're done — it works for the next 24 hours.",
+        },
+      ],
+      cta: { label: "Verify my email address", url: link },
+      afterCta: [
+        {
+          kind: "fallbackLink",
+          intro: "If the link doesn't work, paste this into your browser:",
+          url: link,
+        },
+      ],
+      footnote:
+        "Didn't create an account? Nothing will happen if you ignore this.",
+    }),
+
+  passwordReset: (link: string): EmailBody =>
+    letter({
+      title: "Reset your password",
+      blocks: [
+        {
+          kind: "paragraph",
+          text: "Use the link below to choose a new password. It expires in 1 hour.",
+        },
+      ],
+      cta: { label: "Choose a new password", url: link },
+      afterCta: [
+        {
+          kind: "fallbackLink",
+          intro: "If the link doesn't work, paste this into your browser:",
+          url: link,
+        },
+      ],
+      footnote:
+        "Didn't request this? You can safely ignore this email — your password won't change.",
+    }),
+
+  providerAccountInvite: (link: string): EmailBody =>
+    letter({
+      title: "Your AsapLocal Business account is ready",
+      greeting: "An account has been created for you.",
+      blocks: [
+        {
+          kind: "paragraph",
+          text: "Set a password using the link below and you'll be taken straight through to finish setting up your business profile. The link expires in 1 hour.",
+        },
+      ],
+      cta: { label: "Set my password", url: link },
+      afterCta: [
+        {
+          kind: "fallbackLink",
+          intro: "If the link doesn't work, paste this into your browser:",
+          url: link,
+        },
+      ],
+      footnote: "Not expecting this? Let us know and we'll remove the account.",
+    }),
+
+  newLeadAvailable: (
+    businessName: string,
+    jobTitle: string,
+    city: string,
+    link: string,
+  ): EmailBody =>
+    docket({
+      eyebrow: "New lead",
+      title: jobTitle,
+      blocks: [
+        {
+          kind: "paragraph",
+          text: `Hi ${businessName} — this job matches your trades and covers your service area.`,
+        },
+        {
+          kind: "data",
+          rows: [
+            ["Location", city],
+            ["Status", "Available now"],
+          ],
+        },
+        {
+          kind: "paragraph",
+          text: "Only five providers can take a lead before it closes.",
+        },
+      ],
+      cta: { label: "View and claim", url: link },
+      footnote: `Sent because your service area covers ${city}.`,
+    }),
+
+  quoteReceived: (jobTitle: string, link: string): EmailBody =>
+    docket({
+      eyebrow: "Quote received",
+      title: "You've received a new quote",
+      blocks: [
+        {
+          kind: "paragraph",
+          text: "A provider has quoted on your job. Compare it against any others before you accept.",
+        },
+        { kind: "highlight", title: jobTitle },
+      ],
+      cta: { label: "View quote", url: link },
+    }),
+
+  bookingConfirmed: (link: string): EmailBody =>
+    docket({
+      eyebrow: "Booking confirmed",
+      title: "Your booking is confirmed",
+      blocks: [
+        {
+          kind: "paragraph",
+          text: "Your payment went through and your provider has been notified. You can message them and see the full details from your booking.",
+        },
+      ],
+      cta: { label: "View booking details", url: link },
+    }),
+
+  referenceRequest: (
+    businessName: string,
+    refereeName: string,
+    link: string,
+  ): EmailBody =>
+    docket({
+      eyebrow: "Reference request",
+      title: `${businessName} listed you as a reference`,
+      blocks: [
+        {
+          kind: "paragraph",
+          text: `Hi ${refereeName} — ${businessName} is building trust on AsapLocal and named you as someone who can vouch for their work.`,
+        },
+        {
+          kind: "paragraph",
+          text: "It takes about a minute: confirm you know them and optionally leave a short note.",
+        },
+      ],
+      cta: { label: "Confirm reference", url: link },
+      footnote:
+        "Don't know this business? Ignore this email and nothing will be recorded.",
+    }),
+
+  insuranceExpiring: (
+    businessName: string,
+    policyType: string,
+    expiryDate: string,
+    link: string,
+  ): EmailBody =>
+    docket({
+      eyebrow: "Action needed",
+      title: "Your insurance is expiring",
+      blocks: [
+        {
+          kind: "paragraph",
+          text: `Hi ${businessName} — one of your verified policies is about to lapse. Renew and re-upload it to keep your verified status and trust tier.`,
+        },
+        {
+          kind: "data",
+          rows: [
+            ["Policy", policyType],
+            ["Expires", expiryDate],
+          ],
+        },
+      ],
+      cta: { label: "Update insurance", url: link },
+      footnote: "A lapsed policy automatically lowers your trust tier.",
+    }),
+
+  diyFixGuide: (opts: {
+    summary: string;
+    toolkit: string[];
+    steps: string[];
+    ctaUrl: string;
+  }): EmailBody =>
+    docket({
+      eyebrow: "Fix guide",
+      title: "Your fix guide from AI Buddy",
+      blocks: [
+        { kind: "paragraph", text: opts.summary },
+        ...(opts.toolkit.length
+          ? [
+              {
+                kind: "list" as const,
+                label: "What you'll need",
+                items: opts.toolkit,
+              },
+            ]
+          : []),
+        ...(opts.steps.length
+          ? [{ kind: "steps" as const, label: "Steps", items: opts.steps }]
+          : []),
+        {
+          kind: "paragraph",
+          text: "Not going to plan? A local pro can take it from here.",
+        },
+      ],
+      cta: { label: "Get a quote", url: opts.ctaUrl },
+      footnote:
+        "General DIY guidance, not professional advice. For gas, mains electrics or structural work, always use a qualified tradesperson.",
+    }),
 };

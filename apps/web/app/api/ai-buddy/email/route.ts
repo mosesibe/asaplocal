@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
     await sendEmail({
       to: email,
       subject: "Your fix guide from AsapLocal AI Buddy",
-      html: emailTemplates.diyFixGuide({ summary, toolkit, steps, ctaUrl }),
+      ...emailTemplates.diyFixGuide({ summary, toolkit, steps, ctaUrl }),
     });
   } catch {
     return NextResponse.json({ message: "Couldn't send that email — please try again." }, { status: 502 });

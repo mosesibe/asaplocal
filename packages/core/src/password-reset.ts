@@ -20,7 +20,7 @@ export async function createAndSendPasswordResetEmail(email: string, appUrl: str
   if (!user || !user.passwordHash) return; // no account, or OAuth-only — nothing to reset
 
   const link = await issuePasswordResetLink(user.id, email, appUrl);
-  await sendEmail({ to: email, subject: "Reset your AsapLocal password", html: emailTemplates.passwordReset(link) }).catch(() => {});
+  await sendEmail({ to: email, subject: "Reset your AsapLocal password", ...emailTemplates.passwordReset(link) }).catch(() => {});
 }
 
 /**
@@ -31,7 +31,7 @@ export async function createAndSendPasswordResetEmail(email: string, appUrl: str
  */
 export async function createAndSendProviderAccountInviteEmail(userId: string, email: string, appUrl: string) {
   const link = await issuePasswordResetLink(userId, email, appUrl);
-  await sendEmail({ to: email, subject: "Set up your AsapLocal Business account", html: emailTemplates.providerAccountInvite(link) }).catch(() => {});
+  await sendEmail({ to: email, subject: "Set up your AsapLocal Business account", ...emailTemplates.providerAccountInvite(link) }).catch(() => {});
 }
 
 export async function consumePasswordResetToken(email: string, token: string, newPassword: string) {

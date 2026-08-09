@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
   await sendEmail({
     to: parsed.data.refereeEmail,
     subject: `${business.name} listed you as a reference`,
-    html: emailTemplates.referenceRequest(business.name, parsed.data.refereeName, link),
+    ...emailTemplates.referenceRequest(business.name, parsed.data.refereeName, link),
   }).catch(() => {});
 
   return NextResponse.json({ id: reference.id }, { status: 201 });

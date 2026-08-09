@@ -1,0 +1,520 @@
+<title>AsapLocal — Email Template Directions</title>
+<style>
+  :root {
+    --ground: #FBFAF9;
+    --surface: #FFFFFF;
+    --surface-2: #F2F4F6;
+    --ink: #15181D;
+    --ink-2: #4B5563;
+    --ink-3: #7A8493;
+    --rule: #E1E4E8;
+    --rule-strong: #C6CCD3;
+    --brand: #C15F2A;
+    --brand-ink: #96421A;
+    --brand-wash: #FAF0E9;
+    --inbox: #E6E4E1;
+    --ok: #2F7A55;
+    --warn: #A9701F;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --mono: ui-monospace, "SF Mono", SFMono-Regular, "Cascadia Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #0E1114; --surface: #161A1F; --surface-2: #1C2128;
+      --ink: #E9EBEE; --ink-2: #A3ACB8; --ink-3: #77818E;
+      --rule: #262C34; --rule-strong: #39414B;
+      --brand: #E4823F; --brand-ink: #F0A06A; --brand-wash: #241710;
+      --inbox: #05070A; --ok: #58A87C; --warn: #D3A455;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground: #0E1114; --surface: #161A1F; --surface-2: #1C2128;
+    --ink: #E9EBEE; --ink-2: #A3ACB8; --ink-3: #77818E;
+    --rule: #262C34; --rule-strong: #39414B;
+    --brand: #E4823F; --brand-ink: #F0A06A; --brand-wash: #241710;
+    --inbox: #05070A; --ok: #58A87C; --warn: #D3A455;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--ground); color: var(--ink);
+    font-family: var(--sans); font-size: 16px; line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 62rem; margin: 0 auto; padding: 3.5rem 1.5rem 6rem; }
+
+  h1, h2, h3 { margin: 0; text-wrap: balance; }
+  h1 { font-size: clamp(2.1rem, 5vw, 3rem); line-height: 1.04; letter-spacing: -0.035em; font-weight: 800; }
+  h2 { font-size: clamp(1.35rem, 2.6vw, 1.75rem); line-height: 1.15; letter-spacing: -0.025em; font-weight: 800; }
+  h3 { font-size: 1rem; font-weight: 700; letter-spacing: -0.005em; }
+  p { margin: 0 0 1rem; color: var(--ink-2); max-width: 68ch; }
+  p:last-child { margin-bottom: 0; }
+  strong { color: var(--ink); font-weight: 650; }
+  code { font-family: var(--mono); font-size: 0.88em; background: var(--surface-2); padding: 0.1rem 0.35rem; border-radius: 3px; }
+
+  .eyebrow {
+    font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.16em;
+    text-transform: uppercase; color: var(--brand); margin: 0 0 1rem;
+  }
+  header.top { border-top: 3px solid var(--brand); padding-top: 1.75rem; }
+
+  section { margin-top: 3.5rem; border-top: 1px solid var(--rule); padding-top: 2.25rem; }
+
+  .note {
+    margin-top: 1.25rem; padding: 1rem 1.15rem; background: var(--surface-2);
+    border-left: 3px solid var(--brand); font-size: 0.92rem; color: var(--ink-2);
+  }
+  .note b { color: var(--ink); }
+
+  /* inventory table */
+  .tablewrap { overflow-x: auto; border: 1px solid var(--rule); margin-top: 1.5rem; }
+  table.inv { width: 100%; border-collapse: collapse; font-size: 0.9rem; min-width: 40rem; }
+  table.inv th, table.inv td { text-align: left; padding: 0.7rem 0.9rem; border-bottom: 1px solid var(--rule); }
+  table.inv th {
+    font-family: var(--mono); font-size: 0.66rem; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--ink-3); font-weight: 600; background: var(--surface-2);
+  }
+  table.inv td { color: var(--ink-2); background: var(--surface); }
+  table.inv td.name { font-family: var(--mono); font-size: 0.82rem; color: var(--ink); }
+  table.inv tr:last-child td { border-bottom: none; }
+  .pill {
+    display: inline-block; font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.08em;
+    text-transform: uppercase; padding: 0.12rem 0.4rem; border: 1px solid currentColor; border-radius: 2px;
+  }
+  .pill.dead { color: var(--warn); }
+
+  /* option blocks */
+  .opt-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.85rem; }
+  .opt-num {
+    font-family: var(--mono); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.1em;
+    color: var(--brand); border: 1px solid var(--brand); padding: 0.15rem 0.45rem;
+  }
+  .traits { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 1rem; }
+  .trait {
+    font-family: var(--mono); font-size: 0.66rem; letter-spacing: 0.06em; text-transform: uppercase;
+    background: var(--surface-2); border: 1px solid var(--rule); color: var(--ink-2); padding: 0.28rem 0.5rem;
+  }
+
+  /* simulated inbox */
+  .inbox {
+    margin-top: 1.5rem; background: var(--inbox); padding: clamp(1rem, 3vw, 2rem);
+    border: 1px solid var(--rule); display: flex; flex-direction: column; gap: 1.5rem; align-items: center;
+  }
+  .sample { width: 100%; max-width: 600px; }
+  .sample-label {
+    font-family: var(--mono); font-size: 0.64rem; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--ink-3); margin-bottom: 0.5rem; text-align: center;
+  }
+  /* emails carry their own inline styles; keep page rules from leaking in */
+  .sample table { border-collapse: collapse; }
+  .sample p { margin: 0; max-width: none; }
+
+  ul.plain { margin: 0.75rem 0 0; padding-left: 1.1rem; color: var(--ink-2); max-width: 68ch; }
+  ul.plain li { margin-bottom: 0.4rem; font-size: 0.94rem; }
+  ul.plain li::marker { color: var(--brand); }
+
+  .verdict { background: var(--brand-wash); border: 1px solid var(--brand); padding: 1.5rem; margin-top: 1.5rem; }
+  .verdict h3 { color: var(--brand-ink); }
+</style>
+
+<div class="wrap">
+
+  <header class="top">
+    <p class="eyebrow">AsapLocal · Email system</p>
+    <h1>Three directions for<br />the transactional emails.</h1>
+    <p style="font-size:1.1rem;color:var(--ink);margin-top:1.25rem;max-width:52ch">
+      Every email the platform sends is currently an unstyled fragment — a bare
+      <code>&lt;h2&gt;</code> and a raw URL. Below are three complete directions,
+      rendered as real email HTML so what you see is what an inbox gets.
+    </p>
+  </header>
+
+  <!-- ── Constraints ─────────────────────────────────── -->
+  <section>
+    <p class="eyebrow">Before you judge them</p>
+    <h2>Email HTML is not web HTML.</h2>
+    <p>
+      These samples deliberately look "old-fashioned" under the hood, because
+      that is the only thing that renders consistently. All three directions are
+      built to the same rules:
+    </p>
+    <ul class="plain">
+      <li><strong>Tables for layout.</strong> Outlook on Windows renders with Word's engine — flexbox and grid simply don't work.</li>
+      <li><strong>Every style inline.</strong> Gmail strips much of what lives in a stylesheet.</li>
+      <li><strong>600px wide, fluid below that.</strong> The de-facto standard that survives every client.</li>
+      <li><strong>Padded-anchor buttons.</strong> No border-radius reliance; they degrade to a solid rectangle in Outlook rather than breaking.</li>
+      <li><strong>Light-mode only.</strong> Dark-mode email support is genuinely inconsistent, so these are designed to hold on a light ground rather than gamble.</li>
+    </ul>
+    <div class="note">
+      <b>Rendering note:</b> the samples below are the actual email markup
+      embedded in this page, on a simulated inbox background. Unlike the rest of
+      this page, they do not follow your light/dark preference — by design.
+    </div>
+  </section>
+
+  <!-- ── Inventory ───────────────────────────────────── -->
+  <section>
+    <p class="eyebrow">Scope</p>
+    <h2>Nine emails, three apps.</h2>
+    <p>Whichever direction you pick applies to all of them, since they share one template module in <code>packages/core</code>.</p>
+    <div class="tablewrap">
+      <table class="inv">
+        <thead>
+          <tr><th>Template</th><th>Sent to</th><th>Trigger</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="name">verifyEmail</td><td>Customer · Provider</td><td>Signup, and resend from account</td></tr>
+          <tr><td class="name">passwordReset</td><td>All three apps</td><td>Forgot-password request</td></tr>
+          <tr><td class="name">providerAccountInvite</td><td>Provider</td><td>Admin creates the account for them</td></tr>
+          <tr><td class="name">newLeadAvailable</td><td>Provider</td><td>A matching job is posted nearby</td></tr>
+          <tr><td class="name">quoteReceived</td><td>Customer</td><td>A provider quotes their job</td></tr>
+          <tr><td class="name">bookingConfirmed</td><td>Customer</td><td>Stripe payment succeeds</td></tr>
+          <tr><td class="name">referenceRequest</td><td>External referee</td><td>Provider lists them as a reference</td></tr>
+          <tr><td class="name">diyFixGuide</td><td>Customer · anonymous</td><td>"Email me this fix" in AI Buddy</td></tr>
+          <tr><td class="name">insuranceExpiring <span class="pill dead">unused</span></td><td>Provider</td><td>Defined, but nothing calls it yet</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note">
+      <b>Worth deciding separately:</b> <code>insuranceExpiring</code> exists in
+      the template file but has no call site anywhere in the repo — nothing ever
+      sends it. Either wire it to a scheduled job that checks
+      <code>InsurancePolicy.expiryDate</code>, or delete it. Right now a policy
+      can lapse in silence, which quietly drops the provider's trust tier.
+    </div>
+  </section>
+
+  <!-- ══════════════ OPTION 1 ══════════════ -->
+  <section>
+    <div class="opt-head">
+      <span class="opt-num">01</span>
+      <h2>Signal</h2>
+    </div>
+    <p style="margin-top:1rem">
+      A solid brand band across the top, one clear message, one button. The most
+      conventional of the three and the most instantly recognisable in a crowded
+      inbox — you know who it's from before you read a word.
+    </p>
+    <div class="traits">
+      <span class="trait">Highest recognition</span>
+      <span class="trait">Feels like a product</span>
+      <span class="trait">Safest to build</span>
+      <span class="trait">Most "marketing"</span>
+    </div>
+
+    <div class="inbox">
+      <div class="sample">
+        <p class="sample-label">Verify your email — simple CTA</p>
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#ffffff;border-collapse:collapse;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+          <tr>
+            <td style="background:#c15f2a;padding:22px 32px;">
+              <span style="color:#ffffff;font-size:19px;font-weight:800;letter-spacing:-0.4px;">Asap<span style="color:#f8dec5;">Local</span></span>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:36px 32px 8px 32px;">
+              <h1 style="margin:0 0 14px 0;font-size:24px;line-height:1.25;color:#20140c;font-weight:800;letter-spacing:-0.5px;">Confirm your email address</h1>
+              <p style="margin:0 0 26px 0;font-size:15px;line-height:1.6;color:#5a3f2a;">You're one click from finishing your AsapLocal account. This link expires in 24 hours.</p>
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
+                <td style="background:#c15f2a;">
+                  <a href="#" style="display:inline-block;padding:13px 26px;font-size:15px;font-weight:700;color:#ffffff;text-decoration:none;">Verify my email</a>
+                </td>
+              </tr></table>
+              <p style="margin:24px 0 0 0;font-size:13px;line-height:1.6;color:#7b5a3f;">Or paste this into your browser:<br /><span style="color:#9c4a20;word-break:break-all;">https://app.asaplocal.pro/verify-email?token=8f2c…</span></p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:28px 32px 30px 32px;">
+              <div style="border-top:1px solid #e3d0c2;padding-top:18px;">
+                <p style="margin:0;font-size:12px;line-height:1.6;color:#a57f5f;">Didn't create an account? You can safely ignore this email.<br />AsapLocal · Trusted local trades across the UK</p>
+              </div>
+            </td>
+          </tr>
+        </table>
+      </div>
+
+      <div class="sample">
+        <p class="sample-label">New lead available — content-rich</p>
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#ffffff;border-collapse:collapse;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+          <tr>
+            <td style="background:#c15f2a;padding:22px 32px;">
+              <span style="color:#ffffff;font-size:19px;font-weight:800;letter-spacing:-0.4px;">Asap<span style="color:#f8dec5;">Local</span></span>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:36px 32px 8px 32px;">
+              <h1 style="margin:0 0 14px 0;font-size:24px;line-height:1.25;color:#20140c;font-weight:800;letter-spacing:-0.5px;">New lead near you</h1>
+              <p style="margin:0 0 22px 0;font-size:15px;line-height:1.6;color:#5a3f2a;">Hi FlowFix Plumbing — a job just came in that matches your trades and your service area.</p>
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#fcf1e7;">
+                <tr><td style="padding:18px 20px;">
+                  <p style="margin:0 0 6px 0;font-size:16px;font-weight:700;color:#20140c;">Leaking kitchen tap, needs replacing</p>
+                  <p style="margin:0;font-size:14px;color:#7b5a3f;">Manchester · 2.4 miles away · Budget £80–£150</p>
+                </td></tr>
+              </table>
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin-top:24px;"><tr>
+                <td style="background:#c15f2a;">
+                  <a href="#" style="display:inline-block;padding:13px 26px;font-size:15px;font-weight:700;color:#ffffff;text-decoration:none;">View and claim this lead</a>
+                </td>
+              </tr></table>
+              <p style="margin:20px 0 0 0;font-size:13px;line-height:1.6;color:#7b5a3f;">Only 5 providers can take this lead. 2 have claimed it so far.</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:28px 32px 30px 32px;">
+              <div style="border-top:1px solid #e3d0c2;padding-top:18px;">
+                <p style="margin:0;font-size:12px;line-height:1.6;color:#a57f5f;">You're getting this because your service area covers Manchester.<br />Manage lead alerts in your provider settings.</p>
+              </div>
+            </td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════ OPTION 2 ══════════════ -->
+  <section>
+    <div class="opt-head">
+      <span class="opt-num">02</span>
+      <h2>Docket</h2>
+    </div>
+    <p style="margin-top:1rem">
+      Built like a work order rather than a newsletter. A hairline header, then
+      the facts in a labelled block. Reads as operational and trades-native —
+      the same register as a job sheet, which is what your providers already
+      work from.
+    </p>
+    <div class="traits">
+      <span class="trait">Best for detail-heavy</span>
+      <span class="trait">Trades-native tone</span>
+      <span class="trait">Scannable</span>
+      <span class="trait">Least warm</span>
+    </div>
+
+    <div class="inbox">
+      <div class="sample">
+        <p class="sample-label">Verify your email — simple CTA</p>
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#ffffff;border-collapse:collapse;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;border-top:4px solid #20140c;">
+          <tr>
+            <td style="padding:20px 32px;border-bottom:1px solid #e3d0c2;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+                <td style="font-size:15px;font-weight:800;color:#20140c;letter-spacing:-0.3px;">Asap<span style="color:#c15f2a;">Local</span></td>
+                <td align="right" style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10px;letter-spacing:1.4px;text-transform:uppercase;color:#a57f5f;">Account verification</td>
+              </tr></table>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:34px 32px 10px 32px;">
+              <h1 style="margin:0 0 12px 0;font-size:22px;line-height:1.3;color:#20140c;font-weight:800;letter-spacing:-0.4px;">Confirm your email address</h1>
+              <p style="margin:0 0 24px 0;font-size:15px;line-height:1.6;color:#5a3f2a;">Verify this address to finish setting up your account.</p>
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #e3d0c2;">
+                <tr>
+                  <td style="padding:12px 16px;border-bottom:1px solid #e3d0c2;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:#a57f5f;width:38%;">Address</td>
+                  <td style="padding:12px 16px;border-bottom:1px solid #e3d0c2;font-size:14px;color:#20140c;">you@example.com</td>
+                </tr>
+                <tr>
+                  <td style="padding:12px 16px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:#a57f5f;">Link expires</td>
+                  <td style="padding:12px 16px;font-size:14px;color:#20140c;">In 24 hours</td>
+                </tr>
+              </table>
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin-top:24px;"><tr>
+                <td style="border:2px solid #20140c;">
+                  <a href="#" style="display:inline-block;padding:11px 24px;font-size:14px;font-weight:700;color:#20140c;text-decoration:none;">Verify my email &rarr;</a>
+                </td>
+              </tr></table>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:26px 32px 28px 32px;">
+              <p style="margin:0;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10px;line-height:1.7;letter-spacing:0.5px;color:#a57f5f;">DIDN'T REQUEST THIS? IGNORE THIS EMAIL.<br />ASAPLOCAL · UNITED KINGDOM</p>
+            </td>
+          </tr>
+        </table>
+      </div>
+
+      <div class="sample">
+        <p class="sample-label">New lead available — content-rich</p>
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#ffffff;border-collapse:collapse;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;border-top:4px solid #20140c;">
+          <tr>
+            <td style="padding:20px 32px;border-bottom:1px solid #e3d0c2;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+                <td style="font-size:15px;font-weight:800;color:#20140c;letter-spacing:-0.3px;">Asap<span style="color:#c15f2a;">Local</span></td>
+                <td align="right" style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10px;letter-spacing:1.4px;text-transform:uppercase;color:#c15f2a;">Lead · 2 of 5 claimed</td>
+              </tr></table>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:34px 32px 10px 32px;">
+              <h1 style="margin:0 0 12px 0;font-size:22px;line-height:1.3;color:#20140c;font-weight:800;letter-spacing:-0.4px;">Leaking kitchen tap, needs replacing</h1>
+              <p style="margin:0 0 22px 0;font-size:15px;line-height:1.6;color:#5a3f2a;">Matches your trades and covers your service area.</p>
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #e3d0c2;">
+                <tr>
+                  <td style="padding:11px 16px;border-bottom:1px solid #e3d0c2;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:#a57f5f;width:38%;">Location</td>
+                  <td style="padding:11px 16px;border-bottom:1px solid #e3d0c2;font-size:14px;color:#20140c;">Manchester · 2.4 miles</td>
+                </tr>
+                <tr>
+                  <td style="padding:11px 16px;border-bottom:1px solid #e3d0c2;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:#a57f5f;">Budget</td>
+                  <td style="padding:11px 16px;border-bottom:1px solid #e3d0c2;font-size:14px;color:#20140c;">£80 – £150</td>
+                </tr>
+                <tr>
+                  <td style="padding:11px 16px;border-bottom:1px solid #e3d0c2;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:#a57f5f;">Lead cost</td>
+                  <td style="padding:11px 16px;border-bottom:1px solid #e3d0c2;font-size:14px;color:#20140c;">£10.00 · or 1 credit</td>
+                </tr>
+                <tr>
+                  <td style="padding:11px 16px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:#a57f5f;">Posted</td>
+                  <td style="padding:11px 16px;font-size:14px;color:#20140c;">12 minutes ago</td>
+                </tr>
+              </table>
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin-top:24px;"><tr>
+                <td style="border:2px solid #20140c;">
+                  <a href="#" style="display:inline-block;padding:11px 24px;font-size:14px;font-weight:700;color:#20140c;text-decoration:none;">View and claim &rarr;</a>
+                </td>
+              </tr></table>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:26px 32px 28px 32px;">
+              <p style="margin:0;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10px;line-height:1.7;letter-spacing:0.5px;color:#a57f5f;">SENT BECAUSE YOUR AREA COVERS MANCHESTER.<br />MANAGE ALERTS IN PROVIDER SETTINGS.</p>
+            </td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════ OPTION 3 ══════════════ -->
+  <section>
+    <div class="opt-head">
+      <span class="opt-num">03</span>
+      <h2>Letter</h2>
+    </div>
+    <p style="margin-top:1rem">
+      Almost no chrome. A small wordmark, real typographic hierarchy, and a lot
+      of air. Reads as though a person sent it, not a system — which tends to
+      land better in the inbox and feels least like something to unsubscribe
+      from.
+    </p>
+    <div class="traits">
+      <span class="trait">Best deliverability signal</span>
+      <span class="trait">Feels personal</span>
+      <span class="trait">Ages well</span>
+      <span class="trait">Least brand presence</span>
+    </div>
+
+    <div class="inbox">
+      <div class="sample">
+        <p class="sample-label">Verify your email — simple CTA</p>
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#ffffff;border-collapse:collapse;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+          <tr>
+            <td style="padding:40px 40px 0 40px;">
+              <span style="font-size:14px;font-weight:800;color:#20140c;letter-spacing:-0.2px;">Asap<span style="color:#c15f2a;">Local</span></span>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:28px 40px 0 40px;">
+              <h1 style="margin:0 0 18px 0;font-size:26px;line-height:1.2;color:#20140c;font-weight:800;letter-spacing:-0.6px;">Confirm your email address</h1>
+              <p style="margin:0 0 16px 0;font-size:16px;line-height:1.65;color:#402b1c;">Hi Ava,</p>
+              <p style="margin:0 0 16px 0;font-size:16px;line-height:1.65;color:#402b1c;">You're one step from finishing your AsapLocal account. Tap the link below and you're done — it works for the next 24 hours.</p>
+              <p style="margin:0 0 30px 0;">
+                <a href="#" style="font-size:16px;font-weight:700;color:#9c4a20;text-decoration:underline;">Verify my email address &rarr;</a>
+              </p>
+              <p style="margin:0 0 30px 0;font-size:14px;line-height:1.65;color:#7b5a3f;">If the link doesn't work, paste this into your browser:<br /><span style="color:#9c4a20;word-break:break-all;">https://app.asaplocal.pro/verify-email?token=8f2c…</span></p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:0 40px 40px 40px;">
+              <div style="border-top:1px solid #e3d0c2;padding-top:20px;">
+                <p style="margin:0;font-size:13px;line-height:1.65;color:#a57f5f;">Didn't create an account? Nothing will happen if you ignore this.<br />AsapLocal, United Kingdom</p>
+              </div>
+            </td>
+          </tr>
+        </table>
+      </div>
+
+      <div class="sample">
+        <p class="sample-label">Fix guide from AI Buddy — list-heavy</p>
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#ffffff;border-collapse:collapse;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+          <tr>
+            <td style="padding:40px 40px 0 40px;">
+              <span style="font-size:14px;font-weight:800;color:#20140c;letter-spacing:-0.2px;">Asap<span style="color:#c15f2a;">Local</span></span>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:28px 40px 0 40px;">
+              <h1 style="margin:0 0 18px 0;font-size:26px;line-height:1.2;color:#20140c;font-weight:800;letter-spacing:-0.6px;">Your fix guide</h1>
+              <p style="margin:0 0 26px 0;font-size:16px;line-height:1.65;color:#402b1c;">That's a classic DIY fix — here's the plan we talked through for your slow-draining bathroom sink.</p>
+
+              <p style="margin:0 0 10px 0;font-size:11px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;color:#a57f5f;">What you'll need</p>
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 26px 0;">
+                <tr><td style="padding:5px 0;font-size:15px;line-height:1.5;color:#402b1c;border-bottom:1px solid #f3eae3;">Plunger</td></tr>
+                <tr><td style="padding:5px 0;font-size:15px;line-height:1.5;color:#402b1c;border-bottom:1px solid #f3eae3;">Baking soda &amp; white vinegar</td></tr>
+                <tr><td style="padding:5px 0;font-size:15px;line-height:1.5;color:#402b1c;border-bottom:1px solid #f3eae3;">Bucket and rubber gloves</td></tr>
+              </table>
+
+              <p style="margin:0 0 10px 0;font-size:11px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;color:#a57f5f;">Steps</p>
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 28px 0;">
+                <tr>
+                  <td valign="top" style="width:26px;padding:6px 0;font-size:15px;font-weight:700;color:#c15f2a;">1</td>
+                  <td style="padding:6px 0;font-size:15px;line-height:1.6;color:#402b1c;">Remove any visible hair or debris from the drain opening.</td>
+                </tr>
+                <tr>
+                  <td valign="top" style="width:26px;padding:6px 0;font-size:15px;font-weight:700;color:#c15f2a;">2</td>
+                  <td style="padding:6px 0;font-size:15px;line-height:1.6;color:#402b1c;">Block the overflow with a wet cloth, then plunge hard for 30 seconds.</td>
+                </tr>
+                <tr>
+                  <td valign="top" style="width:26px;padding:6px 0;font-size:15px;font-weight:700;color:#c15f2a;">3</td>
+                  <td style="padding:6px 0;font-size:15px;line-height:1.6;color:#402b1c;">Pour half a cup of baking soda, then vinegar. Leave for 15 minutes.</td>
+                </tr>
+              </table>
+
+              <p style="margin:0 0 30px 0;font-size:15px;line-height:1.65;color:#402b1c;">Not going to plan? <a href="#" style="color:#9c4a20;font-weight:700;text-decoration:underline;">Get a quote from a local pro &rarr;</a></p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:0 40px 40px 40px;">
+              <div style="border-top:1px solid #e3d0c2;padding-top:20px;">
+                <p style="margin:0;font-size:12px;line-height:1.65;color:#a57f5f;">General DIY guidance, not professional advice. For gas, mains electrics or structural work, always use a qualified tradesperson.<br />AsapLocal, United Kingdom</p>
+              </div>
+            </td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Recommendation ──────────────────────────────── -->
+  <section>
+    <p class="eyebrow">My recommendation</p>
+    <h2>Pick 01 as the base, borrow 02's data block.</h2>
+    <div class="verdict">
+      <h3>Signal + Docket's detail table</h3>
+      <p style="margin-top:0.6rem">
+        <strong>01 Signal</strong> should be the house style: the brand band earns
+        recognition across nine different emails from three apps, which matters
+        more than subtlety when a provider is scanning a busy inbox for a lead
+        alert. But <strong>02's labelled data block</strong> is genuinely better
+        for the emails that carry facts — lead alerts, booking confirmations,
+        quotes — so I'd bring that panel into the Signal shell as a reusable
+        piece rather than picking one wholesale.
+      </p>
+      <p style="margin-top:0.9rem">
+        <strong>03 Letter</strong> is the one I'd still use for two specific
+        emails: <code>passwordReset</code> and <code>verifyEmail</code>. Security
+        mail benefits from looking personal and unbranded — heavily-designed
+        password emails read as phishing to a wary user, and plainer mail lands
+        in the inbox more reliably.
+      </p>
+    </div>
+    <p style="margin-top:1.5rem">
+      Whichever you choose, the implementation is the same shape: one shared
+      layout function in <code>packages/core/src/email.ts</code> that takes a
+      title, body blocks and an optional CTA, so all nine templates stop
+      hand-rolling their own markup and any future change happens in one place.
+    </p>
+    <ul class="plain">
+      <li><strong>Reply to this with a number</strong> — or a mix, e.g. "01 for everything, 03 for auth" — and I'll build it.</li>
+      <li>I'll add a plain-text alternative alongside the HTML. Resend accepts both, and sending HTML-only measurably hurts deliverability.</li>
+      <li>Logo will need hosting as a real image at an absolute URL for the header band; the samples above use live text, which is more reliable but less distinctive.</li>
+    </ul>
+  </section>
+
+</div>

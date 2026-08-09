@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
   await sendEmail({
     to: jobRequest.customer.email,
     subject: "You've received a new quote on AsapLocal",
-    html: emailTemplates.quoteReceived(jobRequest.title, `${process.env.NEXT_PUBLIC_WEB_URL}/jobs/${jobRequest.id}`),
+    ...emailTemplates.quoteReceived(jobRequest.title, `${process.env.NEXT_PUBLIC_WEB_URL}/jobs/${jobRequest.id}`),
   }).catch(() => {});
 
   return NextResponse.json({ id: quote.id }, { status: 201 });
