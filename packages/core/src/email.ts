@@ -1,4 +1,5 @@
 import { Resend } from "resend";
+import { escapeHtml } from "./validations";
 
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 const FROM = process.env.EMAIL_FROM ?? "AsapLocal <noreply@asaplocal.pro>";
@@ -30,6 +31,24 @@ export const emailTemplates = {
     <p>Click the link below to choose a new password:</p>
     <p><a href="${link}">${link}</a></p>
     <p>This link expires in 1 hour. If you didn't request this, you can ignore this email.</p>`,
+  // Every field here originates from a user-driven chat, so each one is
+  // escaped rather than interpolated raw — this body must never be able to
+  // carry markup.
+  diyFixGuide: (opts: { summary: string; toolkit: string[]; steps: string[]; ctaUrl: string }) => `
+    <h2>Your fix guide from AI Buddy</h2>
+    <p>${escapeHtml(opts.summary)}</p>
+    ${
+      opts.toolkit.length
+        ? `<h3>What you'll need</h3><ul>${opts.toolkit.map((t) => `<li>${escapeHtml(t)}</li>`).join("")}</ul>`
+        : ""
+    }
+    ${
+      opts.steps.length
+        ? `<h3>Steps</h3><ol>${opts.steps.map((s) => `<li>${escapeHtml(s)}</li>`).join("")}</ol>`
+        : ""
+    }
+    <p style="margin-top:24px">Not going to plan? <a href="${opts.ctaUrl}">Get a quote from a local pro</a>.</p>
+    <p style="color:#6b7280;font-size:12px">This guide is general DIY guidance, not professional advice. If the job involves gas, mains electrics or structural work, use a qualified tradesperson.</p>`,
   providerAccountInvite: (link: string) => `
     <h2>An AsapLocal Business account was created for you</h2>
     <p>Click the link below to set your password and get started:</p>

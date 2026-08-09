@@ -85,3 +85,18 @@ export const dispatcherJobActionSchema = z.object({
 export function stripHtml(input: string): string {
   return input.replace(/<[^>]*>?/gm, "").trim();
 }
+
+/**
+ * Escapes text for safe interpolation into an HTML document (e.g. an email
+ * body). Unlike stripHtml this preserves the original characters rather than
+ * deleting markup, so user text still reads correctly while never being
+ * parsed as HTML.
+ */
+export function escapeHtml(input: string): string {
+  return input
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}

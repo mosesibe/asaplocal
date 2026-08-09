@@ -140,12 +140,22 @@ export interface AiBuddyMessage {
 }
 
 /** Multi-turn DIY-vs-needs-a-pro triage chat for the customer homepage. */
+/** The model often prefixes steps ("1. Do this"), but every surface renders
+ *  them in an ordered list — strip its numbering so it isn't doubled up. */
+function stripLeadingNumber(step: string): string {
+  return step.replace(/^\s*\d+\s*[.)\]]\s*/, "").trim();
+}
+
 export async function askAiBuddy(messages: AiBuddyMessage[]) {
-  return chatJSONMultiTurn<{ reply: string; needsPro: boolean; toolkit: string[] | null; steps: string[] | null }>(
+  const result = await chatJSONMultiTurn<{ reply: string; needsPro: boolean; toolkit: string[] | null; steps: string[] | null }>(
     AI_BUDDY_SYSTEM_PROMPT,
     messages,
     AI_BUDDY_FALLBACK
   );
+  return {
+    ...result,
+    steps: result.steps ? result.steps.map(stripLeadingNumber).filter(Boolean) : result.steps,
+  };
 }
 
 /** Suggests a reply for a provider working a new lead in the chat/lead inbox. */
