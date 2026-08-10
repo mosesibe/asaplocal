@@ -25,9 +25,10 @@ interface ProviderTopBarProps {
   city: string;
   verificationStatus: string;
   trustTier: string;
+  canHaveStaff: boolean;
 }
 
-export function ProviderTopBar(props: ProviderTopBarProps) {
+export function ProviderTopBar({ canHaveStaff, ...props }: ProviderTopBarProps) {
   const pathname = usePathname();
   const [drawerOpen, setDrawerOpen] = useState(false);
 
@@ -45,7 +46,7 @@ export function ProviderTopBar(props: ProviderTopBarProps) {
         <h1 className="truncate text-xl font-bold">{pageTitle(pathname)}</h1>
       </div>
 
-      <AccountDrawer open={drawerOpen} onOpenChange={setDrawerOpen} {...props} />
+      <AccountDrawer open={drawerOpen} onOpenChange={setDrawerOpen} canHaveStaff={canHaveStaff} {...props} />
     </>
   );
 }

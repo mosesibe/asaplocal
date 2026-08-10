@@ -19,6 +19,7 @@ interface AccountDrawerProps {
   city: string;
   verificationStatus: string;
   trustTier: string;
+  canHaveStaff: boolean;
 }
 
 const PANEL_TITLES: Record<DrawerPanelId, string> = {
@@ -45,8 +46,13 @@ export function AccountDrawer({
   city,
   verificationStatus,
   trustTier,
+  canHaveStaff,
 }: AccountDrawerProps) {
   const [panel, setPanel] = useState<DrawerPanelId | null>(null);
+  const drawerSections = ACCOUNT_DRAWER_SECTIONS.map((section) => ({
+    ...section,
+    items: section.items.filter((item) => canHaveStaff || !("href" in item) || item.href !== "/staff"),
+  }));
 
   function handleOpenChange(next: boolean) {
     if (!next) setPanel(null);
@@ -101,7 +107,7 @@ export function AccountDrawer({
             </div>
 
             <div className="mt-3 flex-1 space-y-5 overflow-y-auto">
-              {ACCOUNT_DRAWER_SECTIONS.map((section) => (
+              {drawerSections.map((section) => (
                 <div key={section.title}>
                   <p className="mb-2 px-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{section.title}</p>
                   <Card className="divide-y divide-border p-0">

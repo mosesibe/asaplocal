@@ -8,8 +8,6 @@ import { SignOutButton } from "./sign-out-button";
 import { ProviderBottomNav } from "./provider-bottom-nav";
 import { ProviderTopBar } from "./provider-top-bar";
 
-const NAV = [...PRIMARY_NAV, ...SECONDARY_NAV];
-
 function isActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
@@ -23,10 +21,12 @@ interface AccountSummary {
   city: string;
   verificationStatus: string;
   trustTier: string;
+  canHaveStaff: boolean;
 }
 
 export function ProviderShell({ children, account }: { children: React.ReactNode; account: AccountSummary }) {
   const pathname = usePathname();
+  const NAV = [...PRIMARY_NAV, ...SECONDARY_NAV].filter((item) => account.canHaveStaff || item.href !== "/staff");
 
   return (
     <div className="flex min-h-screen">
