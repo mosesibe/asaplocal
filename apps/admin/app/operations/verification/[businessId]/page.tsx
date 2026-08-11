@@ -142,10 +142,22 @@ export default async function BusinessVerificationDetailPage({ params }: { param
           <Badge variant={business.portfolioItems.length > 0 ? "success" : "outline"} className="mt-1">{business.portfolioItems.length} item(s)</Badge>
         </Card>
         <Card className="p-4">
-          <h2 className="font-semibold">Categories</h2>
-          <div className="mt-1 flex flex-wrap gap-1.5">
+          <div className="flex items-center justify-between">
+            <h2 className="font-semibold">Services</h2>
+            <Badge variant={business.services.some((s) => s.isActive) ? "success" : "destructive"}>
+              {business.services.filter((s) => s.isActive).length} active
+            </Badge>
+          </div>
+          {business.services.length === 0 ? (
+            <p className="mt-1 text-sm text-red-600">No services added — this business will not appear in customer search.</p>
+          ) : !business.services.some((s) => s.isActive) ? (
+            <p className="mt-1 text-sm text-red-600">All services are paused — this business will not appear in customer search.</p>
+          ) : null}
+          <div className="mt-2 flex flex-wrap gap-1.5">
             {business.services.map((s) => (
-              <Badge key={s.id} variant="outline">{s.category.name}</Badge>
+              <Badge key={s.id} variant={s.isActive ? "outline" : "destructive"}>
+                {s.category.name}{!s.isActive && " (paused)"}
+              </Badge>
             ))}
           </div>
         </Card>

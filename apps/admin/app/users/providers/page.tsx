@@ -64,7 +64,18 @@ export default async function ProvidersPage({
   const [users, cities] = await Promise.all([
     prisma.user.findMany({
       where,
-      include: { profile: true, business: { select: { id: true, city: true, businessType: true } } },
+      include: {
+        profile: true,
+        business: {
+          select: {
+            id: true,
+            city: true,
+            businessType: true,
+            verificationStatus: true,
+            services: { select: { isActive: true } },
+          },
+        },
+      },
       orderBy: buildOrderBy(sort, dir),
       take: 100,
     }),
@@ -84,6 +95,8 @@ export default async function ProvidersPage({
     businessId: u.business?.id,
     city: u.business?.city,
     businessType: u.business?.businessType,
+    businessVerificationStatus: u.business?.verificationStatus,
+    businessHasActiveService: u.business?.services.some((s) => s.isActive) ?? false,
   }));
 
   return (

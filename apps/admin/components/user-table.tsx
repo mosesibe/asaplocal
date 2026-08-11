@@ -16,6 +16,8 @@ export type UserTableRow = {
   businessId?: string;
   city?: string | null;
   businessType?: string | null;
+  businessVerificationStatus?: string;
+  businessHasActiveService?: boolean;
 };
 
 const STATUS_VARIANT: Record<string, "success" | "destructive" | "outline" | "warning"> = {
@@ -24,6 +26,17 @@ const STATUS_VARIANT: Record<string, "success" | "destructive" | "outline" | "wa
   DEACTIVATED: "outline",
   PENDING_VERIFICATION: "warning",
 };
+
+function searchVisibility(row: UserTableRow): { visible: boolean; reason: string } {
+  if (!row.businessId) return { visible: false, reason: "No business profile" };
+  if (!["VERIFIED", "PENDING"].includes(row.businessVerificationStatus ?? "")) {
+    return { visible: false, reason: `Verification status: ${row.businessVerificationStatus ?? "UNVERIFIED"}` };
+  }
+  if (!row.businessHasActiveService) {
+    return { visible: false, reason: "No active (unpaused) services" };
+  }
+  return { visible: true, reason: "Verified with at least one active service" };
+}
 
 const BUSINESS_TYPE_LABEL: Record<string, string> = {
   SOLE_TRADER: "Sole Trader",
@@ -88,6 +101,7 @@ export function UserTable({
     { key: "lastLoginAt", label: "Last login", sortable: true },
     { key: "emailVerified", label: "Verified" },
     { key: "status", label: "Status", sortable: true },
+    ...(showBusinessColumns ? [{ key: "searchVisibility", label: "In search" }] : []),
     { key: "actions", label: "Actions" },
   ];
 
@@ -134,6 +148,18 @@ export function UserTable({
               <td className="whitespace-nowrap px-4 py-3">
                 <Badge variant={STATUS_VARIANT[u.status] ?? "outline"}>{u.status}</Badge>
               </td>
+              {showBusinessColumns && (
+                <td className="whitespace-nowrap px-4 py-3">
+                  {(() => {
+                    const { visible, reason } = searchVisibility(u);
+                    return (
+                      <Badge variant={visible ? "success" : "destructive"} title={reason}>
+                        {visible ? "Yes" : "No"}
+                      </Badge>
+                    );
+                  })()}
+                </td>
+              )}
               <td className="px-4 py-3">
                 <UserRowActions userId={u.id} status={u.status} businessId={u.businessId} />
               </td>
