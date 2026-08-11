@@ -14,16 +14,18 @@ export async function POST(req: NextRequest) {
   const session = await auth();
   if (!session?.user) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
 
-  try {
-    await checkRateLimit("phone-verify-send", session.user.id, 5, 3600);
-  } catch (e) {
-    return NextResponse.json({ message: (e as Error).message }, { status: 429 });
-  }
-
   const parsed = schema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ message: "Invalid input", issues: parsed.error.flatten() }, { status: 422 });
 
-  await sendPhoneVerificationCode(session.user.id, parsed.data.phone);
+  try {
+    await checkRateLimit("phone-verify-send", session.user.id, 5, 3600);
+    await sendPhoneVerificationCode(session.user.id, parsed.data.phone);
+  } catch (e) {
+    const statusCode = (e as Error & { statusCode?: number }).statusCode;
+    if (statusCode) return NextResponse.json({ message: (e as Error).message }, { status: statusCode });
+    console.error("[account/phone/send-code]", e);
+    return NextResponse.json({ message: "Something went wrong sending the code. Please try again." }, { status: 500 });
+  }
 
   return NextResponse.json({ sent: true });
 }
