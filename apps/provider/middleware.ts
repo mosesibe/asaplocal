@@ -23,9 +23,8 @@ export default auth((req) => {
   if (user.status === "SUSPENDED" || user.status === "DEACTIVATED") {
     return NextResponse.redirect(new URL("/account-suspended", req.nextUrl.origin));
   }
-  // Phone verification is temporarily not enforced — Twilio isn't set up
-  // yet. Flip NEXT_PUBLIC_REQUIRE_PHONE_VERIFICATION back to unset/"true"
-  // once it is; nothing else needs to change.
+  // Set to "false" to temporarily disable the phone-verification gate
+  // (e.g. an SMS provider outage) without a code change.
   const requirePhone = process.env.NEXT_PUBLIC_REQUIRE_PHONE_VERIFICATION !== "false";
   if ((!user.isEmailVerified || (requirePhone && !user.isPhoneVerified)) && !pathname.startsWith("/verify")) {
     return NextResponse.redirect(new URL("/verify", req.nextUrl.origin));

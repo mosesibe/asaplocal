@@ -16,8 +16,8 @@ export default function VerifyPage() {
   const [notice, setNotice] = useState<string | null>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Twilio isn't set up yet — phone verification isn't enforced for now.
-  // Flip NEXT_PUBLIC_REQUIRE_PHONE_VERIFICATION back once it is.
+  // Set to "false" to temporarily disable the phone-verification gate
+  // (e.g. an SMS provider outage) without a code change.
   const requirePhone = process.env.NEXT_PUBLIC_REQUIRE_PHONE_VERIFICATION !== "false";
   const emailVerified = session?.user?.isEmailVerified ?? false;
   const phoneVerified = session?.user?.isPhoneVerified ?? false;
