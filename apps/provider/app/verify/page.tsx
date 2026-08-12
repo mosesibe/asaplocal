@@ -55,7 +55,10 @@ export default function VerifyPage() {
         setVerifyError(data.message ?? "Something went wrong");
         return;
       }
-      await update();
+      const updated = await update();
+      if (updated?.user?.isEmailVerified && (!requirePhone || updated.user.isPhoneVerified)) {
+        router.replace("/dashboard");
+      }
     } finally {
       setVerifying(false);
     }
