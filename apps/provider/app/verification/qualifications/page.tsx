@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@asaplocal/auth";
 import { prisma } from "@asaplocal/db";
 import { QualificationsForm } from "./qualifications-form";
+import { BackToVerificationCenter } from "../back-link";
 
 export default async function QualificationsPage() {
   const session = await auth();
@@ -18,7 +19,8 @@ export default async function QualificationsPage() {
 
   return (
     <div className="mx-auto max-w-lg px-4 py-10 sm:px-6">
-      <h1 className="text-2xl font-bold">Qualifications</h1>
+      <BackToVerificationCenter />
+      <h1 className="mt-2 text-2xl font-bold">Qualifications</h1>
       <p className="mt-1 text-muted-foreground">
         {regulatedCategories.length > 0
           ? `Suggested for ${regulatedCategories.map((c) => c.name).join(", ")}: ${suggested.join(", ") || "—"}`

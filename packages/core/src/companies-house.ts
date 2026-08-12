@@ -20,7 +20,15 @@ interface Officer {
 
 async function getCompanyProfile(companyNumber: string): Promise<CompanyProfile> {
   const res = await fetch(`${BASE_URL}/company/${encodeURIComponent(companyNumber)}`, { headers: { Authorization: authHeader() } });
-  if (!res.ok) throw Object.assign(new Error("Company not found"), { statusCode: res.status });
+  if (!res.ok) {
+    const message =
+      res.status === 400 || res.status === 401
+        ? "Companies House API auth failed"
+        : res.status === 404
+          ? "Company not found"
+          : `Companies House lookup failed (${res.status})`;
+    throw Object.assign(new Error(message), { statusCode: res.status });
+  }
   return res.json();
 }
 

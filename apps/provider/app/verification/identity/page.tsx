@@ -3,6 +3,7 @@ import { auth } from "@asaplocal/auth";
 import { prisma } from "@asaplocal/db";
 import { Badge, Card } from "@asaplocal/ui";
 import { StartIdentityVerificationButton } from "./start-button";
+import { BackToVerificationCenter } from "../back-link";
 
 export default async function IdentityVerificationPage() {
   const session = await auth();
@@ -15,7 +16,8 @@ export default async function IdentityVerificationPage() {
 
   return (
     <div className="mx-auto max-w-lg px-4 py-10 sm:px-6">
-      <h1 className="text-2xl font-bold">Identity verification</h1>
+      <BackToVerificationCenter />
+      <h1 className="mt-2 text-2xl font-bold">Identity verification</h1>
       <Card className="mt-6 space-y-4 p-6">
         <p className="text-sm text-muted-foreground">
           Confirm your identity with a government-issued ID (passport, driving licence, or national ID) and a quick selfie. This happens on
