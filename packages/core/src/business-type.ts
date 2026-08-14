@@ -17,3 +17,15 @@ export function canHaveStaff(businessType: BusinessType | null | undefined): boo
 export function utrLabel(businessType: BusinessType | null | undefined): string {
   return isIndividualTrader(businessType) ? "Personal UTR (Unique Taxpayer Reference)" : "Company UTR (Unique Taxpayer Reference)";
 }
+
+const BUSINESS_TYPE_LABELS: Record<BusinessType, string> = {
+  SOLE_TRADER: "Sole trader",
+  LIMITED_COMPANY: "Limited company",
+  PARTNERSHIP: "Partnership",
+  SELF_EMPLOYED: "Self-employed",
+  CHARITY: "Charity",
+};
+
+export function businessTypeLabel(businessType: BusinessType | null | undefined): string | null {
+  return businessType ? BUSINESS_TYPE_LABELS[businessType] : null;
+}
