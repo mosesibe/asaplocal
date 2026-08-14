@@ -43,6 +43,7 @@ export function ProfileForm({ business }: { business: BusinessProfile }) {
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [uploadingCover, setUploadingCover] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [isDraggingPhoto, setIsDraggingPhoto] = useState(false);
   const logoInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
   const photoInputRef = useRef<HTMLInputElement>(null);
@@ -79,20 +80,39 @@ export function ProfileForm({ business }: { business: BusinessProfile }) {
     }
   }
 
-  async function onPickPhoto(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    e.target.value = "";
-    if (!file) return;
+  async function uploadPhotos(files: File[]) {
+    const images = files.filter((file) => file.type.startsWith("image/"));
+    if (images.length === 0) return;
     setUploadingPhoto(true);
     setError(null);
-    try {
-      const url = await uploadFile(file, "business-photo");
-      setForm((f) => ({ ...f, photoUrls: [...f.photoUrls, url] }));
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Photo upload failed");
-    } finally {
-      setUploadingPhoto(false);
-    }
+    const results = await Promise.allSettled(images.map((file) => uploadFile(file, "business-photo")));
+    const urls = results.filter((r): r is PromiseFulfilledResult<string> => r.status === "fulfilled").map((r) => r.value);
+    const failures = results.length - urls.length;
+    if (urls.length > 0) setForm((f) => ({ ...f, photoUrls: [...f.photoUrls, ...urls] }));
+    if (failures > 0) setError(`${failures} photo${failures > 1 ? "s" : ""} failed to upload`);
+    setUploadingPhoto(false);
+  }
+
+  async function onPickPhoto(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files ?? []);
+    e.target.value = "";
+    await uploadPhotos(files);
+  }
+
+  function onPhotoDragOver(e: React.DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+    setIsDraggingPhoto(true);
+  }
+
+  function onPhotoDragLeave(e: React.DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+    setIsDraggingPhoto(false);
+  }
+
+  async function onPhotoDrop(e: React.DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+    setIsDraggingPhoto(false);
+    await uploadPhotos(Array.from(e.dataTransfer.files));
   }
 
   function removePhoto(url: string) {
@@ -165,16 +185,36 @@ export function ProfileForm({ business }: { business: BusinessProfile }) {
 
       <div>
         <label className="text-sm font-medium">Business photos</label>
-        <input ref={photoInputRef} type="file" accept="image/*" className="hidden" onChange={onPickPhoto} />
-        <div className="mt-2 flex flex-wrap gap-2">
+        <input ref={photoInputRef} type="file" accept="image/*" multiple className="hidden" onChange={onPickPhoto} />
+        <div
+          onDragOver={onPhotoDragOver}
+          onDragLeave={onPhotoDragLeave}
+          onDrop={onPhotoDrop}
+          onClick={() => photoInputRef.current?.click()}
+          className={`mt-2 flex flex-wrap items-center gap-2 rounded-lg border-2 border-dashed p-3 transition-colors ${
+            isDraggingPhoto ? "border-primary bg-primary/5" : "border-border"
+          }`}
+        >
           {form.photoUrls.map((url) => (
-            <div key={url} className="relative">
+            <div key={url} className="relative" onClick={(e) => e.stopPropagation()}>
               <img src={url} alt="Business" className="h-16 w-16 rounded-lg object-cover" />
               <button type="button" onClick={() => removePhoto(url)} className="absolute -right-1 -top-1 rounded-full bg-red-600 px-1.5 text-xs text-white">×</button>
             </div>
           ))}
-          <Button type="button" size="sm" variant="outline" onClick={() => photoInputRef.current?.click()} disabled={uploadingPhoto}>
-            {uploadingPhoto ? "Uploading…" : "Add photo"}
+          {form.photoUrls.length === 0 && !uploadingPhoto && (
+            <p className="text-sm text-muted-foreground">Drag and drop photos here, or click to browse</p>
+          )}
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={(e) => {
+              e.stopPropagation();
+              photoInputRef.current?.click();
+            }}
+            disabled={uploadingPhoto}
+          >
+            {uploadingPhoto ? "Uploading…" : "Add photos"}
           </Button>
         </div>
       </div>
