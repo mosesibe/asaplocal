@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { cn, Logo, ThemeToggle } from "@asaplocal/ui";
+import { Avatar, Badge, cn, Logo, ThemeToggle } from "@asaplocal/ui";
 import { PRIMARY_NAV, SECONDARY_NAV } from "@/lib/nav";
+import { VerificationStatusBadge } from "@/lib/verification-badge";
 import { SignOutButton } from "./sign-out-button";
 import { ProviderBottomNav } from "./provider-bottom-nav";
 import { ProviderTopBar } from "./provider-top-bar";
@@ -15,12 +16,15 @@ function isActive(pathname: string, href: string) {
 interface AccountSummary {
   name: string;
   email: string;
+  phone: string | null;
   firstName: string;
   lastName: string;
   avatarUrl?: string | null;
   city: string;
   verificationStatus: string;
   trustTier: string;
+  isEmailVerified: boolean;
+  isPhoneVerified: boolean;
   canHaveStaff: boolean;
 }
 
@@ -37,6 +41,23 @@ export function ProviderShell({ children, account }: { children: React.ReactNode
             <span className="text-sm font-normal text-muted-foreground">Business</span>
           </Link>
           <ThemeToggle />
+        </div>
+        <div className="mb-6 rounded-xl border border-border bg-muted/40 p-3">
+          <div className="flex items-center gap-3">
+            <Avatar src={account.avatarUrl} name={account.name} size={40} />
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold">{account.name}</p>
+              <p className="truncate text-xs text-muted-foreground">{account.email}</p>
+              {account.phone && <p className="truncate text-xs text-muted-foreground">{account.phone}</p>}
+            </div>
+          </div>
+          <div className="mt-2.5 flex flex-wrap gap-1.5">
+            <Badge variant={account.isEmailVerified ? "success" : "warning"}>Email {account.isEmailVerified ? "verified" : "unverified"}</Badge>
+            {account.phone && (
+              <Badge variant={account.isPhoneVerified ? "success" : "warning"}>Phone {account.isPhoneVerified ? "verified" : "unverified"}</Badge>
+            )}
+            <VerificationStatusBadge status={account.verificationStatus} />
+          </div>
         </div>
         <nav className="space-y-1">
           {NAV.map(({ href, label, icon: Icon }) => {

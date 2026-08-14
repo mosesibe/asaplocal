@@ -5,6 +5,7 @@ import { useState } from "react";
 import { ArrowLeft, ChevronRight, X } from "lucide-react";
 import { Avatar, Badge, Card, Logo, Sheet, SheetContent, SheetClose, ThemeToggle } from "@asaplocal/ui";
 import { ACCOUNT_DRAWER_SECTIONS, DrawerPanelId } from "@/lib/nav";
+import { VerificationStatusBadge } from "@/lib/verification-badge";
 import { SignOutButton } from "./sign-out-button";
 import { AccountSettingsPanel } from "./account-settings-panel";
 
@@ -13,12 +14,15 @@ interface AccountDrawerProps {
   onOpenChange: (open: boolean) => void;
   name: string;
   email: string;
+  phone: string | null;
   firstName: string;
   lastName: string;
   avatarUrl?: string | null;
   city: string;
   verificationStatus: string;
   trustTier: string;
+  isEmailVerified: boolean;
+  isPhoneVerified: boolean;
   canHaveStaff: boolean;
 }
 
@@ -40,12 +44,15 @@ export function AccountDrawer({
   onOpenChange,
   name,
   email,
+  phone,
   firstName,
   lastName,
   avatarUrl,
   city,
   verificationStatus,
   trustTier,
+  isEmailVerified,
+  isPhoneVerified,
   canHaveStaff,
 }: AccountDrawerProps) {
   const [panel, setPanel] = useState<DrawerPanelId | null>(null);
@@ -98,12 +105,15 @@ export function AccountDrawer({
               <div className="min-w-0">
                 <p className="truncate font-semibold">{name}</p>
                 <p className="truncate text-sm text-muted-foreground">{email}</p>
+                {phone && <p className="truncate text-sm text-muted-foreground">{phone}</p>}
                 <p className="truncate text-xs text-muted-foreground">{city}</p>
               </div>
             </div>
             <div className="flex flex-wrap gap-1.5 border-b border-border py-3">
               <Badge variant="outline">{trustTier} tier</Badge>
-              <Badge variant={verificationStatus === "VERIFIED" ? "success" : "warning"}>{verificationStatus}</Badge>
+              <Badge variant={isEmailVerified ? "success" : "warning"}>Email {isEmailVerified ? "verified" : "unverified"}</Badge>
+              {phone && <Badge variant={isPhoneVerified ? "success" : "warning"}>Phone {isPhoneVerified ? "verified" : "unverified"}</Badge>}
+              <VerificationStatusBadge status={verificationStatus} />
             </div>
 
             <div className="mt-3 flex-1 space-y-5 overflow-y-auto">

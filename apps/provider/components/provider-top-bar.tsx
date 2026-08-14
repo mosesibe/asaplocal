@@ -19,12 +19,15 @@ function pageTitle(pathname: string): string {
 interface ProviderTopBarProps {
   name: string;
   email: string;
+  phone: string | null;
   firstName: string;
   lastName: string;
   avatarUrl?: string | null;
   city: string;
   verificationStatus: string;
   trustTier: string;
+  isEmailVerified: boolean;
+  isPhoneVerified: boolean;
   canHaveStaff: boolean;
 }
 

@@ -2,16 +2,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@asaplocal/auth";
 import { prisma } from "@asaplocal/db";
-import { Badge, Card } from "@asaplocal/ui";
-
-function statusBadge(status: string | null | undefined) {
-  if (!status) return <Badge variant="outline">Not started</Badge>;
-  if (status === "VERIFIED") return <Badge variant="success">Verified</Badge>;
-  if (status === "REJECTED") return <Badge variant="destructive">Rejected</Badge>;
-  if (status === "PENDING") return <Badge variant="warning">Pending review</Badge>;
-  if (status === "MORE_INFO_REQUESTED") return <Badge variant="warning">More info needed</Badge>;
-  return <Badge variant="outline">{status}</Badge>;
-}
+import { Card } from "@asaplocal/ui";
+import { VerificationStatusBadge } from "@/lib/verification-badge";
 
 export default async function VerificationCenterPage() {
   const session = await auth();
@@ -47,7 +39,7 @@ export default async function VerificationCenterPage() {
           <Link key={s.href} href={s.href}>
             <Card className="flex items-center justify-between p-4 transition-shadow hover:shadow-card">
               <span className="font-medium">{s.label}</span>
-              {statusBadge(s.status)}
+              <VerificationStatusBadge status={s.status} />
             </Card>
           </Link>
         ))}
