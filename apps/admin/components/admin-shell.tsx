@@ -19,6 +19,7 @@ import {
   RefreshCcw,
   ShieldCheck,
   IdCard,
+  ClipboardList,
   Wrench,
   Landmark,
   Banknote,
@@ -71,6 +72,7 @@ const OPERATIONS_GROUP: NavItem = {
   label: "Operations",
   icon: Wrench,
   children: [
+    { href: "/operations/jobs", label: "Jobs", icon: ClipboardList },
     { href: "/operations/services", label: "Services", icon: ListTree },
     { href: "/operations/verification", label: "Verification queue", icon: ShieldCheck },
     { href: "/operations/staff", label: "Field staff approvals", icon: IdCard },
