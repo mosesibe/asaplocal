@@ -4,6 +4,7 @@ import { useState } from "react";
 import { usePathname } from "next/navigation";
 import { Menu } from "lucide-react";
 import { AccountDrawer } from "@/components/account-drawer";
+import { NotificationBell } from "@/components/notification-bell";
 import { PRIMARY_NAV, SECONDARY_NAV } from "@/lib/nav";
 
 const NAV = [...PRIMARY_NAV, ...SECONDARY_NAV];
@@ -17,6 +18,7 @@ function pageTitle(pathname: string): string {
 }
 
 interface ProviderTopBarProps {
+  userId: string;
   name: string;
   email: string;
   phone: string | null;
@@ -31,7 +33,7 @@ interface ProviderTopBarProps {
   canHaveStaff: boolean;
 }
 
-export function ProviderTopBar({ canHaveStaff, ...props }: ProviderTopBarProps) {
+export function ProviderTopBar({ canHaveStaff, userId, ...props }: ProviderTopBarProps) {
   const pathname = usePathname();
   const [drawerOpen, setDrawerOpen] = useState(false);
 
@@ -46,7 +48,8 @@ export function ProviderTopBar({ canHaveStaff, ...props }: ProviderTopBarProps) 
         >
           <Menu size={20} />
         </button>
-        <h1 className="truncate text-xl font-bold">{pageTitle(pathname)}</h1>
+        <h1 className="flex-1 truncate text-xl font-bold">{pageTitle(pathname)}</h1>
+        <NotificationBell userId={userId} />
       </div>
 
       <AccountDrawer open={drawerOpen} onOpenChange={setDrawerOpen} canHaveStaff={canHaveStaff} {...props} />

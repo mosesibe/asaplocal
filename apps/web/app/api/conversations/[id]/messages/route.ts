@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@asaplocal/auth";
 import { prisma } from "@asaplocal/db";
-import { messageSchema, publishMessage, stripHtml, checkRateLimit } from "@asaplocal/core";
+import { messageSchema, publishMessage, stripHtml, checkRateLimit, notify } from "@asaplocal/core";
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -39,6 +39,11 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   });
   await prisma.conversation.update({ where: { id }, data: { lastMessageAt: new Date() } });
   await publishMessage(id, "new-message", message);
+
+  const otherParticipants = await prisma.conversationParticipant.findMany({ where: { conversationId: id, userId: { not: session.user.id } } });
+  await Promise.all(
+    otherParticipants.map((p) => notify(p.userId, "MESSAGE_RECEIVED", "New message", message.body.slice(0, 140), `/messages/${id}`))
+  );
 
   return NextResponse.json({ message }, { status: 201 });
 }

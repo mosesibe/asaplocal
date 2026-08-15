@@ -7,6 +7,7 @@ import { Badge, Card, MobileTopBar, formatPence } from "@asaplocal/ui";
 import { LeadPipelineControls } from "./lead-pipeline-controls";
 import { QuoteForm } from "./quote-form";
 import { RefundRequestForm } from "./refund-request-form";
+import { MessageCustomerButton } from "./message-customer-button";
 
 export default async function LeadDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -16,11 +17,22 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
   const business = await prisma.business.findUnique({ where: { ownerId: session.user.id } });
   if (!business) redirect("/onboarding");
 
-  const lead = await prisma.lead.findUnique({ where: { id }, include: { jobRequest: { include: { category: true } } } });
+  const lead = await prisma.lead.findUnique({
+    where: { id },
+    include: { jobRequest: { include: { category: true, customer: { include: { profile: true } } } } },
+  });
   if (!lead) notFound();
 
   const access = await prisma.leadAccess.findUnique({ where: { leadId_businessId: { leadId: id, businessId: business.id } }, include: { refundRequest: true } });
   if (!access) redirect("/leads");
+
+  const dispatchAssignment = await prisma.dispatcherAssignment.findFirst({
+    where: { jobRequestId: lead.jobRequestId, assignedBusinessId: business.id },
+    orderBy: { createdAt: "desc" },
+  });
+  const customerName = lead.jobRequest.customer.profile
+    ? `${lead.jobRequest.customer.profile.firstName} ${lead.jobRequest.customer.profile.lastName}`
+    : "the customer";
 
   const existingQuote = await prisma.quote.findUnique({ where: { jobRequestId_businessId: { jobRequestId: lead.jobRequestId, businessId: business.id } } });
   const aiReply = !existingQuote
@@ -36,12 +48,25 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
   return (
     <div className="mx-auto max-w-3xl">
       <MobileTopBar backHref="/leads" linkAs={Link} title="Lead detail" className="-mx-4 mb-4 md:hidden" />
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <Badge variant="outline">{lead.jobRequest.category.name}</Badge>
         <Badge>{access.status}</Badge>
+        {dispatchAssignment && <Badge variant="secondary">Assigned to you by dispatch</Badge>}
       </div>
       <h1 className="mt-3 text-2xl font-bold">{lead.jobRequest.title}</h1>
       <p className="mt-1 text-sm text-muted-foreground">{lead.jobRequest.city} · Budget {lead.jobRequest.budgetMinPence ? formatPence(lead.jobRequest.budgetMinPence) : "?"}–{lead.jobRequest.budgetMaxPence ? formatPence(lead.jobRequest.budgetMaxPence) : "?"}</p>
+
+      {dispatchAssignment?.note && (
+        <Card className="mt-4 border-brand-200 bg-brand-50/60 p-4 dark:border-brand-800 dark:bg-brand-950/20">
+          <p className="text-xs font-semibold text-brand-800 dark:text-brand-300">Note from dispatch</p>
+          <p className="mt-1 text-sm">{dispatchAssignment.note}</p>
+        </Card>
+      )}
+
+      <div className="mt-4 flex items-center justify-between gap-3">
+        <p className="text-sm text-muted-foreground">Customer: <span className="font-medium text-foreground">{customerName}</span></p>
+        <MessageCustomerButton leadId={lead.id} />
+      </div>
 
       <Card className="mt-6 p-5">
         <p className="whitespace-pre-line">{lead.jobRequest.description}</p>

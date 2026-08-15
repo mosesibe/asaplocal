@@ -9,6 +9,11 @@ export async function POST(req: NextRequest) {
   const form = await req.formData();
   const socketId = form.get("socket_id") as string;
   const channel = form.get("channel_name") as string;
+
+  if (channel === `private-user-${session.user.id}`) {
+    return NextResponse.json(pusherServer.authorizeChannel(socketId, channel));
+  }
+
   const conversationId = channel.replace("private-conversation-", "");
   const participant = await prisma.conversationParticipant.findUnique({ where: { conversationId_userId: { conversationId, userId: session.user.id } } });
   if (!participant) return NextResponse.json({ message: "Forbidden" }, { status: 403 });

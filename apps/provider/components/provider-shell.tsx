@@ -8,12 +8,14 @@ import { VerificationStatusBadge } from "@/lib/verification-badge";
 import { SignOutButton } from "./sign-out-button";
 import { ProviderBottomNav } from "./provider-bottom-nav";
 import { ProviderTopBar } from "./provider-top-bar";
+import { NotificationBell } from "./notification-bell";
 
 function isActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
 interface AccountSummary {
+  userId: string;
   name: string;
   email: string;
   phone: string | null;
@@ -40,7 +42,10 @@ export function ProviderShell({ children, account }: { children: React.ReactNode
             <Logo markClassName="h-7 w-7" />
             <span className="text-sm font-normal text-muted-foreground">Business</span>
           </Link>
-          <ThemeToggle />
+          <div className="flex items-center gap-1">
+            <NotificationBell userId={account.userId} />
+            <ThemeToggle />
+          </div>
         </div>
         <div className="mb-6 rounded-xl border border-border bg-muted/40 p-3">
           <div className="flex items-center gap-3">

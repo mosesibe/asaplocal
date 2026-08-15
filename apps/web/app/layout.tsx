@@ -3,10 +3,9 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
 import { auth } from "@asaplocal/auth";
-import { ThemeScript } from "@asaplocal/ui";
+import { ThemeScript, RegisterServiceWorker } from "@asaplocal/ui";
 import { SiteHeader } from "@/components/site-header";
 import { WebBottomNav } from "@/components/web-bottom-nav";
-import { RegisterServiceWorker } from "@/components/register-service-worker";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 

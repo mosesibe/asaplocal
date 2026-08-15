@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Session } from "next-auth";
 import { Search, MessageSquare } from "lucide-react";
 import { Button, Logo } from "@asaplocal/ui";
+import { NotificationBell } from "./notification-bell";
 
 export function SiteHeader({ session }: { session: Session | null }) {
   return (
@@ -15,6 +16,7 @@ export function SiteHeader({ session }: { session: Session | null }) {
           <Link href={session?.user ? "/messages" : "/login?callbackUrl=/messages"}>
             <Button variant="ghost" size="icon" aria-label="Messages"><MessageSquare size={20} /></Button>
           </Link>
+          {session?.user && <NotificationBell userId={session.user.id} />}
         </div>
       </div>
     </header>

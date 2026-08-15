@@ -4,7 +4,7 @@ import "./globals.css";
 import { Providers } from "./providers";
 import { auth } from "@asaplocal/auth";
 import { prisma } from "@asaplocal/db";
-import { ThemeScript } from "@asaplocal/ui";
+import { ThemeScript, RegisterServiceWorker } from "@asaplocal/ui";
 import { AdminShell } from "@/components/admin-shell";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
@@ -30,8 +30,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       </head>
       <body className={`${inter.variable} font-sans`}>
         <Providers>
+          <RegisterServiceWorker />
           {session?.user ? (
             <AdminShell
+              userId={session.user.id}
               role={session.user.role}
               name={session.user.name}
               email={session.user.email}

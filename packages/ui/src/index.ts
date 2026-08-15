@@ -17,3 +17,5 @@ export * from "./logo";
 export * from "./theme-script";
 export * from "./theme-provider";
 export * from "./theme-toggle";
+export * from "./notification-bell";
+export * from "./register-service-worker";

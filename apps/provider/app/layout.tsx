@@ -5,7 +5,7 @@ import { Providers } from "./providers";
 import { auth } from "@asaplocal/auth";
 import { prisma } from "@asaplocal/db";
 import { canHaveStaff } from "@asaplocal/core";
-import { ThemeScript } from "@asaplocal/ui";
+import { ThemeScript, RegisterServiceWorker } from "@asaplocal/ui";
 import { ProviderShell } from "@/components/provider-shell";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
@@ -29,6 +29,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       prisma.user.findUnique({ where: { id: session.user.id }, select: { phone: true } }),
     ]);
     account = {
+      userId: session.user.id,
       name: profile ? `${profile.firstName} ${profile.lastName}` : (business?.name ?? session.user.email ?? ""),
       email: session.user.email ?? "",
       phone: user?.phone ?? null,
@@ -51,6 +52,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       </head>
       <body className={`${inter.variable} font-sans`}>
         <Providers>
+          <RegisterServiceWorker />
           {account ? <ProviderShell account={account}>{children}</ProviderShell> : children}
         </Providers>
       </body>

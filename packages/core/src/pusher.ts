@@ -15,3 +15,11 @@ export function conversationChannel(conversationId: string) {
 export async function publishMessage(conversationId: string, event: string, payload: unknown) {
   await pusherServer.trigger(conversationChannel(conversationId), event, payload);
 }
+
+export function userChannel(userId: string) {
+  return `private-user-${userId}`;
+}
+
+export async function publishNotification(userId: string, notification: unknown) {
+  await pusherServer.trigger(userChannel(userId), "notification", notification);
+}

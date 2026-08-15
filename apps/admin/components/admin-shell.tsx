@@ -37,6 +37,7 @@ import { LogoMark, Avatar, useTheme, cn } from "@asaplocal/ui";
 import { Sheet, SheetContent, SheetTitle } from "@asaplocal/ui";
 import { signOut } from "next-auth/react";
 import { GlobalSearch } from "./global-search";
+import { NotificationBell } from "./notification-bell";
 import { uploadFile } from "@/lib/upload";
 import type { Role } from "@asaplocal/db";
 
@@ -380,6 +381,7 @@ function ProfileMenu({ role, displayName, email, avatarUrl }: { role: Role; disp
 }
 
 export function AdminShell({
+  userId,
   role,
   name,
   email,
@@ -387,6 +389,7 @@ export function AdminShell({
   pendingApprovals = 0,
   children,
 }: {
+  userId: string;
   role: Role;
   name?: string | null;
   email?: string | null;
@@ -477,6 +480,7 @@ export function AdminShell({
                 <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-red-500 ring-2 ring-surface" />
               )}
             </Link>
+            <NotificationBell userId={userId} />
             <div className="ml-1">
               <ProfileMenu role={role} displayName={displayName} email={email} avatarUrl={avatarUrl} />
             </div>
