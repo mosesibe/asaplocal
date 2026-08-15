@@ -23,3 +23,11 @@ export function userChannel(userId: string) {
 export async function publishNotification(userId: string, notification: unknown) {
   await pusherServer.trigger(userChannel(userId), "notification", notification);
 }
+
+export function bookingChannel(bookingId: string) {
+  return `private-booking-${bookingId}`;
+}
+
+export async function publishBookingUpdate(bookingId: string, event: string, payload: unknown) {
+  await pusherServer.trigger(bookingChannel(bookingId), event, payload);
+}

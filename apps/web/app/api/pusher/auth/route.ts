@@ -16,6 +16,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(pusherServer.authorizeChannel(socketId, channel));
   }
 
+  if (channel.startsWith("private-booking-")) {
+    const bookingId = channel.replace("private-booking-", "");
+    const booking = await prisma.booking.findUnique({ where: { id: bookingId } });
+    if (!booking || booking.customerId !== session.user.id) return NextResponse.json({ message: "Forbidden" }, { status: 403 });
+    return NextResponse.json(pusherServer.authorizeChannel(socketId, channel));
+  }
+
   const conversationId = channel.replace("private-conversation-", "");
 
   const participant = await prisma.conversationParticipant.findUnique({

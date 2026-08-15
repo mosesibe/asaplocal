@@ -227,6 +227,7 @@ enum NotificationType {
   STAFF_ASSIGNED
   BOOKING_AWAITING_APPROVAL
   BOOKING_COMPLETED
+  PROVIDER_ON_THE_WAY
 }
 
 enum ApprovalActionType {
@@ -1055,29 +1056,34 @@ model Quote {
 }
 
 model Booking {
-  id                 String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  customerId         String        @db.Uuid
-  businessId         String        @db.Uuid
-  serviceId          String?       @db.Uuid
-  jobRequestId       String?       @unique @db.Uuid
-  quoteId            String?       @unique @db.Uuid
-  scheduledDate      DateTime
-  status             BookingStatus @default(PENDING)
-  totalAmountPence   Int
-  depositAmountPence Int?
-  addressLine        String
-  city               String
-  postcode           String?
-  notes              String?       @db.Text
-  cancelledReason    String?
-  cancelledAt        DateTime?
-  startedAt          DateTime?
-  completedAt        DateTime?
-  durationMinutes    Int?
-  assignedStaffId    String?       @db.Uuid
-  assignedAt         DateTime?
-  createdAt          DateTime      @default(now())
-  updatedAt          DateTime      @updatedAt
+  id                        String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  customerId                String        @db.Uuid
+  businessId                String        @db.Uuid
+  serviceId                 String?       @db.Uuid
+  jobRequestId              String?       @unique @db.Uuid
+  quoteId                   String?       @unique @db.Uuid
+  scheduledDate             DateTime
+  status                    BookingStatus @default(PENDING)
+  totalAmountPence          Int
+  depositAmountPence        Int?
+  addressLine               String
+  city                      String
+  postcode                  String?
+  notes                     String?       @db.Text
+  cancelledReason           String?
+  cancelledAt               DateTime?
+  startedAt                 DateTime?
+  completedAt               DateTime?
+  durationMinutes           Int?
+  assignedStaffId           String?       @db.Uuid
+  assignedAt                DateTime?
+  etaMinutes                Int?
+  trackingEnabled           Boolean       @default(true)
+  providerLat               Decimal?      @db.Decimal(9, 6)
+  providerLng               Decimal?      @db.Decimal(9, 6)
+  providerLocationUpdatedAt DateTime?
+  createdAt                 DateTime      @default(now())
+  updatedAt                 DateTime      @updatedAt
 
   customer        User            @relation("CustomerBookings", fields: [customerId], references: [id], onDelete: Cascade)
   business        Business        @relation("ProviderBookings", fields: [businessId], references: [id], onDelete: Cascade)

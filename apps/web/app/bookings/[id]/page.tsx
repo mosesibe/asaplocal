@@ -5,6 +5,7 @@ import { prisma } from "@asaplocal/db";
 import { Avatar, Badge, Card, MobileTopBar, formatPence } from "@asaplocal/ui";
 import { LeaveReviewForm } from "./leave-review-form";
 import { AcceptCompletionButton } from "./accept-completion-button";
+import { TrackingMap } from "./tracking-map";
 
 export default async function BookingDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -13,9 +14,11 @@ export default async function BookingDetailPage({ params }: { params: Promise<{ 
 
   const booking = await prisma.booking.findUnique({
     where: { id },
-    include: { business: true, review: true, assignedStaff: true, jobSheetEntries: { orderBy: { loggedAt: "asc" } } },
+    include: { business: true, review: true, assignedStaff: true, jobSheetEntries: { orderBy: { loggedAt: "asc" } }, jobRequest: true },
   });
   if (!booking || booking.customerId !== session.user.id) notFound();
+
+  const showTracking = booking.trackingEnabled && ["CONFIRMED", "IN_PROGRESS"].includes(booking.status);
 
   return (
     <div className="mx-auto max-w-2xl md:px-6 md:py-10">
@@ -28,6 +31,21 @@ export default async function BookingDetailPage({ params }: { params: Promise<{ 
           <div className="flex justify-between text-sm"><span>Address</span><span>{booking.addressLine}, {booking.city}</span></div>
           <div className="flex justify-between text-sm"><span>Total</span><span className="font-semibold">{formatPence(booking.totalAmountPence)}</span></div>
         </Card>
+
+        {showTracking && (
+          <div className="mt-6">
+            <TrackingMap
+              bookingId={booking.id}
+              destination={booking.jobRequest ? { lat: Number(booking.jobRequest.lat), lng: Number(booking.jobRequest.lng) } : null}
+              initialProviderPosition={
+                booking.providerLat != null && booking.providerLng != null
+                  ? { lat: Number(booking.providerLat), lng: Number(booking.providerLng) }
+                  : null
+              }
+              initialEtaMinutes={booking.etaMinutes}
+            />
+          </div>
+        )}
 
         {booking.assignedStaff && (
           <Card className="mt-6 space-y-4 p-6">

@@ -159,7 +159,7 @@ export const emailTemplates = {
       cta: { label: "View quote", url: link },
     }),
 
-  bookingConfirmed: (link: string): EmailBody =>
+  bookingConfirmed: (link: string, timeline?: { label: string; at: Date }[]): EmailBody =>
     docket({
       eyebrow: "Booking confirmed",
       title: "Your booking is confirmed",
@@ -168,8 +168,29 @@ export const emailTemplates = {
           kind: "paragraph",
           text: "Your payment went through and your provider has been notified. You can message them and see the full details from your booking.",
         },
+        ...(timeline?.length ? [{ kind: "timeline" as const, label: "Timeline", entries: timeline }] : []),
       ],
       cta: { label: "View booking details", url: link },
+    }),
+
+  paymentReceivedProvider: (opts: {
+    businessName: string;
+    jobTitle: string;
+    link: string;
+    timeline?: { label: string; at: Date }[];
+  }): EmailBody =>
+    docket({
+      eyebrow: "Payment received",
+      title: "You've been paid — job confirmed",
+      blocks: [
+        {
+          kind: "paragraph",
+          text: `Hi ${opts.businessName} — the customer has paid and this job is now confirmed. It's on your calendar.`,
+        },
+        { kind: "highlight", title: opts.jobTitle },
+        ...(opts.timeline?.length ? [{ kind: "timeline" as const, label: "Timeline", entries: opts.timeline }] : []),
+      ],
+      cta: { label: "View booking", url: opts.link },
     }),
 
   referenceRequest: (

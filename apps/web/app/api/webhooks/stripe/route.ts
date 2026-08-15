@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@asaplocal/core";
 import { prisma } from "@asaplocal/db";
-import { notify, emailTemplates, sendEmail, completeReferralOnFirstPayment } from "@asaplocal/core";
+import { notify, emailTemplates, sendEmail, completeReferralOnFirstPayment, buildJobTimeline } from "@asaplocal/core";
 import type Stripe from "stripe";
 
 /**
@@ -27,10 +27,11 @@ export async function POST(req: NextRequest) {
       const cs = event.data.object as Stripe.Checkout.Session;
       const { bookingId, businessId } = cs.metadata ?? {};
       if (bookingId) {
+        const paymentReceivedAt = new Date();
         const booking = await prisma.booking.update({
           where: { id: bookingId },
           data: { status: "CONFIRMED" },
-          include: { customer: true, business: true },
+          include: { customer: true, business: { include: { owner: true } }, jobRequest: true },
         });
         await prisma.payment.create({
           data: {
@@ -44,12 +45,37 @@ export async function POST(req: NextRequest) {
             stripePaymentIntentId: typeof cs.payment_intent === "string" ? cs.payment_intent : undefined,
           },
         });
+        if (booking.jobRequestId) {
+          await prisma.leadAccess.updateMany({
+            where: { businessId: booking.businessId, lead: { jobRequestId: booking.jobRequestId } },
+            data: { status: "WON", wonAt: paymentReceivedAt },
+          });
+        }
         await completeReferralOnFirstPayment(booking.customerId).catch(() => {});
+
+        const timeline = buildJobTimeline({
+          jobPostedAt: booking.jobRequest?.createdAt,
+          bookingConfirmedAt: booking.createdAt,
+          paymentReceivedAt,
+        });
+        const bookingLink = `${process.env.NEXT_PUBLIC_WEB_URL}/bookings/${booking.id}`;
+
         await notify(booking.business.ownerId, "PAYMENT_RECEIVED", "Payment received", `Deposit received for ${booking.id}`, `/bookings/${booking.id}`);
+        await notify(booking.customerId, "BOOKING_CONFIRMED", "Payment confirmed", "Your booking is confirmed.", `/bookings/${booking.id}`);
         await sendEmail({
           to: booking.customer.email,
           subject: "Your AsapLocal booking is confirmed",
-          ...emailTemplates.bookingConfirmed(`${process.env.NEXT_PUBLIC_WEB_URL}/bookings/${booking.id}`),
+          ...emailTemplates.bookingConfirmed(bookingLink, timeline),
+        }).catch(() => {});
+        await sendEmail({
+          to: booking.business.owner.email,
+          subject: "Payment received — job confirmed",
+          ...emailTemplates.paymentReceivedProvider({
+            businessName: booking.business.name,
+            jobTitle: booking.jobRequest?.title ?? "your job",
+            link: bookingLink,
+            timeline,
+          }),
         }).catch(() => {});
       }
       break;

@@ -68,6 +68,18 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
         <MessageCustomerButton leadId={lead.id} />
       </div>
 
+      {access.status === "WON" && (
+        <Card className="mt-4 space-y-1.5 p-4">
+          <p className="text-xs font-semibold text-muted-foreground">Contact details</p>
+          <p className="text-sm">
+            {lead.jobRequest.addressLine ? `${lead.jobRequest.addressLine}, ` : ""}
+            {lead.jobRequest.city}
+            {lead.jobRequest.postcode ? `, ${lead.jobRequest.postcode}` : ""}
+          </p>
+          <p className="text-sm">{lead.jobRequest.customer.phone ?? "No phone number on file"}</p>
+        </Card>
+      )}
+
       <Card className="mt-6 p-5">
         <p className="whitespace-pre-line">{lead.jobRequest.description}</p>
         {lead.jobRequest.photos.length > 0 && (

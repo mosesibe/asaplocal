@@ -3,6 +3,7 @@ import { auth } from "@asaplocal/auth";
 import { prisma } from "@asaplocal/db";
 import { Badge, Card } from "@asaplocal/ui";
 import { JobSheetPanel } from "./job-sheet-panel";
+import { OnTheWayPanel } from "./on-the-way-panel";
 
 export default async function ProviderBookingDetailPage({ params }: { params: Promise<{ bookingId: string }> }) {
   const { bookingId } = await params;
@@ -40,6 +41,12 @@ export default async function ProviderBookingDetailPage({ params }: { params: Pr
         <Card className="mt-4 p-4">
           <p className="text-sm">Duration: <span className="font-medium">{booking.durationMinutes} min</span></p>
         </Card>
+      )}
+
+      {booking.status === "CONFIRMED" && (
+        <div className="mt-6">
+          <OnTheWayPanel bookingId={booking.id} initialEtaMinutes={booking.etaMinutes} />
+        </div>
       )}
 
       <div className="mt-6">

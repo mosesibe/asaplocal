@@ -33,6 +33,7 @@ export type Block =
   | { kind: "highlight"; title: string; meta?: string }
   | { kind: "list"; label?: string; items: string[] }
   | { kind: "steps"; label?: string; items: string[] }
+  | { kind: "timeline"; label?: string; entries: { label: string; at: Date }[] }
   | { kind: "fallbackLink"; intro: string; url: string };
 
 const FONT =
@@ -101,9 +102,32 @@ function blockHtml(block: Block): string {
       return `${block.label ? label(block.label) : ""}<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 20px 0;">${items}</table>`;
     }
 
+    case "timeline": {
+      const rows = block.entries
+        .map(
+          (entry, i) =>
+            `<tr>
+              <td valign="top" style="width:10px;padding:6px 10px 6px 0;">
+                <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${BRAND};margin-top:6px;"></span>
+                ${i < block.entries.length - 1 ? `<div style="width:1px;height:100%;min-height:18px;background:${RULE};margin:2px auto 0 3px;"></div>` : ""}
+              </td>
+              <td style="padding:6px 0;">
+                <p style="margin:0;font-size:14px;font-weight:600;color:${INK};">${escapeHtml(entry.label)}</p>
+                <p style="margin:1px 0 0 0;font-size:12px;color:${MUTED};">${escapeHtml(formatTimelineDate(entry.at))}</p>
+              </td>
+            </tr>`,
+        )
+        .join("");
+      return `${block.label ? label(block.label) : ""}<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 20px 0;">${rows}</table>`;
+    }
+
     case "fallbackLink":
       return `<p style="margin:0 0 16px 0;font-size:13px;line-height:1.6;color:${MUTED};">${escapeHtml(block.intro)}<br /><span style="color:${BRAND_DEEP};word-break:break-all;">${escapeHtml(block.url)}</span></p>`;
   }
+}
+
+function formatTimelineDate(date: Date): string {
+  return date.toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
 }
 
 function label(text: string): string {
@@ -124,6 +148,10 @@ function blockText(block: Block): string {
         .join("\n");
     case "steps":
       return [block.label, ...block.items.map((i, n) => `${n + 1}. ${i}`)]
+        .filter(Boolean)
+        .join("\n");
+    case "timeline":
+      return [block.label, ...block.entries.map((e) => `- ${e.label} (${formatTimelineDate(e.at)})`)]
         .filter(Boolean)
         .join("\n");
     case "fallbackLink":
