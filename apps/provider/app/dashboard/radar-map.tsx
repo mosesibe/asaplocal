@@ -44,6 +44,72 @@ function budgetLabel(lead: NearbyLead): string {
   return "Not specified";
 }
 
+// Anchored to real map coordinates via OverlayView — a CSS overlay pinned to
+// the card's center would stay put on screen while panning, making it look
+// like the business's own location was drifting. This one moves with the
+// map projection like any other marker, so it stays over the true position.
+class PulseOverlay extends google.maps.OverlayView {
+  private div: HTMLDivElement | null = null;
+  private position: google.maps.LatLng;
+
+  constructor(position: google.maps.LatLngLiteral) {
+    super();
+    this.position = new google.maps.LatLng(position);
+  }
+
+  onAdd() {
+    const el = document.createElement("div");
+    el.style.position = "absolute";
+    el.style.transform = "translate(-50%, -50%)";
+    el.className = "pointer-events-none relative flex h-16 w-16 items-center justify-center";
+    for (const delay of ["0s", "0.8s", "1.6s"]) {
+      const ring = document.createElement("span");
+      ring.className = "absolute h-16 w-16 animate-ping rounded-full bg-brand-500/30";
+      ring.style.animationDuration = "2.5s";
+      ring.style.animationDelay = delay;
+      el.appendChild(ring);
+    }
+    const dot = document.createElement("span");
+    dot.className = "relative h-3 w-3 rounded-full bg-brand-500 shadow-accent";
+    el.appendChild(dot);
+    this.div = el;
+    this.getPanes()?.overlayMouseTarget.appendChild(el);
+  }
+
+  draw() {
+    if (!this.div) return;
+    const point = this.getProjection()?.fromLatLngToDivPixel(this.position);
+    if (point) {
+      this.div.style.left = `${point.x}px`;
+      this.div.style.top = `${point.y}px`;
+    }
+  }
+
+  onRemove() {
+    this.div?.remove();
+    this.div = null;
+  }
+}
+
+function ProviderLocationMarker({ position }: { position: { lat: number; lng: number } }) {
+  const map = useMap();
+  const overlayRef = useRef<PulseOverlay | null>(null);
+
+  useEffect(() => {
+    if (!map) return;
+    const overlay = new PulseOverlay(position);
+    overlay.setMap(map);
+    overlayRef.current = overlay;
+    return () => {
+      overlay.setMap(null);
+      overlayRef.current = null;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [map, position.lat, position.lng]);
+
+  return null;
+}
+
 function CoverageCircles({ areas }: { areas: ServiceAreaCircleDef[] }) {
   const map = useMap();
   useEffect(() => {
@@ -200,20 +266,16 @@ export function RadarMap({
               styles={theme === "dark" ? MONOCHROME_DARK_STYLE : []}
             >
               <CoverageCircles areas={circles} />
-              <LeadMarkers leads={leads} onView={(lead) => router.push(lead.alreadyAcquired ? `/leads/${lead.id}` : "/leads")} />
+              <ProviderLocationMarker position={center} />
+              <LeadMarkers
+                leads={leads}
+                onView={(lead) => router.push(lead.alreadyAcquired ? `/leads/${lead.id}` : `/leads?highlight=${lead.id}#lead-${lead.id}`)}
+              />
             </Map>
           </APIProvider>
         ) : (
           <div className="flex h-full items-center justify-center bg-muted text-sm text-muted-foreground">Map unavailable</div>
         )}
-
-        {/* Pulsing "actively searching" rings, centered on the business */}
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-          <span className="absolute h-16 w-16 animate-ping rounded-full bg-brand-500/30" style={{ animationDuration: "2.5s" }} />
-          <span className="absolute h-16 w-16 animate-ping rounded-full bg-brand-500/30" style={{ animationDuration: "2.5s", animationDelay: "0.8s" }} />
-          <span className="absolute h-16 w-16 animate-ping rounded-full bg-brand-500/30" style={{ animationDuration: "2.5s", animationDelay: "1.6s" }} />
-          <span className="relative h-3 w-3 rounded-full bg-brand-500 shadow-accent" />
-        </div>
 
         <button
           type="button"

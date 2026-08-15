@@ -2,12 +2,13 @@ import { redirect } from "next/navigation";
 import { auth } from "@asaplocal/auth";
 import { prisma } from "@asaplocal/db";
 import { getLeadsNearBusiness } from "@asaplocal/core";
-import { Badge, Card, formatPence } from "@asaplocal/ui";
+import { Badge, Card, cn, formatPence } from "@asaplocal/ui";
 import { AcquireLeadButtons } from "./acquire-lead-buttons";
 
 export const metadata = { title: "Lead marketplace" };
 
-export default async function LeadsMarketplacePage() {
+export default async function LeadsMarketplacePage({ searchParams }: { searchParams: Promise<{ highlight?: string }> }) {
+  const { highlight } = await searchParams;
   const session = await auth();
   if (!session?.user) redirect("/login");
 
@@ -32,7 +33,7 @@ export default async function LeadsMarketplacePage() {
       </div>
       <div className="space-y-4">
         {leads.map((l) => (
-          <Card key={l.id} className="p-5">
+          <Card key={l.id} id={`lead-${l.id}`} className={cn("scroll-mt-4 p-5", highlight === l.id && "ring-2 ring-brand-500")}>
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
               <div>
                 <div className="flex items-center gap-2">
