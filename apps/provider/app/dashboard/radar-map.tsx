@@ -194,8 +194,8 @@ export function RadarMap({
             <Map
               defaultCenter={center}
               defaultZoom={11}
-              gestureHandling="none"
-              zoomControl={false}
+              gestureHandling="greedy"
+              zoomControl
               disableDefaultUI
               styles={theme === "dark" ? MONOCHROME_DARK_STYLE : []}
             >
