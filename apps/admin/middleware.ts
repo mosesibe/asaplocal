@@ -10,22 +10,32 @@ export default auth((req) => {
   const { pathname } = req.nextUrl;
   if (PUBLIC_PREFIXES.some((p) => pathname.startsWith(p))) return NextResponse.next();
 
+  // API routes are called via fetch(), not navigated to — a redirect to an
+  // HTML page is useless to a JSON-expecting client. Every route handler
+  // still does its own auth check; middleware just needs to fail the same
+  // shape instead of silently turning into an HTML response.
+  const isApiRoute = pathname.startsWith("/api/");
+
   const user = req.auth?.user;
   if (!user) {
+    if (isApiRoute) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     const url = new URL("/login", req.nextUrl.origin);
     url.searchParams.set("callbackUrl", pathname);
     return NextResponse.redirect(url);
   }
 
   if (user.role !== "ADMIN" && user.role !== "DISPATCHER") {
+    if (isApiRoute) return NextResponse.json({ message: "Forbidden" }, { status: 403 });
     return NextResponse.redirect(new URL("/login", req.nextUrl.origin));
   }
 
   if (user.role === "DISPATCHER" && !DISPATCHER_ALLOWED_PREFIXES.some((p) => pathname.startsWith(p)) && pathname !== "/") {
+    if (isApiRoute) return NextResponse.json({ message: "Forbidden" }, { status: 403 });
     return NextResponse.redirect(new URL("/dispatch", req.nextUrl.origin));
   }
 
   if (user.status === "SUSPENDED" || user.status === "DEACTIVATED") {
+    if (isApiRoute) return NextResponse.json({ message: "Account suspended" }, { status: 403 });
     return NextResponse.redirect(new URL("/account-suspended", req.nextUrl.origin));
   }
 

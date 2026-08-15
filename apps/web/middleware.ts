@@ -21,17 +21,33 @@ export default auth((req) => {
 
   if (isPublic) return NextResponse.next();
 
+  // API routes are called via fetch(), not navigated to — a client expecting
+  // JSON has no way to handle an HTML redirect gracefully (fetch silently
+  // follows it, so `res.status` is never 401 and callers that already check
+  // for it, e.g. the homepage AI job form, never see it). Every route
+  // handler still does its own auth check and returns a proper JSON error;
+  // middleware here only needs to short-circuit with the same shape.
+  const isApiRoute = pathname.startsWith("/api/");
+
   const user = req.auth?.user;
   if (!user) {
+    if (isApiRoute) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     const url = new URL("/login", req.nextUrl.origin);
     url.searchParams.set("callbackUrl", pathname);
     return NextResponse.redirect(url);
   }
 
-  if (user.role === "PROVIDER") return NextResponse.redirect(new URL(process.env.NEXT_PUBLIC_PROVIDER_URL ?? "/", req.nextUrl.origin));
-  if (user.role === "ADMIN" || user.role === "DISPATCHER") return NextResponse.redirect(new URL(process.env.NEXT_PUBLIC_ADMIN_URL ?? "/", req.nextUrl.origin));
+  if (user.role === "PROVIDER") {
+    if (isApiRoute) return NextResponse.json({ message: "Forbidden" }, { status: 403 });
+    return NextResponse.redirect(new URL(process.env.NEXT_PUBLIC_PROVIDER_URL ?? "/", req.nextUrl.origin));
+  }
+  if (user.role === "ADMIN" || user.role === "DISPATCHER") {
+    if (isApiRoute) return NextResponse.json({ message: "Forbidden" }, { status: 403 });
+    return NextResponse.redirect(new URL(process.env.NEXT_PUBLIC_ADMIN_URL ?? "/", req.nextUrl.origin));
+  }
 
   if (user.status === "SUSPENDED" || user.status === "DEACTIVATED") {
+    if (isApiRoute) return NextResponse.json({ message: "Account suspended" }, { status: 403 });
     return NextResponse.redirect(new URL("/account-suspended", req.nextUrl.origin));
   }
 
