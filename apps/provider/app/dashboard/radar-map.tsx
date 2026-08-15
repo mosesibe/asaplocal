@@ -44,66 +44,74 @@ function budgetLabel(lead: NearbyLead): string {
   return "Not specified";
 }
 
-// Anchored to real map coordinates via OverlayView — a CSS overlay pinned to
-// the card's center would stay put on screen while panning, making it look
-// like the business's own location was drifting. This one moves with the
-// map projection like any other marker, so it stays over the true position.
-class PulseOverlay extends google.maps.OverlayView {
-  private div: HTMLDivElement | null = null;
-  private position: google.maps.LatLng;
+/**
+ * Anchored to real map coordinates via OverlayView — a CSS overlay pinned to
+ * the card's center would stay put on screen while panning, making it look
+ * like the business's own location was drifting. This one moves with the map
+ * projection like any other marker, so it stays over the true position.
+ *
+ * Built inside a factory rather than declared at module scope: `extends
+ * google.maps.OverlayView` is evaluated when the class definition runs, and
+ * this module is also evaluated on the server (client components are still
+ * SSR'd), where `google` doesn't exist. A top-level class here throws
+ * ReferenceError and 500s the whole page — and `next build` won't catch it,
+ * since /dashboard is rendered on demand rather than prerendered.
+ */
+function createPulseOverlay(position: google.maps.LatLngLiteral) {
+  class PulseOverlay extends google.maps.OverlayView {
+    private div: HTMLDivElement | null = null;
+    private readonly latLng: google.maps.LatLng;
 
-  constructor(position: google.maps.LatLngLiteral) {
-    super();
-    this.position = new google.maps.LatLng(position);
-  }
-
-  onAdd() {
-    const el = document.createElement("div");
-    el.style.position = "absolute";
-    el.style.transform = "translate(-50%, -50%)";
-    el.className = "pointer-events-none relative flex h-16 w-16 items-center justify-center";
-    for (const delay of ["0s", "0.8s", "1.6s"]) {
-      const ring = document.createElement("span");
-      ring.className = "absolute h-16 w-16 animate-ping rounded-full bg-brand-500/30";
-      ring.style.animationDuration = "2.5s";
-      ring.style.animationDelay = delay;
-      el.appendChild(ring);
+    constructor(pos: google.maps.LatLngLiteral) {
+      super();
+      this.latLng = new google.maps.LatLng(pos);
     }
-    const dot = document.createElement("span");
-    dot.className = "relative h-3 w-3 rounded-full bg-brand-500 shadow-accent";
-    el.appendChild(dot);
-    this.div = el;
-    this.getPanes()?.overlayMouseTarget.appendChild(el);
-  }
 
-  draw() {
-    if (!this.div) return;
-    const point = this.getProjection()?.fromLatLngToDivPixel(this.position);
-    if (point) {
-      this.div.style.left = `${point.x}px`;
-      this.div.style.top = `${point.y}px`;
+    onAdd() {
+      const el = document.createElement("div");
+      el.style.position = "absolute";
+      el.style.transform = "translate(-50%, -50%)";
+      el.className = "pointer-events-none relative flex h-16 w-16 items-center justify-center";
+      for (const delay of ["0s", "0.8s", "1.6s"]) {
+        const ring = document.createElement("span");
+        ring.className = "absolute h-16 w-16 animate-ping rounded-full bg-brand-500/30";
+        ring.style.animationDuration = "2.5s";
+        ring.style.animationDelay = delay;
+        el.appendChild(ring);
+      }
+      const dot = document.createElement("span");
+      dot.className = "relative h-3 w-3 rounded-full bg-brand-500 shadow-accent";
+      el.appendChild(dot);
+      this.div = el;
+      this.getPanes()?.overlayMouseTarget.appendChild(el);
+    }
+
+    draw() {
+      if (!this.div) return;
+      const point = this.getProjection()?.fromLatLngToDivPixel(this.latLng);
+      if (point) {
+        this.div.style.left = `${point.x}px`;
+        this.div.style.top = `${point.y}px`;
+      }
+    }
+
+    onRemove() {
+      this.div?.remove();
+      this.div = null;
     }
   }
 
-  onRemove() {
-    this.div?.remove();
-    this.div = null;
-  }
+  return new PulseOverlay(position);
 }
 
 function ProviderLocationMarker({ position }: { position: { lat: number; lng: number } }) {
   const map = useMap();
-  const overlayRef = useRef<PulseOverlay | null>(null);
 
   useEffect(() => {
     if (!map) return;
-    const overlay = new PulseOverlay(position);
+    const overlay = createPulseOverlay(position);
     overlay.setMap(map);
-    overlayRef.current = overlay;
-    return () => {
-      overlay.setMap(null);
-      overlayRef.current = null;
-    };
+    return () => overlay.setMap(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [map, position.lat, position.lng]);
 
