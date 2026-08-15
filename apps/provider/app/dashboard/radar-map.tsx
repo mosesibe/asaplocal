@@ -2,7 +2,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { APIProvider, Map, useMap } from "@vis.gl/react-google-maps";
-import { Card, useTheme } from "@asaplocal/ui";
+import { Card, useTheme, formatPence } from "@asaplocal/ui";
+import type { NearbyLead } from "@asaplocal/core";
 
 const MONOCHROME_DARK_STYLE: google.maps.MapTypeStyle[] = [
   { elementType: "geometry", stylers: [{ color: "#212121" }] },
@@ -34,14 +35,14 @@ interface ServiceAreaCircleDef {
   radiusMiles: number;
 }
 
-interface NearbyLeadPin {
-  id: string;
-  jitteredLat: number;
-  jitteredLng: number;
-  categoryName: string;
-}
-
 const MILES_TO_METERS = 1609.34;
+
+function budgetLabel(lead: NearbyLead): string {
+  if (lead.budgetMinPence && lead.budgetMaxPence) return `${formatPence(lead.budgetMinPence)}–${formatPence(lead.budgetMaxPence)}`;
+  if (lead.budgetMaxPence) return `Up to ${formatPence(lead.budgetMaxPence)}`;
+  if (lead.budgetMinPence) return `From ${formatPence(lead.budgetMinPence)}`;
+  return "Not specified";
+}
 
 function CoverageCircles({ areas }: { areas: ServiceAreaCircleDef[] }) {
   const map = useMap();
@@ -67,20 +68,50 @@ function CoverageCircles({ areas }: { areas: ServiceAreaCircleDef[] }) {
   return null;
 }
 
-function LeadMarkers({ leads, onSelect }: { leads: NearbyLeadPin[]; onSelect: () => void }) {
+function textEl(tag: string, className: string, text: string): HTMLElement {
+  const el = document.createElement(tag);
+  el.className = className;
+  el.textContent = text;
+  return el;
+}
+
+function leadInfoContent(lead: NearbyLead, onView: () => void): HTMLDivElement {
+  const el = document.createElement("div");
+  el.className = "min-w-[220px] max-w-[260px] py-1";
+  el.appendChild(textEl("p", "text-sm font-semibold text-espresso-900", lead.title));
+  el.appendChild(
+    textEl("p", "mt-0.5 text-xs text-espresso-500", `${lead.categoryName} · ${lead.city} · ${lead.distanceMiles.toFixed(1)} mi away`)
+  );
+  el.appendChild(textEl("p", "mt-1.5 text-sm font-medium text-espresso-900", `Expected cost: ${budgetLabel(lead)}`));
+  const button = document.createElement("button");
+  button.type = "button";
+  button.textContent = lead.alreadyAcquired ? "View details" : "View & acquire";
+  button.className = "mt-2.5 w-full rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-700";
+  button.addEventListener("click", onView);
+  el.appendChild(button);
+  return el;
+}
+
+function LeadMarkers({ leads, onView }: { leads: NearbyLead[]; onView: (lead: NearbyLead) => void }) {
   const map = useMap();
   const markersRef = useRef<globalThis.Map<string, google.maps.Marker>>(new globalThis.Map());
+  const leadsRef = useRef<globalThis.Map<string, NearbyLead>>(new globalThis.Map());
+  const infoWindowRef = useRef<google.maps.InfoWindow | null>(null);
 
   useEffect(() => {
     if (!map) return;
+    if (!infoWindowRef.current) infoWindowRef.current = new google.maps.InfoWindow();
+
     const currentIds = new Set(leads.map((l) => l.id));
     for (const [id, marker] of markersRef.current) {
       if (!currentIds.has(id)) {
         marker.setMap(null);
         markersRef.current.delete(id);
+        leadsRef.current.delete(id);
       }
     }
     for (const lead of leads) {
+      leadsRef.current.set(lead.id, lead);
       if (markersRef.current.has(lead.id)) continue;
       const marker = new google.maps.Marker({
         map,
@@ -96,7 +127,12 @@ function LeadMarkers({ leads, onSelect }: { leads: NearbyLeadPin[]; onSelect: ()
         },
         animation: google.maps.Animation.DROP,
       });
-      marker.addListener("click", onSelect);
+      marker.addListener("click", () => {
+        const current = leadsRef.current.get(lead.id);
+        if (!current || !infoWindowRef.current) return;
+        infoWindowRef.current.setContent(leadInfoContent(current, () => onView(current)));
+        infoWindowRef.current.open({ map, anchor: marker });
+      });
       markersRef.current.set(lead.id, marker);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -104,6 +140,7 @@ function LeadMarkers({ leads, onSelect }: { leads: NearbyLeadPin[]; onSelect: ()
 
   useEffect(
     () => () => {
+      infoWindowRef.current?.close();
       markersRef.current.forEach((m) => m.setMap(null));
       markersRef.current.clear();
     },
@@ -124,7 +161,7 @@ export function RadarMap({
 }) {
   const router = useRouter();
   const { theme } = useTheme();
-  const [leads, setLeads] = useState<NearbyLeadPin[]>([]);
+  const [leads, setLeads] = useState<NearbyLead[]>([]);
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
   useEffect(() => {
@@ -163,7 +200,7 @@ export function RadarMap({
               styles={theme === "dark" ? MONOCHROME_DARK_STYLE : []}
             >
               <CoverageCircles areas={circles} />
-              <LeadMarkers leads={leads} onSelect={() => router.push("/leads")} />
+              <LeadMarkers leads={leads} onView={(lead) => router.push(lead.alreadyAcquired ? `/leads/${lead.id}` : "/leads")} />
             </Map>
           </APIProvider>
         ) : (
