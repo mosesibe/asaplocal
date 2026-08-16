@@ -45,11 +45,20 @@ export function PreferredDatePicker({
   value,
   onChange,
   location,
+  tone = "auto",
 }: {
   value: PreferredDateValue | null;
   onChange: (value: PreferredDateValue | null) => void;
   location?: { lat?: number; lng?: number } | null;
+  /** "light" pins the palette for hosts that are always light (e.g. the homepage AI card), matching LocationPicker. */
+  tone?: "auto" | "light";
 }) {
+  const isLight = tone === "light";
+  const textClass = isLight ? "text-espresso-900" : "text-foreground";
+  const mutedClass = isLight ? "text-espresso-400" : "text-muted-foreground";
+  const borderClass = isLight ? "border-espresso-200" : "border-border";
+  const surfaceClass = isLight ? "bg-white" : "bg-surface";
+  const hoverClass = isLight ? "hover:bg-espresso-50" : "hover:bg-muted";
   const [open, setOpen] = useState(false);
   const [viewMonth, setViewMonth] = useState(() => {
     const base = value ? new Date(value.date) : new Date();
@@ -107,40 +116,40 @@ export function PreferredDatePicker({
   return (
     <div>
       <div className="relative">
-        <div className="flex h-11 w-full items-center gap-2 rounded-xl border border-border bg-surface px-3.5 text-base text-foreground shadow-sm focus-within:ring-2 focus-within:ring-brand-500">
+        <div className={`flex h-11 w-full items-center gap-2 rounded-xl border ${borderClass} ${surfaceClass} px-3.5 text-base ${textClass} shadow-sm focus-within:ring-2 focus-within:ring-brand-500`}>
           <button
             type="button"
             onClick={() => setOpen((o) => !o)}
             className="flex flex-1 items-center gap-2 text-left focus-visible:outline-none"
           >
-            <Calendar size={16} className="shrink-0 text-muted-foreground" />
+            <Calendar size={16} className={`shrink-0 ${mutedClass}`} />
             {activeDate ? (
               <span>
                 {new Intl.DateTimeFormat("en-GB", { weekday: "short", day: "numeric", month: "short" }).format(new Date(activeDate))}
                 {value?.time !== undefined && (
-                  <span className="text-muted-foreground"> · {value.time ? formatTime(value.time) : "Flexible"}</span>
+                  <span className={mutedClass}> · {value.time ? formatTime(value.time) : "Flexible"}</span>
                 )}
               </span>
             ) : (
-              <span className="text-muted-foreground">Choose a date (optional)</span>
+              <span className={mutedClass}>Choose a date (optional)</span>
             )}
           </button>
           {activeDate && (
-            <button type="button" aria-label="Clear date" onClick={clear} className="text-muted-foreground hover:text-foreground">
+            <button type="button" aria-label="Clear date" onClick={clear} className={`${mutedClass} hover:opacity-70`}>
               <X size={14} />
             </button>
           )}
         </div>
 
         {open && (
-          <div className="absolute z-10 mt-1 w-full rounded-xl border border-border bg-surface p-3 shadow-card">
+          <div className={`absolute z-10 mt-1 w-full rounded-xl border ${borderClass} ${surfaceClass} p-3 shadow-card ${textClass}`}>
             <div className="mb-2 flex items-center justify-between">
               <button
                 type="button"
                 aria-label="Previous month"
                 disabled={!isCurrentOrFutureMonth}
                 onClick={() => setViewMonth(new Date(viewMonth.getFullYear(), viewMonth.getMonth() - 1, 1))}
-                className="rounded-lg p-1 hover:bg-muted disabled:pointer-events-none disabled:opacity-30"
+                className={`rounded-lg p-1 ${hoverClass} disabled:pointer-events-none disabled:opacity-30`}
               >
                 <ChevronLeft size={16} />
               </button>
@@ -149,12 +158,12 @@ export function PreferredDatePicker({
                 type="button"
                 aria-label="Next month"
                 onClick={() => setViewMonth(new Date(viewMonth.getFullYear(), viewMonth.getMonth() + 1, 1))}
-                className="rounded-lg p-1 hover:bg-muted"
+                className={`rounded-lg p-1 ${hoverClass}`}
               >
                 <ChevronRight size={16} />
               </button>
             </div>
-            <div className="grid grid-cols-7 gap-1 text-center text-xs text-muted-foreground">
+            <div className={`grid grid-cols-7 gap-1 text-center text-xs ${mutedClass}`}>
               {["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"].map((d) => (
                 <div key={d} className="py-1">
                   {d}
@@ -175,8 +184,8 @@ export function PreferredDatePicker({
                     type="button"
                     disabled={isPast}
                     onClick={() => selectDay(day)}
-                    className={`h-9 w-9 rounded-full text-sm transition-colors disabled:pointer-events-none disabled:text-muted-foreground disabled:opacity-40 ${
-                      isSelected ? "bg-brand-600 text-white" : isToday ? "ring-1 ring-brand-500" : "hover:bg-muted"
+                    className={`h-9 w-9 rounded-full text-sm transition-colors disabled:pointer-events-none disabled:opacity-40 ${
+                      isSelected ? "bg-brand-600 text-white" : isToday ? "ring-1 ring-brand-500" : hoverClass
                     }`}
                   >
                     {day}
@@ -191,16 +200,16 @@ export function PreferredDatePicker({
       {activeDate && !open && (
         <div className="mt-2 flex flex-wrap items-center gap-3">
           <label className="flex items-center gap-2 text-sm">
-            <span className="text-muted-foreground">Arrival time</span>
+            <span className={mutedClass}>Arrival time</span>
             <input
               type="time"
               value={value?.time ?? DEFAULT_TIME}
               disabled={value?.time === null}
               onChange={(e) => selectTime(e.target.value)}
-              className="h-9 rounded-lg border border-border bg-surface px-2 text-sm disabled:opacity-50"
+              className={`h-9 rounded-lg border ${borderClass} ${surfaceClass} ${textClass} px-2 text-sm disabled:opacity-50`}
             />
           </label>
-          <label className="flex items-center gap-1.5 text-sm text-muted-foreground">
+          <label className={`flex items-center gap-1.5 text-sm ${mutedClass}`}>
             <input
               type="checkbox"
               checked={value?.time === null}
@@ -212,16 +221,16 @@ export function PreferredDatePicker({
       )}
 
       {activeDate && !open && (weatherLoading || weather) && (
-        <div className="mt-2 flex items-center gap-2 rounded-lg bg-muted px-3 py-2 text-sm">
+        <div className={`mt-2 flex items-center gap-2 rounded-lg ${isLight ? "bg-espresso-50 text-espresso-900" : "bg-muted"} px-3 py-2 text-sm`}>
           {weatherLoading ? (
-            <span className="text-muted-foreground">Checking the forecast…</span>
+            <span className={mutedClass}>Checking the forecast…</span>
           ) : weather ? (
             <>
               <span className="text-lg leading-none">{weather.emoji}</span>
               <span>
                 {weather.label}, {weather.tempMinC}–{weather.tempMaxC}°C
               </span>
-              <span className="text-muted-foreground">· {weather.precipitationChancePct}% chance of rain</span>
+              <span className={mutedClass}>· {weather.precipitationChancePct}% chance of rain</span>
             </>
           ) : null}
         </div>

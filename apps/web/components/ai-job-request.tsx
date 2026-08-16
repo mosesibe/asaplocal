@@ -7,6 +7,7 @@ import { ArrowUp, Loader2, Sparkles } from "lucide-react";
 import { Button, Card, Input, Select, Textarea } from "@asaplocal/ui";
 import { InstallAppBanner } from "./install-app-banner";
 import { LocationPicker, type LocationValue } from "./location-picker";
+import { PreferredDatePicker, toPreferredDateTime, type PreferredDateValue } from "./preferred-date-picker";
 
 interface Category {
   id: string;
@@ -41,6 +42,7 @@ export function AiJobRequest({
   const [title, setTitle] = useState("");
   const [confirmDescription, setConfirmDescription] = useState("");
   const [location, setLocation] = useState<LocationValue | null>(null);
+  const [preferredDate, setPreferredDate] = useState<PreferredDateValue | null>(null);
   const [budgetMin, setBudgetMin] = useState("");
   const [budgetMax, setBudgetMax] = useState("");
 
@@ -126,6 +128,8 @@ export function AiJobRequest({
           lat: location.lat,
           lng: location.lng,
           locationSource: location.source,
+          preferredDate: preferredDate ? toPreferredDateTime(preferredDate) : undefined,
+          flexibleDate: preferredDate ? preferredDate.time === null : true,
           budgetMinPence: budgetMin ? Math.round(Number(budgetMin) * 100) : undefined,
           budgetMaxPence: budgetMax ? Math.round(Number(budgetMax) * 100) : undefined,
         }),
@@ -230,6 +234,12 @@ export function AiJobRequest({
               <label className="text-sm font-medium text-espresso-900">Service location</label>
               <div className="mt-1">
                 <LocationPicker value={location} onChange={setLocation} tone="light" />
+              </div>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-espresso-900">When do you need it done? (optional)</label>
+              <div className="mt-1">
+                <PreferredDatePicker value={preferredDate} onChange={setPreferredDate} location={location} tone="light" />
               </div>
             </div>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
