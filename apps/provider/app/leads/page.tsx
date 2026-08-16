@@ -1,8 +1,9 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@asaplocal/auth";
 import { prisma } from "@asaplocal/db";
 import { getLeadsNearBusiness } from "@asaplocal/core";
-import { Badge, Card, cn, formatPence } from "@asaplocal/ui";
+import { Badge, Card, buttonVariants, cn, formatPence } from "@asaplocal/ui";
 import { AcquireLeadButtons } from "./acquire-lead-buttons";
 
 export const metadata = { title: "Lead marketplace" };
@@ -54,7 +55,12 @@ export default async function LeadsMarketplacePage({ searchParams }: { searchPar
               <div className="shrink-0 sm:text-right">
                 <p className="text-lg font-bold text-brand-700">{formatPence(l.leadPricePence)}</p>
                 {l.alreadyAcquired ? (
-                  <Badge variant="success">Acquired</Badge>
+                  <div className="mt-1 flex flex-col items-start gap-2 sm:items-end">
+                    <Badge variant="success">Acquired</Badge>
+                    <Link href={`/leads/${l.id}`} className={buttonVariants({ size: "sm" })}>
+                      View &amp; send quote
+                    </Link>
+                  </div>
                 ) : (
                   <AcquireLeadButtons leadId={l.id} pricePence={l.leadPricePence} hasAllowance={allowanceRemaining > 0} hasCredits={creditBalance > 0} />
                 )}

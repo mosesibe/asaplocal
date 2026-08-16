@@ -271,6 +271,7 @@ export function RadarMap({
               gestureHandling="greedy"
               zoomControl
               disableDefaultUI
+              keyboardShortcuts={false}
               styles={theme === "dark" ? MONOCHROME_DARK_STYLE : []}
             >
               <CoverageCircles areas={circles} />
