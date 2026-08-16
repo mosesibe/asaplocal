@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { auth } from "@asaplocal/auth";
 import { prisma } from "@asaplocal/db";
 import { Badge, Button, Card, MobileTopBar, formatPence } from "@asaplocal/ui";
+import { formatBudget, formatJobLocation, formatNeededBy } from "@/lib/job-format";
 import { AcceptQuoteButton } from "./accept-quote-button";
 import { DeleteJobButton } from "./delete-job-button";
 
@@ -55,6 +56,30 @@ export default async function JobStatusPage({ params }: { params: Promise<{ id: 
         <Card className="mt-6 p-5">
           <p className="text-sm text-muted-foreground">{job.category.name} · {job.city}</p>
           <p className="mt-3 whitespace-pre-line">{job.description}</p>
+
+          {job.photos.length > 0 && (
+            <div className="mt-4 flex flex-wrap gap-2">
+              {job.photos.map((src, i) => (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img key={i} src={src} alt="" className="h-20 w-20 rounded-lg border border-border object-cover" />
+              ))}
+            </div>
+          )}
+
+          <dl className="mt-5 grid grid-cols-1 gap-x-6 gap-y-3 border-t border-border pt-4 text-sm sm:grid-cols-2">
+            <div>
+              <dt className="text-muted-foreground">Expected cost</dt>
+              <dd className="mt-0.5 font-medium">{formatBudget(job.budgetMinPence, job.budgetMaxPence) ?? "No budget set"}</dd>
+            </div>
+            <div>
+              <dt className="text-muted-foreground">Needed by</dt>
+              <dd className="mt-0.5 font-medium">{formatNeededBy(job.preferredDate, job.flexibleDate)}</dd>
+            </div>
+            <div className="sm:col-span-2">
+              <dt className="text-muted-foreground">Service location</dt>
+              <dd className="mt-0.5 font-medium">{formatJobLocation(job)}</dd>
+            </div>
+          </dl>
         </Card>
 
         <h2 className="mt-10 mb-4 text-xl font-semibold">Quotes ({job.quotes.length})</h2>

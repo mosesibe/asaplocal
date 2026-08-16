@@ -3,13 +3,7 @@ import Link from "next/link";
 import { auth } from "@asaplocal/auth";
 import { prisma } from "@asaplocal/db";
 import { Badge, Card, formatPence } from "@asaplocal/ui";
-
-function formatBudget(minPence: number | null, maxPence: number | null): string | null {
-  if (minPence && maxPence) return `${formatPence(minPence)}–${formatPence(maxPence)}`;
-  if (minPence) return `From ${formatPence(minPence)}`;
-  if (maxPence) return `Up to ${formatPence(maxPence)}`;
-  return null;
-}
+import { formatBudget, formatJobLocation, formatNeededBy } from "@/lib/job-format";
 
 export default async function ActivityPage() {
   const session = await auth();
@@ -49,10 +43,10 @@ export default async function ActivityPage() {
                     <div>
                       <p className="font-medium">{j.title}</p>
                       <p className="text-xs text-muted-foreground">
-                        {j.createdAt.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
-                        {" · "}
-                        {j.addressLine ? `${j.addressLine}, ${j.city}` : j.city}
+                        Posted {j.createdAt.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
                       </p>
+                      <p className="mt-0.5 text-xs text-muted-foreground">{formatJobLocation(j)}</p>
+                      <p className="text-xs text-muted-foreground">Needed by: {formatNeededBy(j.preferredDate, j.flexibleDate)}</p>
                       <p className="text-xs text-muted-foreground">{budget ? `Expected cost: ${budget}` : "No budget set"}</p>
                     </div>
                     <Badge variant="outline" className="w-fit">{j.status.replace("_", " ")}</Badge>
