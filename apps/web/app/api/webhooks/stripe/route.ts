@@ -60,7 +60,15 @@ export async function POST(req: NextRequest) {
         });
         const bookingLink = `${process.env.NEXT_PUBLIC_WEB_URL}/bookings/${booking.id}`;
 
-        await notify(booking.business.ownerId, "PAYMENT_RECEIVED", "Payment received", `Deposit received for ${booking.id}`, `/bookings/${booking.id}`);
+        // Provider-side link must be a provider-app route — it has no /bookings,
+        // its per-booking view is /calendar/[bookingId].
+        await notify(
+          booking.business.ownerId,
+          "PAYMENT_RECEIVED",
+          "Payment received",
+          `Deposit received for ${booking.jobRequest?.title ?? "your booking"}`,
+          `/calendar/${booking.id}`
+        );
         await notify(booking.customerId, "BOOKING_CONFIRMED", "Payment confirmed", "Your booking is confirmed.", `/bookings/${booking.id}`);
         await sendEmail({
           to: booking.customer.email,

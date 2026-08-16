@@ -56,7 +56,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
           });
         }
         const business = await tx.business.findUnique({ where: { id: businessId } });
-        if (business) await notify(business.ownerId, "DISPATCHER_ASSIGNMENT", "A job was assigned to you", approval.jobRequest?.title ?? "", "/leads");
+        if (business) await notify(business.ownerId, "DISPATCHER_ASSIGNMENT", "A job was assigned to you", approval.jobRequest?.title ?? "", lead ? `/leads/${lead.id}` : "/leads");
         void assignment;
         break;
       }

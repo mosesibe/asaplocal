@@ -8,7 +8,10 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
   const session = await auth();
   if (!session?.user) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
 
-  const quote = await prisma.quote.findUnique({ where: { id }, include: { jobRequest: true, business: true } });
+  const quote = await prisma.quote.findUnique({
+    where: { id },
+    include: { jobRequest: { include: { lead: true } }, business: true },
+  });
   if (!quote || quote.jobRequest.customerId !== session.user.id) {
     return NextResponse.json({ message: "Quote not found" }, { status: 404 });
   }
@@ -41,6 +44,18 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
 
     await tx.jobRequest.update({ where: { id: quote.jobRequestId }, data: { status: "ASSIGNED" } });
 
+    // The provider has won the job the moment their quote is accepted — without
+    // this their lead pipeline still reads "QUOTED" indefinitely. The Stripe
+    // webhook sets the same thing on payment, but that fires later (and only
+    // once its signing secret is configured), so acceptance is the reliable
+    // point to record it.
+    if (quote.jobRequest.lead) {
+      await tx.leadAccess.updateMany({
+        where: { leadId: quote.jobRequest.lead.id, businessId: quote.businessId },
+        data: { status: "WON", wonAt: new Date() },
+      });
+    }
+
     await tx.conversation.create({
       data: {
         jobRequestId: quote.jobRequestId,
@@ -52,7 +67,15 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
     return booking;
   });
 
-  await notify(quote.business.ownerId, "QUOTE_ACCEPTED", "Your quote was accepted!", quote.jobRequest.title, `/leads`);
+  // Link straight to the lead the quote was for — "/leads" dropped the provider
+  // on the generic marketplace with no indication which job had been accepted.
+  await notify(
+    quote.business.ownerId,
+    "QUOTE_ACCEPTED",
+    "Your quote was accepted!",
+    quote.jobRequest.title,
+    quote.jobRequest.lead ? `/leads/${quote.jobRequest.lead.id}` : `/calendar/${result.id}`
+  );
 
   return NextResponse.json({ bookingId: result.id });
 }

@@ -3,11 +3,21 @@ import { notFound, redirect } from "next/navigation";
 import { auth } from "@asaplocal/auth";
 import { prisma } from "@asaplocal/db";
 import { generateQuoteTemplate } from "@asaplocal/core";
-import { Badge, Card, MobileTopBar, formatPence } from "@asaplocal/ui";
+import { Badge, Card, MobileTopBar, buttonVariants, formatPence } from "@asaplocal/ui";
 import { LeadPipelineControls } from "./lead-pipeline-controls";
 import { QuoteForm } from "./quote-form";
 import { RefundRequestForm } from "./refund-request-form";
 import { MessageCustomerButton } from "./message-customer-button";
+
+/** What the provider actually does next, per booking stage (see JobSheetPanel). */
+const BOOKING_NEXT_STEP: Record<string, string> = {
+  PENDING: "Waiting for the customer to pay their deposit — you'll be notified when it clears.",
+  CONFIRMED: "Share your ETA, then start the job when you arrive.",
+  IN_PROGRESS: "Log what you're doing as you go, then finish the job to send it for sign-off.",
+  AWAITING_APPROVAL: "Sent to the customer — waiting for them to confirm the work is complete.",
+  COMPLETED: "The customer confirmed this job as complete.",
+  CANCELLED: "This booking was cancelled.",
+};
 
 export default async function LeadDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -33,6 +43,12 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
   const customerName = lead.jobRequest.customer.profile
     ? `${lead.jobRequest.customer.profile.firstName} ${lead.jobRequest.customer.profile.lastName}`
     : "the customer";
+
+  // Once a quote is accepted the work itself lives on the booking (start job,
+  // job sheet, finish) — surface it here so the provider isn't left on the lead
+  // page with nothing to act on. Booking.jobRequestId is unique.
+  const booking = await prisma.booking.findUnique({ where: { jobRequestId: lead.jobRequestId } });
+  const ownBooking = booking && booking.businessId === business.id ? booking : null;
 
   const existingQuote = await prisma.quote.findUnique({ where: { jobRequestId_businessId: { jobRequestId: lead.jobRequestId, businessId: business.id } } });
   const aiReply = !existingQuote
@@ -88,6 +104,19 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
           </div>
         )}
       </Card>
+
+      {ownBooking && (
+        <Card className="mt-6 border-brand-200 bg-brand-50/60 p-5 dark:border-brand-800 dark:bg-brand-950/20">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h2 className="text-lg font-semibold">You won this job</h2>
+            <Badge variant="outline">{ownBooking.status.replace(/_/g, " ")}</Badge>
+          </div>
+          <p className="mt-1 text-sm text-muted-foreground">{BOOKING_NEXT_STEP[ownBooking.status] ?? "Open the booking for details."}</p>
+          <Link href={`/calendar/${ownBooking.id}`} className={`${buttonVariants({ size: "sm" })} mt-3`}>
+            {ownBooking.status === "IN_PROGRESS" ? "Open job sheet" : "Open booking"}
+          </Link>
+        </Card>
+      )}
 
       <div className="mt-6">
         <h2 className="mb-2 text-lg font-semibold">Pipeline status</h2>

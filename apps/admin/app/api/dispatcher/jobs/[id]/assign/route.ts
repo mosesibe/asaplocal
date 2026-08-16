@@ -39,7 +39,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       return assignment;
     });
     const business = await prisma.business.findUnique({ where: { id: parsed.data.businessId } });
-    if (business) await notify(business.ownerId, "DISPATCHER_ASSIGNMENT", "A job was assigned to you", jobRequest.title, `/leads`);
+    if (business) await notify(business.ownerId, "DISPATCHER_ASSIGNMENT", "A job was assigned to you", jobRequest.title, jobRequest.lead ? `/leads/${jobRequest.lead.id}` : `/leads`);
     await writeAuditLog({ actorId: session.user.id, actorRole: "ADMIN", action: "dispatcher.assign.direct", targetType: "JobRequest", targetId: jobRequestId, metadata: parsed.data });
     return NextResponse.json({ id: result.id, status: "APPLIED" }, { status: 201 });
   }
