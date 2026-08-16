@@ -57,7 +57,16 @@ export function NotificationBell({
         {unreadCount > 0 && <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-red-500 ring-2 ring-surface" />}
       </button>
       {open && (
-        <div className="absolute right-0 top-full z-30 mt-2 w-80 max-w-[90vw] rounded-xl border border-border bg-surface shadow-card">
+        /*
+         * z-50 so the panel clears the page chrome it drops over: MobileTopBar
+         * is sticky z-30 and MobileBottomNav is fixed z-40, and the hosts that
+         * mount this bell (e.g. ProviderTopBar) add no stacking context of
+         * their own — at the panel's old z-30 the sticky sub-header simply won
+         * on DOM order and painted over the first notification. Dialog/Sheet
+         * are also z-50 but portal to the end of <body>, so modals still win
+         * the tie and render above this.
+         */
+        <div className="absolute right-0 top-full z-50 mt-2 w-80 max-w-[90vw] rounded-xl border border-border bg-surface shadow-card">
           <div className="flex items-center justify-between border-b border-border px-3.5 py-2.5">
             <p className="text-sm font-semibold">Notifications</p>
             {unreadCount > 0 && (
