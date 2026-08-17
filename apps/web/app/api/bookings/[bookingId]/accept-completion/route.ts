@@ -1,14 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@asaplocal/auth";
 import { prisma } from "@asaplocal/db";
-import { writeAuditLog, notify } from "@asaplocal/core";
+import { writeAuditLog, notify, sendEmail, emailTemplates } from "@asaplocal/core";
 
 export async function POST(_req: NextRequest, { params }: { params: Promise<{ bookingId: string }> }) {
   const { bookingId } = await params;
   const session = await auth();
   if (!session?.user) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
 
-  const booking = await prisma.booking.findUnique({ where: { id: bookingId }, include: { business: true } });
+  const booking = await prisma.booking.findUnique({
+    where: { id: bookingId },
+    include: { business: { include: { owner: true } }, jobRequest: true },
+  });
   if (!booking || booking.customerId !== session.user.id) return NextResponse.json({ message: "Not found" }, { status: 404 });
   if (booking.status !== "AWAITING_APPROVAL") {
     return NextResponse.json({ message: "This booking isn't awaiting your approval" }, { status: 400 });
@@ -34,6 +37,16 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ bo
     `Your customer has confirmed the job as complete.`,
     `/calendar/${bookingId}`
   );
+
+  await sendEmail({
+    to: booking.business.owner.email,
+    subject: "Job signed off by the customer",
+    ...emailTemplates.jobCompletedProvider({
+      businessName: booking.business.name,
+      jobTitle: booking.jobRequest?.title ?? "your job",
+      link: `${process.env.NEXT_PUBLIC_PROVIDER_URL}/calendar/${bookingId}`,
+    }),
+  }).catch(() => {});
 
   return NextResponse.json({ ok: true });
 }

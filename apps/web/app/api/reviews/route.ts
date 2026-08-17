@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@asaplocal/auth";
 import { prisma } from "@asaplocal/db";
-import { reviewSchema, moderateReview, stripHtml, notify } from "@asaplocal/core";
+import { reviewSchema, moderateReview, stripHtml, notify, sendEmail, emailTemplates } from "@asaplocal/core";
 
 export async function POST(req: NextRequest) {
   const session = await auth();
@@ -11,7 +11,10 @@ export async function POST(req: NextRequest) {
   const parsed = reviewSchema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ message: "Invalid review", issues: parsed.error.flatten() }, { status: 422 });
 
-  const booking = await prisma.booking.findUnique({ where: { id: parsed.data.bookingId }, include: { review: true, business: true } });
+  const booking = await prisma.booking.findUnique({
+    where: { id: parsed.data.bookingId },
+    include: { review: true, business: { include: { owner: true } }, jobRequest: true },
+  });
   if (!booking || booking.customerId !== session.user.id) return NextResponse.json({ message: "Booking not found" }, { status: 404 });
   if (booking.status !== "COMPLETED") return NextResponse.json({ message: "You can only review completed bookings" }, { status: 409 });
   if (booking.review) return NextResponse.json({ message: "You've already reviewed this booking" }, { status: 409 });
@@ -45,6 +48,22 @@ export async function POST(req: NextRequest) {
   });
 
   await notify(booking.business.ownerId, "REVIEW_RECEIVED", "You've received a new review", `${parsed.data.rating}★ from a customer`, `/reviews`);
+
+  // Flagged reviews stay hidden pending moderation, so don't announce them to
+  // the provider as though they were live.
+  if (!moderation.flagged) {
+    await sendEmail({
+      to: booking.business.owner.email,
+      subject: `New ${parsed.data.rating}-star review`,
+      ...emailTemplates.reviewReceivedProvider({
+        businessName: booking.business.name,
+        jobTitle: booking.jobRequest?.title ?? "your job",
+        rating: parsed.data.rating,
+        comment,
+        link: `${process.env.NEXT_PUBLIC_PROVIDER_URL}/reviews`,
+      }),
+    }).catch(() => {});
+  }
 
   return NextResponse.json({ id: review.id, flagged: moderation.flagged }, { status: 201 });
 }

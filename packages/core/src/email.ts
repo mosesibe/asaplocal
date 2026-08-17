@@ -193,6 +193,68 @@ export const emailTemplates = {
       cta: { label: "View booking", url: opts.link },
     }),
 
+  /** Provider finished — customer reviews the work log and confirms completion. */
+  jobFinishedCustomer: (opts: {
+    businessName: string;
+    jobTitle: string;
+    workLog: { label: string; at: Date }[];
+    durationMinutes?: number | null;
+    link: string;
+  }): EmailBody =>
+    docket({
+      eyebrow: "Job finished",
+      title: "Your job is marked as done",
+      blocks: [
+        {
+          kind: "paragraph",
+          text: `${opts.businessName} has finished the job. Here's what they logged — check it over, then confirm completion so they can be paid out.`,
+        },
+        { kind: "highlight", title: opts.jobTitle, meta: opts.durationMinutes ? `${opts.durationMinutes} minutes on site` : undefined },
+        ...(opts.workLog.length ? [{ kind: "timeline" as const, label: "Work log", entries: opts.workLog }] : []),
+      ],
+      cta: { label: "Review and confirm", url: opts.link },
+      footnote: "Nothing is final until you confirm — raise anything that looks wrong before you do.",
+    }),
+
+  /** Customer confirmed completion — the provider's job is signed off. */
+  jobCompletedProvider: (opts: { businessName: string; jobTitle: string; link: string }): EmailBody =>
+    docket({
+      eyebrow: "Signed off",
+      title: "The customer confirmed the job is complete",
+      blocks: [
+        {
+          kind: "paragraph",
+          text: `Hi ${opts.businessName} — your customer has reviewed the work log and confirmed this job as complete.`,
+        },
+        { kind: "highlight", title: opts.jobTitle },
+      ],
+      cta: { label: "View booking", url: opts.link },
+    }),
+
+  /** Customer left a rating/review on a completed booking. */
+  reviewReceivedProvider: (opts: {
+    businessName: string;
+    jobTitle: string;
+    rating: number;
+    comment?: string | null;
+    link: string;
+  }): EmailBody =>
+    docket({
+      eyebrow: "New review",
+      title: `You've received a ${opts.rating}-star review`,
+      blocks: [
+        { kind: "paragraph", text: `Hi ${opts.businessName} — a customer has reviewed your work.` },
+        {
+          kind: "highlight",
+          title: `${"★".repeat(opts.rating)}${"☆".repeat(Math.max(0, 5 - opts.rating))}  ${opts.rating}/5`,
+          meta: opts.jobTitle,
+        },
+        ...(opts.comment ? [{ kind: "paragraph" as const, text: `"${opts.comment}"` }] : []),
+        { kind: "paragraph", text: "Reviews feed your public rating and trust tier — replying quickly to feedback helps win the next job." },
+      ],
+      cta: { label: "View your reviews", url: opts.link },
+    }),
+
   referenceRequest: (
     businessName: string,
     refereeName: string,

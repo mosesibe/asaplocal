@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@asaplocal/auth";
 import { prisma } from "@asaplocal/db";
-import { writeAuditLog, notify } from "@asaplocal/core";
+import { writeAuditLog, notify, sendEmail, emailTemplates } from "@asaplocal/core";
 
 export async function POST(_req: NextRequest, { params }: { params: Promise<{ bookingId: string }> }) {
   const { bookingId } = await params;
@@ -11,12 +11,15 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ bo
   const business = await prisma.business.findUnique({ where: { ownerId: session.user.id } });
   if (!business) return NextResponse.json({ message: "Complete onboarding first" }, { status: 400 });
 
-  const booking = await prisma.booking.findUnique({ where: { id: bookingId } });
+  const booking = await prisma.booking.findUnique({
+    where: { id: bookingId },
+    include: { customer: true, jobRequest: true },
+  });
   if (!booking || booking.businessId !== business.id) return NextResponse.json({ message: "Not found" }, { status: 404 });
   if (booking.status !== "IN_PROGRESS") return NextResponse.json({ message: "Only a job in progress can be finished" }, { status: 400 });
 
-  const entryCount = await prisma.jobSheetEntry.count({ where: { bookingId } });
-  if (entryCount === 0) {
+  const entries = await prisma.jobSheetEntry.findMany({ where: { bookingId }, orderBy: { loggedAt: "asc" } });
+  if (entries.length === 0) {
     return NextResponse.json({ message: "Add at least one action to the job sheet before finishing" }, { status: 400 });
   }
 
@@ -44,6 +47,18 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ bo
     `${business.name} has finished the job — review what was done and confirm completion.`,
     `/bookings/${bookingId}`
   );
+
+  await sendEmail({
+    to: booking.customer.email,
+    subject: `${business.name} has finished your job`,
+    ...emailTemplates.jobFinishedCustomer({
+      businessName: business.name,
+      jobTitle: booking.jobRequest?.title ?? "your job",
+      workLog: entries.map((e) => ({ label: e.description, at: e.loggedAt })),
+      durationMinutes,
+      link: `${process.env.NEXT_PUBLIC_WEB_URL}/bookings/${bookingId}`,
+    }),
+  }).catch(() => {});
 
   return NextResponse.json({ ok: true, durationMinutes });
 }

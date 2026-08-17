@@ -25,7 +25,15 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
       category: true,
       customer: { include: { profile: true } },
       quotes: { include: { business: true }, orderBy: { createdAt: "asc" } },
-      booking: { include: { business: true, payments: { orderBy: { createdAt: "asc" } }, assignedStaff: true } },
+      booking: {
+        include: {
+          business: true,
+          payments: { orderBy: { createdAt: "asc" } },
+          assignedStaff: true,
+          jobSheetEntries: { orderBy: { loggedAt: "asc" } },
+          review: true,
+        },
+      },
       lead: { include: { accesses: { include: { business: true }, orderBy: { createdAt: "asc" } } } },
       dispatcherAssignments: { include: { dispatcher: true, assignedBusiness: true }, orderBy: { createdAt: "desc" } },
       conversations: {
@@ -204,6 +212,54 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
                     </div>
                   ))}
                 </div>
+              </div>
+            )}
+          </Card>
+        )}
+
+        {job.booking && (
+          <Card className="p-4">
+            <div className="flex items-center justify-between">
+              <h2 className="font-semibold">Work log</h2>
+              {job.booking.durationMinutes != null && (
+                <span className="text-sm text-muted-foreground">{job.booking.durationMinutes} min on site</span>
+              )}
+            </div>
+            {job.booking.jobSheetEntries.length === 0 ? (
+              <p className="mt-1 text-sm text-muted-foreground">
+                {job.booking.startedAt ? "Job started but nothing logged yet." : "The provider hasn't started this job yet."}
+              </p>
+            ) : (
+              <div className="mt-2 space-y-2">
+                {job.booking.jobSheetEntries.map((entry) => (
+                  <div key={entry.id} className="rounded-lg border border-border p-3">
+                    <p className="text-sm">{entry.description}</p>
+                    {entry.photos.length > 0 && (
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {entry.photos.map((url, i) => (
+                          <a key={i} href={url} target="_blank" rel="noreferrer">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={url} alt="" className="h-16 w-16 rounded-lg border border-border object-cover" />
+                          </a>
+                        ))}
+                      </div>
+                    )}
+                    <p className="mt-1 text-xs text-muted-foreground">{fmtDateTime(entry.loggedAt)}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+            {job.booking.review && (
+              <div className="mt-3 border-t border-border pt-3">
+                <div className="flex items-center justify-between">
+                  <p className="text-xs font-semibold text-muted-foreground">Customer review</p>
+                  <Badge variant={statusVariant(job.booking.review.status)}>{job.booking.review.status}</Badge>
+                </div>
+                <p className="mt-1 text-sm font-medium">
+                  {"★".repeat(job.booking.review.rating)}
+                  {"☆".repeat(Math.max(0, 5 - job.booking.review.rating))} {job.booking.review.rating}/5
+                </p>
+                {job.booking.review.comment && <p className="mt-1 text-sm text-muted-foreground">{job.booking.review.comment}</p>}
               </div>
             )}
           </Card>
