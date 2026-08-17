@@ -112,7 +112,10 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
             <Badge variant="outline">{ownBooking.status.replace(/_/g, " ")}</Badge>
           </div>
           <p className="mt-1 text-sm text-muted-foreground">{BOOKING_NEXT_STEP[ownBooking.status] ?? "Open the booking for details."}</p>
-          <Link href={`/calendar/${ownBooking.id}`} className={`${buttonVariants({ size: "sm" })} mt-3`}>
+          {/* prefetch={false}: the destination renders a live booking status that
+              can change between page load and click (e.g. the deposit clearing),
+              and a prefetched payload would show the stale one. */}
+          <Link href={`/calendar/${ownBooking.id}`} prefetch={false} className={`${buttonVariants({ size: "sm" })} mt-3`}>
             {ownBooking.status === "IN_PROGRESS" ? "Open job sheet" : "Open booking"}
           </Link>
         </Card>

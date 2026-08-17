@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { auth } from "@asaplocal/auth";
 import { prisma } from "@asaplocal/db";
@@ -19,18 +20,31 @@ export default async function ProviderBookingDetailPage({ params }: { params: Pr
       customer: { include: { profile: true } },
       jobSheetEntries: { orderBy: { loggedAt: "asc" } },
       assignedStaff: true,
+      jobRequest: { include: { lead: true } },
     },
   });
   if (!booking || booking.businessId !== business.id) notFound();
 
+  const customerName = booking.customer.profile
+    ? `${booking.customer.profile.firstName} ${booking.customer.profile.lastName}`
+    : booking.customer.email;
+  const leadId = booking.jobRequest?.lead?.id;
+
   return (
     <div className="mx-auto max-w-2xl">
-      <div className="flex items-center justify-between">
+      <Link href={leadId ? `/leads/${leadId}` : "/calendar"} className="text-sm text-muted-foreground hover:underline">
+        ← Back to {leadId ? "lead" : "calendar"}
+      </Link>
+
+      <div className="mt-2 flex items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold">{booking.customer.profile?.firstName} {booking.customer.profile?.lastName}</h1>
+          {/* Lead the heading with the job — the customer's name alone gave no
+              clue which booking this was, and the URL is a bare uuid. */}
+          <h1 className="text-2xl font-bold">{booking.jobRequest?.title ?? "Booking"}</h1>
+          <p className="text-sm text-muted-foreground">{customerName}</p>
           <p className="text-sm text-muted-foreground">{booking.scheduledDate.toLocaleString("en-GB")} · {booking.addressLine}, {booking.city}</p>
         </div>
-        <Badge variant="outline">{booking.status.replace(/_/g, " ")}</Badge>
+        <Badge variant="outline" className="shrink-0">{booking.status.replace(/_/g, " ")}</Badge>
       </div>
 
       {booking.assignedStaff && (

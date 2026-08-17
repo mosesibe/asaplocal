@@ -121,5 +121,23 @@ export function JobSheetPanel({ bookingId, status, entryCount }: Props) {
     );
   }
 
-  return null;
+  if (status === "PENDING") {
+    return (
+      <Card className="p-6">
+        <p className="text-sm font-medium">Waiting for the customer's deposit</p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          You'll be notified the moment it clears — you can start the job from here once it does.
+        </p>
+      </Card>
+    );
+  }
+
+  // CANCELLED / DISPUTED — no actions, but never leave the page blank.
+  return (
+    <Card className="p-6">
+      <p className="text-sm text-muted-foreground">
+        This booking is {status.replace(/_/g, " ").toLowerCase()} — there's nothing to do here.
+      </p>
+    </Card>
+  );
 }
