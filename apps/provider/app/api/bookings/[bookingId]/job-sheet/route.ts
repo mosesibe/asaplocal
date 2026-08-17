@@ -3,7 +3,10 @@ import { auth } from "@asaplocal/auth";
 import { prisma } from "@asaplocal/db";
 import { z } from "zod";
 
-const schema = z.object({ description: z.string().min(1).max(500) });
+const schema = z.object({
+  description: z.string().min(1).max(500),
+  photos: z.array(z.string().url()).max(10).default([]),
+});
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ bookingId: string }> }) {
   const { bookingId } = await params;
@@ -23,7 +26,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ boo
   if (!parsed.success) return NextResponse.json({ message: "Invalid input" }, { status: 422 });
 
   const entry = await prisma.jobSheetEntry.create({
-    data: { bookingId, description: parsed.data.description },
+    data: { bookingId, description: parsed.data.description, photos: parsed.data.photos },
   });
 
   return NextResponse.json({ id: entry.id }, { status: 201 });

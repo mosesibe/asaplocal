@@ -6,6 +6,7 @@ import { Avatar, Badge, Card, MobileTopBar, formatPence } from "@asaplocal/ui";
 import { LeaveReviewForm } from "./leave-review-form";
 import { AcceptCompletionButton } from "./accept-completion-button";
 import { TrackingMap } from "./tracking-map";
+import { JobPhotoGallery } from "./job-photo-gallery";
 
 export default async function BookingDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -81,6 +82,7 @@ export default async function BookingDetailPage({ params }: { params: Promise<{ 
               {booking.jobSheetEntries.map((entry) => (
                 <div key={entry.id} className="rounded-lg border border-border p-3">
                   <p className="text-sm">{entry.description}</p>
+                  <JobPhotoGallery photos={entry.photos} label={entry.description} />
                   <p className="mt-1 text-xs text-muted-foreground">{entry.loggedAt.toLocaleString("en-GB")}</p>
                 </div>
               ))}

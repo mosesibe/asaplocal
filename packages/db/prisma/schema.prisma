@@ -1110,6 +1110,7 @@ model JobSheetEntry {
   id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   bookingId   String   @db.Uuid
   description String   @db.Text
+  photos      String[] // provider's photos of the work done, shown to the customer
   loggedAt    DateTime @default(now())
 
   booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
