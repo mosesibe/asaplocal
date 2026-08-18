@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import type Stripe from "stripe";
-import { stripe, grantPurchasedLeadAccess, grantMonthlyAllowance, notify, retrieveIdentityVerificationSession, recomputeTrustTier } from "@asaplocal/core";
+import { stripe, grantPurchasedLeadAccess, grantMonthlyAllowance, notify, retrieveIdentityVerificationSession, recomputeTrustTier, sweepOutstandingPayouts } from "@asaplocal/core";
 import { prisma } from "@asaplocal/db";
 
 /**
@@ -162,6 +162,11 @@ export async function POST(req: NextRequest) {
         });
         if (payoutsEnabled && !business.payoutsEnabled) {
           await notify(business.ownerId, "VERIFICATION_UPDATE", "Bank account connected", "You're all set up to receive payouts.", "/verification/banking");
+          // Jobs they completed before connecting a bank accrued an unpaid
+          // entitlement — release the backlog now that there's somewhere to send it.
+          await sweepOutstandingPayouts(business.id).catch((err) =>
+            console.error("[settlement] onboarding sweep failed", business.id, err)
+          );
         }
       }
       break;
