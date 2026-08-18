@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@asaplocal/auth";
 import { prisma } from "@asaplocal/db";
-import { stripe } from "@asaplocal/core";
+import { stripe, computeBookingBalance } from "@asaplocal/core";
 
 /**
  * Creates a Stripe Checkout Session for a booking deposit or full payment.
@@ -13,10 +13,30 @@ export async function POST(req: NextRequest) {
   if (!session?.user) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
 
   const { bookingId, paymentKind } = await req.json();
-  const booking = await prisma.booking.findUnique({ where: { id: bookingId }, include: { business: true, customer: true } });
+  const booking = await prisma.booking.findUnique({
+    where: { id: bookingId },
+    include: { business: true, customer: true, variations: true, payments: true },
+  });
   if (!booking || booking.customerId !== session.user.id) return NextResponse.json({ message: "Not found" }, { status: 404 });
 
-  const amountPence = paymentKind === "BOOKING_FULL" ? booking.totalAmountPence : booking.depositAmountPence ?? booking.totalAmountPence;
+  const balance = computeBookingBalance(booking);
+
+  // BOOKING_BALANCE is what's still owed (incl. accepted extras) — distinct from
+  // BOOKING_FULL, which is the whole job price and would double-charge anyone
+  // who has already paid a deposit.
+  const amountPence =
+    paymentKind === "BOOKING_BALANCE"
+      ? balance.outstandingPence
+      : paymentKind === "BOOKING_FULL"
+        ? balance.totalPence
+        : (booking.depositAmountPence ?? booking.totalAmountPence);
+
+  if (amountPence <= 0) {
+    return NextResponse.json({ message: "This booking is already paid in full" }, { status: 400 });
+  }
+
+  const label =
+    paymentKind === "BOOKING_BALANCE" ? "Balance" : paymentKind === "BOOKING_FULL" ? "Full payment" : "Deposit";
 
   const checkoutSession = await stripe.checkout.sessions.create({
     mode: "payment",
@@ -26,7 +46,7 @@ export async function POST(req: NextRequest) {
         price_data: {
           currency: "gbp",
           unit_amount: amountPence,
-          product_data: { name: `${paymentKind === "BOOKING_FULL" ? "Full payment" : "Deposit"} — ${booking.business.name}` },
+          product_data: { name: `${label} — ${booking.business.name}` },
         },
         quantity: 1,
       },

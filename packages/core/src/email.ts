@@ -43,6 +43,14 @@ export async function sendEmail(opts: {
 }
 
 /**
+ * Local money formatter — packages/ui owns the app-facing formatPence(), but
+ * core must not depend on a React package just to render an email.
+ */
+function formatPence(pence: number, currency = "GBP") {
+  return new Intl.NumberFormat("en-GB", { style: "currency", currency }).format(pence / 100);
+}
+
+/**
  * Every template returns { html, text } — spread it into sendEmail:
  *   sendEmail({ to, subject, ...emailTemplates.verifyEmail(link) })
  *
@@ -189,6 +197,61 @@ export const emailTemplates = {
         },
         { kind: "highlight", title: opts.jobTitle },
         ...(opts.timeline?.length ? [{ kind: "timeline" as const, label: "Timeline", entries: opts.timeline }] : []),
+      ],
+      cta: { label: "View booking", url: opts.link },
+    }),
+
+  /** Provider proposed extra work mid-job — the customer must accept before it's billable. */
+  variationProposedCustomer: (opts: {
+    businessName: string;
+    jobTitle: string;
+    description: string;
+    amountPence: number;
+    newTotalPence: number;
+    link: string;
+  }): EmailBody =>
+    docket({
+      eyebrow: "Extra work proposed",
+      title: `${opts.businessName} has proposed extra work`,
+      blocks: [
+        {
+          kind: "paragraph",
+          text: "They've asked to add work beyond the original quote. Nothing is charged unless you accept it.",
+        },
+        { kind: "highlight", title: opts.description, meta: `+${formatPence(opts.amountPence)}` },
+        {
+          kind: "data",
+          rows: [
+            ["Job", opts.jobTitle],
+            ["Extra", `+${formatPence(opts.amountPence)}`],
+            ["New total if accepted", formatPence(opts.newTotalPence)],
+          ],
+        },
+      ],
+      cta: { label: "Review and decide", url: opts.link },
+      footnote: "You can decline and the job continues at the original price.",
+    }),
+
+  /** Customer accepted or rejected a proposed variation. */
+  variationDecidedProvider: (opts: {
+    businessName: string;
+    jobTitle: string;
+    description: string;
+    amountPence: number;
+    accepted: boolean;
+    link: string;
+  }): EmailBody =>
+    docket({
+      eyebrow: opts.accepted ? "Extra approved" : "Extra declined",
+      title: opts.accepted ? "Your extra work was approved" : "Your extra work was declined",
+      blocks: [
+        {
+          kind: "paragraph",
+          text: opts.accepted
+            ? `Hi ${opts.businessName} — the customer approved your proposed extra. It's been added to what they owe on completion.`
+            : `Hi ${opts.businessName} — the customer declined your proposed extra, so the job stands at the original price. Talk it through with them if you think it's needed.`,
+        },
+        { kind: "highlight", title: opts.description, meta: `${formatPence(opts.amountPence)} · ${opts.jobTitle}` },
       ],
       cta: { label: "View booking", url: opts.link },
     }),

@@ -410,7 +410,7 @@ export async function getLeadConversionAnalytics(businessId: string) {
   };
 }
 
-const EARNING_PAYMENT_TYPES = ["BOOKING_DEPOSIT", "BOOKING_FULL"] as const;
+const EARNING_PAYMENT_TYPES = ["BOOKING_DEPOSIT", "BOOKING_FULL", "BOOKING_BALANCE"] as const;
 
 function startOfWeek(date: Date): Date {
   const d = new Date(date);

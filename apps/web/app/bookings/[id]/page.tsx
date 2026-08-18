@@ -3,10 +3,13 @@ import { redirect, notFound } from "next/navigation";
 import { auth } from "@asaplocal/auth";
 import { prisma } from "@asaplocal/db";
 import { Avatar, Badge, Card, MobileTopBar, formatPence } from "@asaplocal/ui";
+import { computeBookingBalance } from "@asaplocal/core";
 import { LeaveReviewForm } from "./leave-review-form";
 import { AcceptCompletionButton } from "./accept-completion-button";
 import { TrackingMap } from "./tracking-map";
 import { JobPhotoGallery } from "./job-photo-gallery";
+import { VariationDecision } from "./variation-decision";
+import { PayBalanceButton } from "./pay-balance-button";
 
 export default async function BookingDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -15,11 +18,22 @@ export default async function BookingDetailPage({ params }: { params: Promise<{ 
 
   const booking = await prisma.booking.findUnique({
     where: { id },
-    include: { business: true, review: true, assignedStaff: true, jobSheetEntries: { orderBy: { loggedAt: "asc" } }, jobRequest: true },
+    include: {
+      business: true,
+      review: true,
+      assignedStaff: true,
+      jobSheetEntries: { orderBy: { loggedAt: "asc" } },
+      jobRequest: true,
+      variations: { orderBy: { createdAt: "asc" } },
+      payments: true,
+    },
   });
   if (!booking || booking.customerId !== session.user.id) notFound();
 
   const showTracking = booking.trackingEnabled && ["CONFIRMED", "IN_PROGRESS"].includes(booking.status);
+  const balance = computeBookingBalance(booking);
+  const pendingVariations = booking.variations.filter((v) => v.status === "PENDING");
+  const acceptedVariations = booking.variations.filter((v) => v.status === "ACCEPTED");
 
   return (
     <div className="mx-auto max-w-2xl md:px-6 md:py-10">
@@ -30,8 +44,50 @@ export default async function BookingDetailPage({ params }: { params: Promise<{ 
         <Card className="mt-6 space-y-2 p-6">
           <div className="flex justify-between text-sm"><span>Scheduled</span><span>{booking.scheduledDate.toLocaleDateString("en-GB")}</span></div>
           <div className="flex justify-between text-sm"><span>Address</span><span>{booking.addressLine}, {booking.city}</span></div>
-          <div className="flex justify-between text-sm"><span>Total</span><span className="font-semibold">{formatPence(booking.totalAmountPence)}</span></div>
+          <div className="flex justify-between text-sm"><span>Agreed price</span><span>{formatPence(balance.basePence)}</span></div>
+          {acceptedVariations.map((v) => (
+            <div key={v.id} className="flex justify-between gap-3 text-sm text-muted-foreground">
+              <span className="truncate">Extra: {v.description}</span>
+              <span className="shrink-0">+{formatPence(v.amountPence)}</span>
+            </div>
+          ))}
+          <div className="flex justify-between border-t border-border pt-2 text-sm"><span>Total</span><span className="font-semibold">{formatPence(balance.totalPence)}</span></div>
+          <div className="flex justify-between text-sm text-muted-foreground"><span>Paid so far</span><span>−{formatPence(balance.paidPence)}</span></div>
+          <div className="flex justify-between text-base font-semibold"><span>{balance.outstandingPence > 0 ? "Still to pay" : "Paid in full"}</span><span>{formatPence(balance.outstandingPence)}</span></div>
         </Card>
+
+        {balance.outstandingPence > 0 && booking.status === "COMPLETED" && (
+          <div className="mt-4">
+            <PayBalanceButton bookingId={booking.id} outstandingPence={balance.outstandingPence} />
+            {pendingVariations.length > 0 && (
+              <p className="mt-2 text-center text-xs text-muted-foreground">
+                {pendingVariations.length} proposed extra{pendingVariations.length > 1 ? "s" : ""} below — decide on {pendingVariations.length > 1 ? "them" : "it"} before paying if you want {pendingVariations.length > 1 ? "them" : "it"} included.
+              </p>
+            )}
+          </div>
+        )}
+
+        {booking.variations.length > 0 && (
+          <Card className="mt-6 space-y-3 p-6">
+            <h2 className="font-semibold">Extra work</h2>
+            {booking.variations.map((v) => (
+              <div key={v.id} className="rounded-lg border border-border p-3">
+                <div className="flex items-start justify-between gap-3">
+                  <p className="text-sm">{v.description}</p>
+                  <span className="shrink-0 text-sm font-semibold">+{formatPence(v.amountPence)}</span>
+                </div>
+                <JobPhotoGallery photos={v.photos} label={v.description} />
+                {v.status === "PENDING" ? (
+                  <VariationDecision bookingId={booking.id} variationId={v.id} amountPence={v.amountPence} />
+                ) : (
+                  <Badge variant={v.status === "ACCEPTED" ? "success" : "outline"} className="mt-2">
+                    {v.status === "ACCEPTED" ? "Approved" : "Declined"}
+                  </Badge>
+                )}
+              </div>
+            ))}
+          </Card>
+        )}
 
         {showTracking && (
           <div className="mt-6">

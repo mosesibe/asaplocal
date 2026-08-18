@@ -28,23 +28,52 @@ export async function POST(req: NextRequest) {
       const { bookingId, businessId } = cs.metadata ?? {};
       if (bookingId) {
         const paymentReceivedAt = new Date();
-        const booking = await prisma.booking.update({
-          where: { id: bookingId },
-          data: { status: "CONFIRMED" },
-          include: { customer: true, business: { include: { owner: true } }, jobRequest: true },
-        });
+        const isBalance = cs.metadata?.paymentType === "BOOKING_BALANCE";
+        const booking = isBalance
+          ? await prisma.booking.findUniqueOrThrow({
+              where: { id: bookingId },
+              include: { customer: true, business: { include: { owner: true } }, jobRequest: true },
+            })
+          : await prisma.booking.update({
+              where: { id: bookingId },
+              data: { status: "CONFIRMED" },
+              include: { customer: true, business: { include: { owner: true } }, jobRequest: true },
+            });
         await prisma.payment.create({
           data: {
             userId: booking.customerId,
             businessId: businessId ?? booking.businessId,
             bookingId: booking.id,
-            type: cs.metadata?.paymentType === "BOOKING_FULL" ? "BOOKING_FULL" : "BOOKING_DEPOSIT",
+            type:
+              cs.metadata?.paymentType === "BOOKING_FULL"
+                ? "BOOKING_FULL"
+                : cs.metadata?.paymentType === "BOOKING_BALANCE"
+                  ? "BOOKING_BALANCE"
+                  : "BOOKING_DEPOSIT",
             status: "SUCCEEDED",
             amountPence: cs.amount_total ?? 0,
             currency: cs.currency ?? "gbp",
             stripePaymentIntentId: typeof cs.payment_intent === "string" ? cs.payment_intent : undefined,
           },
         });
+        const bookingLink = `${process.env.NEXT_PUBLIC_WEB_URL}/bookings/${booking.id}`;
+        const jobTitle = booking.jobRequest?.title ?? "your job";
+
+        if (isBalance) {
+          // Final settlement on an already-completed job: the deposit-time side
+          // effects (lead won, referral credit, "booking confirmed") already ran
+          // and must not repeat — only tell the provider they've been paid off.
+          await notify(
+            booking.business.ownerId,
+            "PAYMENT_RECEIVED",
+            "Final payment received",
+            `Balance settled for ${jobTitle}`,
+            `/calendar/${booking.id}`
+          );
+          await notify(booking.customerId, "PAYMENT_RECEIVED", "Payment complete", `${jobTitle} is now paid in full.`, `/bookings/${booking.id}`);
+          break;
+        }
+
         if (booking.jobRequestId) {
           await prisma.leadAccess.updateMany({
             where: { businessId: booking.businessId, lead: { jobRequestId: booking.jobRequestId } },
@@ -58,7 +87,6 @@ export async function POST(req: NextRequest) {
           bookingConfirmedAt: booking.createdAt,
           paymentReceivedAt,
         });
-        const bookingLink = `${process.env.NEXT_PUBLIC_WEB_URL}/bookings/${booking.id}`;
 
         // Provider-side link must be a provider-app route — it has no /bookings,
         // its per-booking view is /calendar/[bookingId].
@@ -66,7 +94,7 @@ export async function POST(req: NextRequest) {
           booking.business.ownerId,
           "PAYMENT_RECEIVED",
           "Payment received",
-          `Deposit received for ${booking.jobRequest?.title ?? "your booking"}`,
+          `Deposit received for ${jobTitle}`,
           `/calendar/${booking.id}`
         );
         await notify(booking.customerId, "BOOKING_CONFIRMED", "Payment confirmed", "Your booking is confirmed.", `/bookings/${booking.id}`);
@@ -80,7 +108,7 @@ export async function POST(req: NextRequest) {
           subject: "Payment received — job confirmed",
           ...emailTemplates.paymentReceivedProvider({
             businessName: booking.business.name,
-            jobTitle: booking.jobRequest?.title ?? "your job",
+            jobTitle,
             link: bookingLink,
             timeline,
           }),

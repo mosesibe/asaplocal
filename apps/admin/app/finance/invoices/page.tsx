@@ -9,7 +9,7 @@ import { Pagination } from "@/components/pagination";
 import { invoiceNumber } from "@/lib/invoice-number";
 
 const PAGE_SIZE = 20;
-const INVOICE_TYPES = ["BOOKING_DEPOSIT", "BOOKING_FULL"] as const;
+const INVOICE_TYPES = ["BOOKING_DEPOSIT", "BOOKING_FULL", "BOOKING_BALANCE"] as const;
 
 export default async function InvoicesPage({ searchParams }: { searchParams: Promise<{ q?: string; page?: string }> }) {
   const { q, page: pageParam } = await searchParams;

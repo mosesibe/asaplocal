@@ -26,7 +26,7 @@ export default async function PayoutsPage({ searchParams }: { searchParams: Prom
     prisma.business.count({ where }),
     prisma.payment.groupBy({
       by: ["businessId"],
-      where: { status: "SUCCEEDED", type: { in: ["BOOKING_DEPOSIT", "BOOKING_FULL"] }, businessId: { not: null } },
+      where: { status: "SUCCEEDED", type: { in: ["BOOKING_DEPOSIT", "BOOKING_FULL", "BOOKING_BALANCE"] }, businessId: { not: null } },
       _sum: { amountPence: true },
     }),
     prisma.payout.groupBy({ by: ["businessId"], _sum: { amountPence: true } }),

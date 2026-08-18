@@ -5,6 +5,7 @@ import { prisma } from "@asaplocal/db";
 import { Badge, Card } from "@asaplocal/ui";
 import { JobSheetPanel } from "./job-sheet-panel";
 import { OnTheWayPanel } from "./on-the-way-panel";
+import { VariationPanel } from "./variation-panel";
 
 export default async function ProviderBookingDetailPage({ params }: { params: Promise<{ bookingId: string }> }) {
   const { bookingId } = await params;
@@ -21,6 +22,7 @@ export default async function ProviderBookingDetailPage({ params }: { params: Pr
       jobSheetEntries: { orderBy: { loggedAt: "asc" } },
       assignedStaff: true,
       jobRequest: { include: { lead: true } },
+      variations: { orderBy: { createdAt: "asc" } },
     },
   });
   if (!booking || booking.businessId !== business.id) notFound();
@@ -66,6 +68,12 @@ export default async function ProviderBookingDetailPage({ params }: { params: Pr
       <div className="mt-6">
         <JobSheetPanel bookingId={booking.id} status={booking.status} entryCount={booking.jobSheetEntries.length} />
       </div>
+
+      {["CONFIRMED", "IN_PROGRESS", "AWAITING_APPROVAL"].includes(booking.status) && (
+        <div className="mt-6">
+          <VariationPanel bookingId={booking.id} variations={booking.variations} />
+        </div>
+      )}
 
       {booking.jobSheetEntries.length > 0 && (
         <div className="mt-6">

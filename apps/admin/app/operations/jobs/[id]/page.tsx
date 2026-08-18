@@ -32,6 +32,7 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
           assignedStaff: true,
           jobSheetEntries: { orderBy: { loggedAt: "asc" } },
           review: true,
+          variations: { orderBy: { createdAt: "asc" } },
         },
       },
       lead: { include: { accesses: { include: { business: true }, orderBy: { createdAt: "asc" } } } },
@@ -249,6 +250,23 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
                 ))}
               </div>
             )}
+            {job.booking.variations.length > 0 && (
+              <div className="mt-3 border-t border-border pt-3">
+                <p className="mb-1.5 text-xs font-semibold text-muted-foreground">Extra work (variations)</p>
+                <div className="space-y-1.5">
+                  {job.booking.variations.map((v) => (
+                    <div key={v.id} className="flex items-start justify-between gap-3 text-sm">
+                      <span>{v.description}</span>
+                      <span className="flex shrink-0 items-center gap-2">
+                        <span>+{formatPence(v.amountPence)}</span>
+                        <Badge variant={statusVariant(v.status)}>{v.status}</Badge>
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {job.booking.review && (
               <div className="mt-3 border-t border-border pt-3">
                 <div className="flex items-center justify-between">

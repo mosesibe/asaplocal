@@ -161,6 +161,12 @@ enum BookingStatus {
   DISPUTED
 }
 
+enum VariationStatus {
+  PENDING // proposed by the provider, awaiting the customer's decision
+  ACCEPTED
+  REJECTED
+}
+
 enum QuoteStatus {
   PENDING
   SENT
@@ -172,6 +178,7 @@ enum QuoteStatus {
 enum PaymentType {
   BOOKING_DEPOSIT
   BOOKING_FULL
+  BOOKING_BALANCE // remaining amount after the deposit, incl. accepted variations
   LEAD_PURCHASE
   LEAD_CREDIT_TOPUP
   SUBSCRIPTION
@@ -228,6 +235,8 @@ enum NotificationType {
   BOOKING_AWAITING_APPROVAL
   BOOKING_COMPLETED
   PROVIDER_ON_THE_WAY
+  VARIATION_PROPOSED
+  VARIATION_DECIDED
 }
 
 enum ApprovalActionType {
@@ -1095,6 +1104,7 @@ model Booking {
   review          Review?
   conversation    Conversation?
   jobSheetEntries JobSheetEntry[]
+  variations      BookingVariation[]
 
   @@index([customerId])
   @@index([assignedStaffId])
@@ -1116,6 +1126,26 @@ model JobSheetEntry {
   booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
 
   @@index([bookingId])
+}
+
+// Extra work agreed on site after the quote was accepted. Kept separate from
+// Booking.totalAmountPence so the original agreement is never rewritten, and
+// separate from JobSheetEntry because a variation is a commercial proposal the
+// customer must consent to — not a factual record of work already done.
+model BookingVariation {
+  id          String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  bookingId   String          @db.Uuid
+  description String          @db.Text
+  amountPence Int
+  photos      String[]
+  status      VariationStatus @default(PENDING)
+  decidedAt   DateTime?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@index([bookingId, status])
 }
 
 // ── Reviews & Favourites ─────────────────────────────────────────────────
