@@ -24,10 +24,13 @@ export default async function PayoutsPage({ searchParams }: { searchParams: Prom
       take: PAGE_SIZE,
     }),
     prisma.business.count({ where }),
-    prisma.payment.groupBy({
+    // What providers are actually owed is the settled net (gross minus
+    // commission), not everything collected — summing payments would overstate
+    // every balance by the platform's fee.
+    prisma.booking.groupBy({
       by: ["businessId"],
-      where: { status: "SUCCEEDED", type: { in: ["BOOKING_DEPOSIT", "BOOKING_FULL", "BOOKING_BALANCE"] }, businessId: { not: null } },
-      _sum: { amountPence: true },
+      where: { settledAt: { not: null } },
+      _sum: { providerNetPence: true },
     }),
     prisma.payout.groupBy({ by: ["businessId"], _sum: { amountPence: true } }),
     prisma.booking.groupBy({ by: ["businessId"], where: { status: "COMPLETED" }, _count: true }),
@@ -35,7 +38,7 @@ export default async function PayoutsPage({ searchParams }: { searchParams: Prom
   ]);
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
 
-  const earnedMap = new Map(earnedByBusiness.map((r) => [r.businessId as string, r._sum.amountPence ?? 0]));
+  const earnedMap = new Map(earnedByBusiness.map((r) => [r.businessId as string, r._sum.providerNetPence ?? 0]));
   const paidOutMap = new Map(paidOutByBusiness.map((r) => [r.businessId, r._sum.amountPence ?? 0]));
   const jobsMap = new Map(jobsByBusiness.map((r) => [r.businessId, r._count]));
 

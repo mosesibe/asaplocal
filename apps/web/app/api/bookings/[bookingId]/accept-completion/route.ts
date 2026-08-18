@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@asaplocal/auth";
 import { prisma } from "@asaplocal/db";
-import { writeAuditLog, notify, sendEmail, emailTemplates } from "@asaplocal/core";
+import { writeAuditLog, notify, sendEmail, emailTemplates, settleBookingPayout } from "@asaplocal/core";
 
 export async function POST(_req: NextRequest, { params }: { params: Promise<{ bookingId: string }> }) {
   const { bookingId } = await params;
@@ -47,6 +47,10 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ bo
       link: `${process.env.NEXT_PUBLIC_PROVIDER_URL}/calendar/${bookingId}`,
     }),
   }).catch(() => {});
+
+  // If the balance was already settled before sign-off, completion is the
+  // trigger instead of the payment. Idempotent either way.
+  await settleBookingPayout(bookingId).catch((err) => console.error("[settlement] failed", bookingId, err));
 
   return NextResponse.json({ ok: true });
 }

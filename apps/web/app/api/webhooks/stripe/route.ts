@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@asaplocal/core";
 import { prisma } from "@asaplocal/db";
-import { notify, emailTemplates, sendEmail, completeReferralOnFirstPayment, buildJobTimeline } from "@asaplocal/core";
+import { notify, emailTemplates, sendEmail, completeReferralOnFirstPayment, buildJobTimeline, settleBookingPayout } from "@asaplocal/core";
 import type Stripe from "stripe";
 
 /**
@@ -71,6 +71,12 @@ export async function POST(req: NextRequest) {
             `/calendar/${booking.id}`
           );
           await notify(booking.customerId, "PAYMENT_RECEIVED", "Payment complete", `${jobTitle} is now paid in full.`, `/bookings/${booking.id}`);
+
+          // Job is signed off and fully paid — release the provider's share.
+          // Self-gating and idempotent, so a retry can't double-transfer.
+          await settleBookingPayout(booking.id).catch((err) =>
+            console.error("[settlement] transfer failed", booking.id, err)
+          );
           break;
         }
 

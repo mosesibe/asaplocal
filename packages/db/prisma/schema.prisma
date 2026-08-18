@@ -161,6 +161,11 @@ enum BookingStatus {
   DISPUTED
 }
 
+enum PayoutMethod {
+  STRIPE_CONNECT // automatic transfer to the provider's connected account
+  MANUAL // bank transfer done by hand and recorded by an admin
+}
+
 enum VariationStatus {
   PENDING // proposed by the provider, awaiting the customer's decision
   ACCEPTED
@@ -692,20 +697,28 @@ model Supply {
 // Admin-recorded ledger of payouts made to providers outside Stripe Connect
 // (e.g. manual bank transfer) — there's no automated Stripe Transfer sync
 // yet, so this is how the platform tracks what's actually been paid out.
+// Money actually sent to a provider. A row here means funds moved — the
+// amount *owed* lives on Booking.providerNetPence, so an unpaid entitlement
+// is never mistaken for a completed payout.
 model Payout {
-  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  businessId  String   @db.Uuid
-  amountPence Int
-  method      String? // e.g. "Bank transfer"
-  reference   String?
-  paidAt      DateTime @default(now())
-  createdById String   @db.Uuid
-  createdAt   DateTime @default(now())
+  id               String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  businessId       String       @db.Uuid
+  bookingId        String?      @db.Uuid // the job being settled; null for ad-hoc/bulk manual payouts
+  amountPence      Int // net paid to the provider
+  platformFeePence Int          @default(0) // commission retained on this settlement
+  method           PayoutMethod @default(MANUAL)
+  stripeTransferId String?      @unique // set for STRIPE_CONNECT transfers
+  reference        String?
+  paidAt           DateTime     @default(now())
+  createdById      String?      @db.Uuid // null for automatic transfers — no admin actor
+  createdAt        DateTime     @default(now())
 
   business  Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  createdBy User     @relation("PayoutRecorder", fields: [createdById], references: [id], onDelete: Cascade)
+  booking   Booking? @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+  createdBy User?    @relation("PayoutRecorder", fields: [createdById], references: [id], onDelete: SetNull)
 
   @@index([businessId])
+  @@index([bookingId])
 }
 
 model IdentityVerification {
@@ -1087,6 +1100,10 @@ model Booking {
   assignedStaffId           String?       @db.Uuid
   assignedAt                DateTime?
   etaMinutes                Int?
+  // Provider settlement, computed once the job is complete and paid in full.
+  platformFeePence          Int?
+  providerNetPence          Int?
+  settledAt                 DateTime?
   trackingEnabled           Boolean       @default(true)
   providerLat               Decimal?      @db.Decimal(9, 6)
   providerLng               Decimal?      @db.Decimal(9, 6)
@@ -1105,6 +1122,7 @@ model Booking {
   conversation    Conversation?
   jobSheetEntries JobSheetEntry[]
   variations      BookingVariation[]
+  payouts         Payout[]
 
   @@index([customerId])
   @@index([assignedStaffId])

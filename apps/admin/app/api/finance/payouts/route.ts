@@ -7,6 +7,9 @@ import { z } from "zod";
 const schema = z.object({
   businessId: z.string().uuid(),
   amountPence: z.number().int().positive(),
+  /** Free text from the form ("Bank transfer", "Faster Payments") — Payout.method
+   *  is now an enum, and this route is by definition the MANUAL path, so the
+   *  detail is preserved in `reference` rather than dropped. */
   method: z.string().max(100).optional(),
   reference: z.string().max(200).optional(),
   paidAt: z.string().optional(),
@@ -23,8 +26,8 @@ export async function POST(req: NextRequest) {
     data: {
       businessId: parsed.data.businessId,
       amountPence: parsed.data.amountPence,
-      method: parsed.data.method,
-      reference: parsed.data.reference,
+      method: "MANUAL",
+      reference: [parsed.data.method, parsed.data.reference].filter(Boolean).join(" · ") || undefined,
       paidAt: parsed.data.paidAt ? new Date(parsed.data.paidAt) : new Date(),
       createdById: session.user.id,
     },
