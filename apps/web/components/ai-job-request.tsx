@@ -150,7 +150,7 @@ export function AiJobRequest({
 
   return (
     <Card
-      className={`mx-auto max-w-2xl border-transparent bg-white text-left shadow-xl ${step === "describe" ? "p-1.5 sm:p-2" : "p-5 sm:p-6"}`}
+      className={`mx-auto max-w-2xl text-left shadow-xl ${step === "describe" ? "p-1.5 sm:p-2" : "p-5 sm:p-6"}`}
     >
       {step === "describe" ? (
         <>
@@ -158,7 +158,7 @@ export function AiJobRequest({
             <Sparkles size={16} />
             AI job assistant
           </div>
-          <div className="relative rounded-2xl border border-espresso-100 bg-espresso-50 transition-shadow focus-within:border-brand-500 focus-within:ring-1 focus-within:ring-brand-500">
+          <div className="relative rounded-2xl border border-border bg-muted transition-shadow focus-within:border-brand-500 focus-within:ring-1 focus-within:ring-brand-500">
             <textarea
               ref={textareaRef}
               value={description}
@@ -166,7 +166,7 @@ export function AiJobRequest({
               onKeyDown={handleDescriptionKeyDown}
               rows={3}
               placeholder={'Describe the work you need done — e.g. "My kitchen tap has been leaking for two days and I need it fixed this week"'}
-              className="max-h-60 w-full resize-none rounded-2xl bg-transparent px-4 pb-14 pt-3.5 text-base text-espresso-900 placeholder:text-espresso-400 focus:outline-none"
+              className="max-h-60 w-full resize-none rounded-2xl bg-transparent px-4 pb-14 pt-3.5 text-base text-foreground placeholder:text-muted-foreground focus:outline-none"
             />
             <Button
               size="icon"
@@ -178,8 +178,8 @@ export function AiJobRequest({
               {suggesting ? <Loader2 size={18} className="animate-spin" /> : <ArrowUp size={18} />}
             </Button>
           </div>
-          {suggestError && <p className="mt-2 px-3 text-sm text-red-600">{suggestError}</p>}
-          <p className="mb-2 mt-2 px-3 text-xs text-espresso-400">Press Enter to get matched, Shift+Enter for a new line.</p>
+          {suggestError && <p className="mt-2 px-3 text-sm text-red-600 dark:text-red-400">{suggestError}</p>}
+          <p className="mb-2 mt-2 px-3 text-xs text-muted-foreground">Press Enter to get matched, Shift+Enter for a new line.</p>
         </>
       ) : (
         <>
@@ -188,15 +188,15 @@ export function AiJobRequest({
               <Sparkles size={16} />
               Confirm your job
             </div>
-            <button type="button" className="text-sm text-espresso-400 hover:text-espresso-600 hover:underline" onClick={() => setStep("describe")}>
+            <button type="button" className="text-sm text-muted-foreground hover:text-foreground hover:underline" onClick={() => setStep("describe")}>
               Start over
             </button>
           </div>
           <div className="space-y-3">
             <div>
-              <label className="text-sm font-medium text-espresso-900">Category</label>
+              <label className="text-sm font-medium text-foreground">Category</label>
               <Select
-                className="mt-1 border-espresso-200 bg-white text-espresso-900"
+                className="mt-1 border-border bg-surface text-foreground"
                 value={categoryId}
                 onChange={(e) => setCategoryId(e.target.value)}
               >
@@ -214,49 +214,49 @@ export function AiJobRequest({
               </Select>
             </div>
             <div>
-              <label className="text-sm font-medium text-espresso-900">Job title</label>
+              <label className="text-sm font-medium text-foreground">Job title</label>
               <Input
-                className="mt-1 border-espresso-200 bg-white text-espresso-900 placeholder:text-espresso-400"
+                className="mt-1 border-border bg-surface text-foreground placeholder:text-muted-foreground"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
               />
             </div>
             <div>
-              <label className="text-sm font-medium text-espresso-900">Description</label>
+              <label className="text-sm font-medium text-foreground">Description</label>
               <Textarea
-                className="mt-1 border-espresso-200 bg-white text-espresso-900 placeholder:text-espresso-400"
+                className="mt-1 border-border bg-surface text-foreground placeholder:text-muted-foreground"
                 rows={4}
                 value={confirmDescription}
                 onChange={(e) => setConfirmDescription(e.target.value)}
               />
             </div>
             <div>
-              <label className="text-sm font-medium text-espresso-900">Service location</label>
+              <label className="text-sm font-medium text-foreground">Service location</label>
               <div className="mt-1">
                 <LocationPicker value={location} onChange={setLocation} tone="light" />
               </div>
             </div>
             <div>
-              <label className="text-sm font-medium text-espresso-900">When do you need it done? (optional)</label>
+              <label className="text-sm font-medium text-foreground">When do you need it done? (optional)</label>
               <div className="mt-1">
                 <PreferredDatePicker value={preferredDate} onChange={setPreferredDate} location={location} tone="light" />
               </div>
             </div>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div>
-                <label className="text-sm font-medium text-espresso-900">Budget min (£, optional)</label>
+                <label className="text-sm font-medium text-foreground">Budget min (£, optional)</label>
                 <Input
                   type="number"
-                  className="mt-1 border-espresso-200 bg-white text-espresso-900 placeholder:text-espresso-400"
+                  className="mt-1 border-border bg-surface text-foreground placeholder:text-muted-foreground"
                   value={budgetMin}
                   onChange={(e) => setBudgetMin(e.target.value)}
                 />
               </div>
               <div>
-                <label className="text-sm font-medium text-espresso-900">Budget max (£, optional)</label>
+                <label className="text-sm font-medium text-foreground">Budget max (£, optional)</label>
                 <Input
                   type="number"
-                  className="mt-1 border-espresso-200 bg-white text-espresso-900 placeholder:text-espresso-400"
+                  className="mt-1 border-border bg-surface text-foreground placeholder:text-muted-foreground"
                   value={budgetMax}
                   onChange={(e) => setBudgetMax(e.target.value)}
                 />
@@ -265,7 +265,7 @@ export function AiJobRequest({
           </div>
 
           {needsLogin && (
-            <p className="mt-3 text-sm text-espresso-400">
+            <p className="mt-3 text-sm text-muted-foreground">
               Please{" "}
               <Link href="/login?callbackUrl=/" className="font-medium text-brand-600 hover:underline">
                 log in
@@ -277,7 +277,7 @@ export function AiJobRequest({
               ) to post this job — your details above are kept.
             </p>
           )}
-          {postError && <p className="mt-3 text-sm text-red-600">{postError}</p>}
+          {postError && <p className="mt-3 text-sm text-red-600 dark:text-red-400">{postError}</p>}
 
           <div className="mt-4">
             <InstallAppBanner />

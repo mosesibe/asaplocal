@@ -118,18 +118,18 @@ export function AiBuddy({ onHandoff }: { onHandoff: (summary: string) => void })
   return (
     <div className="overflow-hidden rounded-2xl">
       <div className="flex items-end justify-between gap-3 px-1 pb-3">
-        <p className="text-sm text-espresso-200">Not sure if it's a DIY job? Describe it and I'll help you figure it out — free.</p>
+        <p className="text-sm text-muted-foreground">Not sure if it's a DIY job? Describe it and I'll help you figure it out — free.</p>
         {messages.length > 0 && (
           <button
             type="button"
             onClick={startOver}
-            className="flex shrink-0 items-center gap-1 text-xs text-espresso-200 underline-offset-2 hover:underline"
+            className="flex shrink-0 items-center gap-1 text-xs text-muted-foreground underline-offset-2 hover:underline"
           >
             <RotateCcw size={12} /> Start over
           </button>
         )}
       </div>
-      <div className="overflow-hidden rounded-2xl border border-espresso-100 bg-white">
+      <div className="overflow-hidden rounded-2xl border border-border bg-surface">
         <div ref={listRef} className="max-h-96 space-y-3 overflow-y-auto p-4">
           {allMessages.map((m, i) => (
             <div key={i} className={m.role === "user" ? "flex justify-end" : "flex justify-start"}>
@@ -138,27 +138,27 @@ export function AiBuddy({ onHandoff }: { onHandoff: (summary: string) => void })
                   className={
                     m.role === "user"
                       ? "rounded-2xl rounded-tr-sm bg-brand-500 px-3.5 py-2.5 text-sm text-white"
-                      : "rounded-2xl rounded-tl-sm bg-espresso-50 px-3.5 py-2.5 text-sm text-espresso-800"
+                      : "rounded-2xl rounded-tl-sm bg-muted px-3.5 py-2.5 text-sm text-foreground"
                   }
                 >
                   {m.content}
                 </div>
                 {(m.toolkit?.length || m.steps?.length) ? (
-                  <div className="rounded-2xl border border-espresso-100 bg-white p-3.5 shadow-card">
+                  <div className="rounded-2xl border border-border bg-surface p-3.5 shadow-card">
                     {!!m.toolkit?.length && (
                       <>
-                        <p className="flex items-center gap-1 text-[11px] font-bold uppercase tracking-wide text-espresso-400">
+                        <p className="flex items-center gap-1 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
                           <Wrench size={11} /> Toolkit
                         </p>
-                        <ul className="mt-1.5 space-y-1 text-xs text-espresso-700">
+                        <ul className="mt-1.5 space-y-1 text-xs text-foreground">
                           {m.toolkit.map((t, j) => <li key={j}>• {t}</li>)}
                         </ul>
                       </>
                     )}
                     {!!m.steps?.length && (
                       <>
-                        <p className="mt-3 text-[11px] font-bold uppercase tracking-wide text-espresso-400">Steps</p>
-                        <ol className="mt-1.5 list-decimal space-y-1 pl-4 text-xs text-espresso-700">
+                        <p className="mt-3 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">Steps</p>
+                        <ol className="mt-1.5 list-decimal space-y-1 pl-4 text-xs text-foreground">
                           {m.steps.map((s, j) => <li key={j}>{s}</li>)}
                         </ol>
                       </>
@@ -176,23 +176,23 @@ export function AiBuddy({ onHandoff }: { onHandoff: (summary: string) => void })
           ))}
           {sending && (
             <div className="flex justify-start">
-              <div className="rounded-2xl rounded-tl-sm bg-espresso-50 px-3.5 py-2.5">
-                <Loader2 size={16} className="animate-spin text-espresso-400" />
+              <div className="rounded-2xl rounded-tl-sm bg-muted px-3.5 py-2.5">
+                <Loader2 size={16} className="animate-spin text-muted-foreground" />
               </div>
             </div>
           )}
         </div>
 
         {needsPro && (
-          <div className="border-t border-espresso-100 bg-brand-50 p-3.5 dark:bg-brand-950">
+          <div className="border-t border-border bg-brand-50 p-3.5 dark:bg-brand-950">
             <Button size="sm" className="w-full" onClick={handleHandoff}>
               This needs a pro — request one, I'll pass along what we discussed
             </Button>
           </div>
         )}
 
-        <div className="border-t border-espresso-100 p-3">
-          {error && <p className="mb-2 px-1 text-sm text-red-600">{error}</p>}
+        <div className="border-t border-border p-3">
+          {error && <p className="mb-2 px-1 text-sm text-red-600 dark:text-red-400">{error}</p>}
           <div className="flex items-center gap-2">
             <input
               value={input}
@@ -204,7 +204,7 @@ export function AiBuddy({ onHandoff }: { onHandoff: (summary: string) => void })
                 }
               }}
               placeholder="e.g. My bathroom sink drains really slowly"
-              className="flex-1 rounded-full border border-espresso-100 bg-espresso-50 px-4 py-2.5 text-sm text-espresso-900 placeholder:text-espresso-400 focus:outline-none focus:ring-1 focus:ring-brand-500"
+              className="flex-1 rounded-full border border-border bg-muted px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-brand-500"
             />
             <Button size="icon" className="h-10 w-10 shrink-0 rounded-full" onClick={send} disabled={sending || !input.trim()} aria-label="Send">
               <ArrowUp size={16} />
@@ -257,17 +257,17 @@ function EmailGuide({
 
   if (sent) {
     return (
-      <p className="mt-3 flex items-center gap-1.5 border-t border-espresso-100 pt-3 text-xs font-medium text-emerald-700">
+      <p className="mt-3 flex items-center gap-1.5 border-t border-border pt-3 text-xs font-medium text-emerald-700 dark:text-emerald-400">
         <Check size={13} /> Sent to {email} — check your inbox.
       </p>
     );
   }
 
   return (
-    <div className="mt-3 border-t border-espresso-100 pt-3">
+    <div className="mt-3 border-t border-border pt-3">
       {open ? (
         <div className="space-y-2">
-          <label htmlFor="ai-guide-email" className="block text-[11px] font-bold uppercase tracking-wide text-espresso-400">
+          <label htmlFor="ai-guide-email" className="block text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
             Email this guide
           </label>
           <div className="flex items-center gap-2">
@@ -283,13 +283,13 @@ function EmailGuide({
                 }
               }}
               placeholder="you@example.com"
-              className="min-w-0 flex-1 rounded-full border border-espresso-100 bg-espresso-50 px-3 py-1.5 text-xs text-espresso-900 placeholder:text-espresso-400 focus:outline-none focus:ring-1 focus:ring-brand-500"
+              className="min-w-0 flex-1 rounded-full border border-border bg-muted px-3 py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-brand-500"
             />
             <Button size="sm" onClick={send} disabled={sending || !email.trim()} className="shrink-0">
               {sending ? <Loader2 size={13} className="animate-spin" /> : "Send"}
             </Button>
           </div>
-          {error && <p className="text-xs text-red-600">{error}</p>}
+          {error && <p className="text-xs text-red-600 dark:text-red-400">{error}</p>}
         </div>
       ) : (
         <button

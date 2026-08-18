@@ -28,23 +28,23 @@ export function HomepageAiSection({ categories }: { categories: Category[] }) {
   }
 
   return (
-    <section className="relative overflow-hidden bg-espresso-950 px-4 py-14 sm:px-6 sm:py-20">
+    <section className="relative overflow-hidden bg-gradient-to-b from-brand-50 to-background px-4 py-14 sm:px-6 sm:py-20 dark:from-espresso-950 dark:to-espresso-950">
       <div
-        className="pointer-events-none absolute inset-0 bg-gradient-to-br from-brand-900/40 via-transparent to-transparent"
+        className="pointer-events-none absolute inset-0 bg-gradient-to-br from-brand-100/60 via-transparent to-transparent dark:from-brand-900/40"
         aria-hidden
       />
       <div className="relative mx-auto max-w-2xl text-center">
-        <h1 className="text-3xl font-bold tracking-tight text-brand-50 sm:text-4xl">{COPY[mode].title}</h1>
-        <p className="mt-3 text-lg text-espresso-200">{COPY[mode].subtitle}</p>
+        <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">{COPY[mode].title}</h1>
+        <p className="mt-3 text-lg text-muted-foreground">{COPY[mode].subtitle}</p>
       </div>
 
       <div className="relative mx-auto mt-6 flex max-w-2xl justify-center">
-        <div className="inline-flex rounded-full border border-white/10 bg-white/5 p-1">
+        <div className="inline-flex rounded-full border border-border bg-surface/80 p-1 shadow-sm">
           <button
             type="button"
             onClick={() => setMode("job")}
             className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
-              mode === "job" ? "bg-white text-espresso-900" : "text-espresso-200 hover:text-white"
+              mode === "job" ? "bg-brand-600 text-white" : "text-muted-foreground hover:text-foreground"
             }`}
           >
             Post a job
@@ -53,7 +53,7 @@ export function HomepageAiSection({ categories }: { categories: Category[] }) {
             type="button"
             onClick={() => setMode("buddy")}
             className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
-              mode === "buddy" ? "bg-white text-espresso-900" : "text-espresso-200 hover:text-white"
+              mode === "buddy" ? "bg-brand-600 text-white" : "text-muted-foreground hover:text-foreground"
             }`}
           >
             Ask AI Buddy
@@ -70,8 +70,8 @@ export function HomepageAiSection({ categories }: { categories: Category[] }) {
       </div>
 
       {mode === "job" && (
-        <p className="relative mt-4 text-center text-sm text-espresso-200">
-          Prefer to look yourself? <Link href="/search" className="font-medium text-brand-300 hover:text-brand-200 hover:underline">Browse providers directly</Link>
+        <p className="relative mt-4 text-center text-sm text-muted-foreground">
+          Prefer to look yourself? <Link href="/search" className="font-medium text-brand-600 hover:text-brand-700 hover:underline dark:text-brand-300 dark:hover:text-brand-200">Browse providers directly</Link>
         </p>
       )}
     </section>
