@@ -61,7 +61,7 @@ interface Category {
   icon: string | null;
 }
 
-export function CategoryFlyerCarousel({ categories }: { categories: Category[] }) {
+export function CategoryFlyerCarousel({ categories, citySlug }: { categories: Category[]; citySlug: string }) {
   const scrollerRef = useRef<HTMLDivElement>(null);
 
   function scrollBy(delta: number) {
@@ -79,7 +79,7 @@ export function CategoryFlyerCarousel({ categories }: { categories: Category[] }
           return (
             <Link
               key={c.id}
-              href={`/${c.slug}-manchester`}
+              href={`/${c.slug}-${citySlug}`}
               className={cn(
                 "relative flex w-64 shrink-0 snap-start flex-col justify-between overflow-hidden rounded-2xl bg-gradient-to-br p-5 text-white shadow-card sm:w-72",
                 GRADIENTS[i % GRADIENTS.length]

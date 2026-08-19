@@ -50,14 +50,14 @@ interface Category {
   icon: string | null;
 }
 
-export function PopularCategories({ categories }: { categories: Category[] }) {
+export function PopularCategories({ categories, citySlug }: { categories: Category[]; citySlug: string }) {
   return (
     <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
       {categories.map((c) => {
         const Icon = (c.icon ? ICONS[c.icon] : undefined) ?? Tag;
         const accent = (c.icon && ACCENTS[c.icon]) ?? "bg-muted text-muted-foreground";
         return (
-          <Link key={c.id} href={`/${c.slug}-manchester`}>
+          <Link key={c.id} href={`/${c.slug}-${citySlug}`}>
             <Card className="bg-gradient-to-br from-surface to-muted/60 p-4 text-center transition-shadow hover:border-brand-300 hover:shadow-accent dark:hover:border-brand-700">
               <div className={cn("mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full", accent)}>
                 <Icon size={22} strokeWidth={2} />

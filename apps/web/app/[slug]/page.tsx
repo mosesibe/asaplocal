@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@asaplocal/db";
 import { ProviderCard } from "@/components/provider-card";
+import { SUPPORTED_CITIES } from "@/lib/supported-cities";
 
 /**
  * Local-SEO landing pages of the form /electricians-manchester,
@@ -24,8 +25,7 @@ async function resolveSlug(slug: string) {
 
 export async function generateStaticParams() {
   const categories = await prisma.category.findMany({ where: { isActive: true } });
-  const cities = ["manchester", "london", "liverpool", "birmingham"];
-  return categories.flatMap((c) => cities.map((city) => ({ slug: `${c.slug}-${city}` })));
+  return categories.flatMap((c) => SUPPORTED_CITIES.map((city) => ({ slug: `${c.slug}-${city.slug}` })));
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
