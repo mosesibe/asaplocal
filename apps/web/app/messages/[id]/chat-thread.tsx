@@ -8,7 +8,7 @@ interface ChatMessage { id: string; body: string; senderId: string; createdAt: s
 export function ChatThread({ conversationId, currentUserId, initialMessages }: { conversationId: string; currentUserId: string; initialMessages: ChatMessage[] }) {
   const [messages, setMessages] = useState(initialMessages);
   const [draft, setDraft] = useState("");
-  const bottomRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!process.env.NEXT_PUBLIC_PUSHER_KEY) return;
@@ -24,7 +24,10 @@ export function ChatThread({ conversationId, currentUserId, initialMessages }: {
     };
   }, [conversationId]);
 
-  useEffect(() => bottomRef.current?.scrollIntoView({ behavior: "smooth" }), [messages]);
+  useEffect(() => {
+    const el = listRef.current;
+    if (el) el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+  }, [messages]);
 
   async function send() {
     if (!draft.trim()) return;
@@ -43,13 +46,12 @@ export function ChatThread({ conversationId, currentUserId, initialMessages }: {
 
   return (
     <div className="flex h-[70dvh] flex-col rounded-2xl border border-border">
-      <div className="flex-1 space-y-3 overflow-y-auto p-4">
+      <div ref={listRef} className="flex-1 space-y-3 overflow-y-auto p-4">
         {messages.map((m) => (
           <div key={m.id} className={`max-w-[75%] rounded-2xl px-4 py-2 text-sm ${m.senderId === currentUserId ? "ml-auto bg-brand-600 text-white" : "bg-muted"}`}>
             {m.body}
           </div>
         ))}
-        <div ref={bottomRef} />
       </div>
       <div className="flex shrink-0 gap-2 border-t border-border p-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)]">
         <Input

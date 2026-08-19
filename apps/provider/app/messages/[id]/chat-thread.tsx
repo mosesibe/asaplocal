@@ -9,7 +9,7 @@ export function ChatThread({ conversationId, currentUserId, initialMessages }: {
   const [messages, setMessages] = useState(initialMessages);
   const [draft, setDraft] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
-  const bottomRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
 
   async function suggestReply() {
     setAiLoading(true);
@@ -32,7 +32,10 @@ export function ChatThread({ conversationId, currentUserId, initialMessages }: {
     return () => { pusher.unsubscribe(`private-conversation-${conversationId}`); pusher.disconnect(); };
   }, [conversationId]);
 
-  useEffect(() => bottomRef.current?.scrollIntoView({ behavior: "smooth" }), [messages]);
+  useEffect(() => {
+    const el = listRef.current;
+    if (el) el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+  }, [messages]);
 
   async function send() {
     if (!draft.trim()) return;
@@ -47,11 +50,10 @@ export function ChatThread({ conversationId, currentUserId, initialMessages }: {
 
   return (
     <div className="flex h-[75dvh] flex-col rounded-2xl border border-border">
-      <div className="flex-1 space-y-3 overflow-y-auto p-4">
+      <div ref={listRef} className="flex-1 space-y-3 overflow-y-auto p-4">
         {messages.map((m) => (
           <div key={m.id} className={`max-w-[75%] rounded-2xl px-4 py-2 text-sm ${m.senderId === currentUserId ? "ml-auto bg-brand-600 text-white" : "bg-muted"}`}>{m.body}</div>
         ))}
-        <div ref={bottomRef} />
       </div>
       <div className="flex shrink-0 flex-col gap-2 border-t border-border p-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] sm:flex-row">
         <Button variant="outline" onClick={suggestReply} disabled={aiLoading} title="AI chat assistant: draft a reply" className="shrink-0">
