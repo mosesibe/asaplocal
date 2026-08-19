@@ -85,7 +85,7 @@ export function ProviderShell({ children, account }: { children: React.ReactNode
           <SignOutButton />
         </div>
       </aside>
-      <div className="flex-1">
+      <div className="min-w-0 flex-1">
         <main className="mx-auto max-w-6xl px-4 py-8 pb-20 sm:px-6 md:pb-8">
           <ProviderTopBar {...account} />
           {children}

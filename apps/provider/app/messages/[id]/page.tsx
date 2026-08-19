@@ -31,22 +31,24 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
   return (
     <div>
       <MobileTopBar backHref="/messages" linkAs={Link} title={customerName} className="-mx-4 mb-4 md:hidden" />
-      <Card className="mb-4 flex items-center gap-3 p-4">
-        <Avatar name={customerName} />
-        <div className="min-w-0 flex-1">
-          <p className="truncate font-semibold">{customerName}</p>
-          {conversation.jobRequest && (
-            <p className="truncate text-sm text-muted-foreground">
+      <Card className="mb-4 min-w-0 space-y-2 p-4">
+        <div className="flex min-w-0 items-center gap-3">
+          <Avatar name={customerName} />
+          <p className="min-w-0 flex-1 truncate font-semibold">{customerName}</p>
+          {leadAccess && (
+            <Link href={`/leads/${lead!.id}`} className="shrink-0 text-sm font-medium text-brand-600 hover:underline dark:text-brand-300">
+              View lead
+            </Link>
+          )}
+        </div>
+        {conversation.jobRequest && (
+          <div className="flex min-w-0 items-center gap-2">
+            <p className="min-w-0 flex-1 truncate text-sm text-muted-foreground">
               {conversation.jobRequest.title} · {conversation.jobRequest.city}
               {conversation.jobRequest.budgetMinPence ? ` · Budget ${formatPence(conversation.jobRequest.budgetMinPence)}–${conversation.jobRequest.budgetMaxPence ? formatPence(conversation.jobRequest.budgetMaxPence) : "?"}` : ""}
             </p>
-          )}
-        </div>
-        {conversation.jobRequest?.category && <Badge variant="outline">{conversation.jobRequest.category.name}</Badge>}
-        {leadAccess && (
-          <Link href={`/leads/${lead!.id}`} className="shrink-0 text-sm font-medium text-brand-600 hover:underline dark:text-brand-300">
-            View lead
-          </Link>
+            {conversation.jobRequest.category && <Badge variant="outline" className="shrink-0">{conversation.jobRequest.category.name}</Badge>}
+          </div>
         )}
       </Card>
       <ChatThread
