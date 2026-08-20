@@ -2,6 +2,7 @@ import { prisma } from "@asaplocal/db";
 import { stripe } from "./stripe";
 import { computeBookingBalance } from "./booking-balance";
 import { notify } from "./notify";
+import { sendEmail, emailTemplates } from "./email";
 
 /**
  * Platform commission on job value, as a percentage. Configurable so the rate
@@ -140,7 +141,7 @@ export async function settleBookingPayout(bookingId: string): Promise<
 > {
   const booking = await prisma.booking.findUnique({
     where: { id: bookingId },
-    include: { business: true, payments: true, variations: true, jobRequest: true },
+    include: { business: { include: { owner: true } }, payments: true, variations: true, jobRequest: true, customer: { include: { profile: true } } },
   });
   if (!booking) return { settled: false, reason: "booking not found" };
   if (booking.settledAt) return { settled: false, reason: "already settled" };
@@ -161,6 +162,11 @@ export async function settleBookingPayout(bookingId: string): Promise<
     },
   });
 
+  const customerName = booking.customer.profile
+    ? `${booking.customer.profile.firstName} ${booking.customer.profile.lastName}`
+    : booking.customer.email;
+  const jobTitle = booking.jobRequest?.title ?? "your job";
+
   const canTransfer = Boolean(booking.business.stripeAccountId) && booking.business.payoutsEnabled;
   if (!canTransfer) {
     await notify(
@@ -170,6 +176,21 @@ export async function settleBookingPayout(bookingId: string): Promise<
       "Your job is paid in full. Finish bank setup to receive payouts automatically.",
       "/verification/banking"
     );
+    await sendEmail({
+      to: booking.business.owner.email,
+      subject: `Earnings ready — ${jobTitle}`,
+      ...emailTemplates.payoutStatementProvider({
+        businessName: booking.business.name,
+        jobTitle,
+        customerName,
+        completedAt: booking.completedAt,
+        collectedPence: settlement.collectedPence,
+        platformFeePence: settlement.platformFeePence,
+        netPence: settlement.providerNetPence,
+        transferred: false,
+        link: `${process.env.NEXT_PUBLIC_PROVIDER_URL}/verification/banking`,
+      }),
+    }).catch(() => {});
     return { settled: true, method: "PENDING_MANUAL", settlement };
   }
 
@@ -197,9 +218,25 @@ export async function settleBookingPayout(bookingId: string): Promise<
     booking.business.ownerId,
     "PAYMENT_RECEIVED",
     "You've been paid",
-    `${booking.jobRequest?.title ?? "Your job"} — payout on its way to your bank.`,
+    `${jobTitle} — payout on its way to your bank.`,
     `/calendar/${bookingId}`
   );
+
+  await sendEmail({
+    to: booking.business.owner.email,
+    subject: `Payout sent — ${jobTitle}`,
+    ...emailTemplates.payoutStatementProvider({
+      businessName: booking.business.name,
+      jobTitle,
+      customerName,
+      completedAt: booking.completedAt,
+      collectedPence: settlement.collectedPence,
+      platformFeePence: settlement.platformFeePence,
+      netPence: settlement.providerNetPence,
+      transferred: true,
+      link: `${process.env.NEXT_PUBLIC_PROVIDER_URL}/calendar/${bookingId}`,
+    }),
+  }).catch(() => {});
 
   return { settled: true, method: "STRIPE_CONNECT", settlement };
 }

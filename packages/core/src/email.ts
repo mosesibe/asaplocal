@@ -201,6 +201,91 @@ export const emailTemplates = {
       cta: { label: "View booking", url: opts.link },
     }),
 
+  /** Itemised invoice sent to the customer once a job is paid in full. */
+  invoicePaidCustomer: (opts: {
+    invoiceRef: string;
+    businessName: string;
+    jobTitle: string;
+    basePence: number;
+    extras: { description: string; amountPence: number }[];
+    payments: { label: string; amountPence: number; paidAt: Date }[];
+    totalPence: number;
+    link: string;
+  }): EmailBody =>
+    docket({
+      eyebrow: `Invoice ${opts.invoiceRef}`,
+      title: "Your job is paid in full",
+      blocks: [
+        {
+          kind: "paragraph",
+          text: `Thanks — here's your receipt for ${opts.jobTitle} with ${opts.businessName}. Nothing further is owed.`,
+        },
+        {
+          kind: "data",
+          rows: [
+            ["Agreed price", formatPence(opts.basePence)],
+            ...opts.extras.map((e): [string, string] => [`Extra: ${e.description}`, `+${formatPence(e.amountPence)}`]),
+            ["Total", formatPence(opts.totalPence)],
+          ],
+        },
+        {
+          kind: "data",
+          rows: opts.payments.map((p): [string, string] => [
+            `${p.label} · ${p.paidAt.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}`,
+            formatPence(p.amountPence),
+          ]),
+        },
+      ],
+      cta: { label: "View booking", url: opts.link },
+      footnote: `Invoice ${opts.invoiceRef} · Keep this for your records.`,
+    }),
+
+  /** Payout statement — what the provider earned on a job and what reached them. */
+  payoutStatementProvider: (opts: {
+    businessName: string;
+    jobTitle: string;
+    customerName: string;
+    completedAt?: Date | null;
+    collectedPence: number;
+    platformFeePence: number;
+    netPence: number;
+    transferred: boolean;
+    link: string;
+  }): EmailBody =>
+    docket({
+      eyebrow: opts.transferred ? "Payout sent" : "Payout pending",
+      title: opts.transferred ? "You've been paid" : "Your earnings are ready",
+      blocks: [
+        {
+          kind: "paragraph",
+          text: opts.transferred
+            ? `Hi ${opts.businessName} — this job is complete and paid in full, and your share is on its way to your bank.`
+            : `Hi ${opts.businessName} — this job is complete and paid in full. Connect your bank account and we'll send your earnings straight away.`,
+        },
+        {
+          kind: "highlight",
+          title: opts.jobTitle,
+          meta: [opts.customerName, opts.completedAt ? `completed ${opts.completedAt.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}` : null]
+            .filter(Boolean)
+            .join(" · "),
+        },
+        {
+          kind: "data",
+          rows: [
+            ["Customer paid", formatPence(opts.collectedPence)],
+            ["Platform commission", `−${formatPence(opts.platformFeePence)}`],
+            [opts.transferred ? "Paid to you" : "Owed to you", formatPence(opts.netPence)],
+          ],
+        },
+      ],
+      cta: opts.transferred
+        ? { label: "View job", url: opts.link }
+        : { label: "Connect your bank", url: opts.link },
+      footnote: opts.transferred
+        ? "Stripe pays this into your bank on your usual payout schedule."
+        : "Your earnings are held safely until your bank details are set up.",
+    }),
+
   /** Provider proposed extra work mid-job — the customer must accept before it's billable. */
   variationProposedCustomer: (opts: {
     businessName: string;

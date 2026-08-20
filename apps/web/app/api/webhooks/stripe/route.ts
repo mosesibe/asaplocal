@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@asaplocal/core";
 import { prisma } from "@asaplocal/db";
-import { notify, emailTemplates, sendEmail, completeReferralOnFirstPayment, buildJobTimeline, settleBookingPayout } from "@asaplocal/core";
+import { notify, emailTemplates, sendEmail, completeReferralOnFirstPayment, buildJobTimeline, settleBookingPayout, computeBookingBalance, invoiceNumber } from "@asaplocal/core";
 import type Stripe from "stripe";
 
 /**
@@ -32,7 +32,13 @@ export async function POST(req: NextRequest) {
         const booking = isBalance
           ? await prisma.booking.findUniqueOrThrow({
               where: { id: bookingId },
-              include: { customer: true, business: { include: { owner: true } }, jobRequest: true },
+              include: {
+                customer: true,
+                business: { include: { owner: true } },
+                jobRequest: true,
+                variations: true,
+                payments: { orderBy: { createdAt: "asc" } },
+              },
             })
           : await prisma.booking.update({
               where: { id: bookingId },
@@ -71,6 +77,35 @@ export async function POST(req: NextRequest) {
             `/calendar/${booking.id}`
           );
           await notify(booking.customerId, "PAYMENT_RECEIVED", "Payment complete", `${jobTitle} is now paid in full.`, `/bookings/${booking.id}`);
+
+          // Itemised invoice/receipt — re-read so the payment just created by
+          // this handler is included in the breakdown.
+          const paid = await prisma.booking.findUniqueOrThrow({
+            where: { id: booking.id },
+            include: { variations: true, payments: { orderBy: { createdAt: "asc" } } },
+          });
+          const invoiceBalance = computeBookingBalance(paid);
+          const succeeded = paid.payments.filter((p) => p.status === "SUCCEEDED");
+          await sendEmail({
+            to: booking.customer.email,
+            subject: `Invoice — ${jobTitle} paid in full`,
+            ...emailTemplates.invoicePaidCustomer({
+              invoiceRef: invoiceNumber(succeeded.at(-1)?.id ?? booking.id),
+              businessName: booking.business.name,
+              jobTitle,
+              basePence: invoiceBalance.basePence,
+              extras: paid.variations
+                .filter((v) => v.status === "ACCEPTED")
+                .map((v) => ({ description: v.description, amountPence: v.amountPence })),
+              payments: succeeded.map((p) => ({
+                label: p.type === "BOOKING_DEPOSIT" ? "Deposit paid" : p.type === "BOOKING_BALANCE" ? "Balance paid" : "Payment",
+                amountPence: p.amountPence,
+                paidAt: p.createdAt,
+              })),
+              totalPence: invoiceBalance.totalPence,
+              link: bookingLink,
+            }),
+          }).catch(() => {});
 
           // Job is signed off and fully paid — release the provider's share.
           // Self-gating and idempotent, so a retry can't double-transfer.

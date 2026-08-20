@@ -1,3 +1,3 @@
-export function invoiceNumber(paymentId: string) {
-  return `INV-${paymentId.replace(/-/g, "").slice(0, 8).toUpperCase()}`;
-}
+// Single implementation lives in @asaplocal/core so emailed invoices and the
+// admin invoices page can never show different references for one payment.
+export { invoiceNumber } from "@asaplocal/core";
