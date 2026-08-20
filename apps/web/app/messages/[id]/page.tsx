@@ -25,10 +25,13 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
   const recipientName = other?.user.business?.name ?? other?.user.profile?.firstName ?? "User";
 
   return (
-    <div className="md:mx-auto md:max-w-2xl md:px-6 md:py-6">
-      <MobileTopBar backHref="/messages" linkAs={Link} title={recipientName} className="md:hidden" />
-      <div className="px-4 py-4 md:p-0">
-        <Card className="mb-4 min-w-0 space-y-2 p-4">
+    // Pin the composer: the shell is exactly the space left by the chrome
+    // (4rem header + main's 7rem pb-28 on mobile; 4rem header on md+), so the
+    // page itself never scrolls and only the message list does.
+    <div className="flex h-[calc(100dvh-11rem)] flex-col overflow-hidden md:mx-auto md:h-[calc(100dvh-4rem)] md:max-w-2xl md:px-6 md:py-6">
+      <MobileTopBar backHref="/messages" linkAs={Link} title={recipientName} className="shrink-0 md:hidden" />
+      <div className="flex min-h-0 flex-1 flex-col px-4 py-4 md:p-0">
+        <Card className="mb-4 min-w-0 shrink-0 space-y-2 p-4">
           <div className="flex min-w-0 items-center gap-3">
             <Avatar name={recipientName} />
             <p className="min-w-0 flex-1 truncate font-semibold">{recipientName}</p>

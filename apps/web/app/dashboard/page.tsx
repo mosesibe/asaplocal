@@ -1,14 +1,14 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { HelpCircle, FileText, Shield, Receipt } from "lucide-react";
+import { HelpCircle, FileText, Shield } from "lucide-react";
 import { auth } from "@asaplocal/auth";
 import { prisma } from "@asaplocal/db";
-import { formatPence } from "@asaplocal/ui";
-import { getCustomerAccountStats, getSignInMethods } from "@asaplocal/core";
+import { getCustomerAccountStats, getSignInMethods, invoiceNumber } from "@asaplocal/core";
 import { InstallAppBanner } from "@/components/install-app-banner";
 import { SignOutButton } from "@/components/sign-out-button";
 import { ProfileCard } from "@/components/account/profile-card";
 import { SectionCard, SectionRow } from "@/components/account/section-row";
+import { InvoicesSection } from "@/components/account/invoices-section";
 import { VerifyPhoneRow } from "@/components/account/verify-phone";
 import { VerifyEmailRow } from "@/components/account/verify-email";
 import { PreferencesRows } from "@/components/account/preferences";
@@ -72,30 +72,19 @@ export default async function CustomerDashboard() {
           <VerifyEmailRow email={user.email} verified={Boolean(user.emailVerified)} />
           <VerifyPhoneRow phone={user.phone} verified={Boolean(user.phoneVerifiedAt)} />
           <PreferencesRows />
-          <SectionRow
-            icon={Receipt}
-            label="Invoices and receipts"
-            description={payments.length > 0 ? `${payments.length} payment${payments.length === 1 ? "" : "s"}` : "No payments yet"}
+          <InvoicesSection
+            invoices={payments.map((p) => ({
+              id: p.id,
+              bookingId: p.bookingId,
+              businessName: p.business?.name ?? null,
+              type: p.type,
+              amountPence: p.amountPence,
+              createdAt: p.createdAt.toISOString(),
+              invoiceRef: invoiceNumber(p.id),
+            }))}
           />
           <ReferralCard />
         </SectionCard>
-        {payments.length > 0 && (
-          <div className="mt-2 divide-y divide-border overflow-hidden rounded-2xl border border-border bg-surface">
-            {payments.map((p) => (
-              <Link
-                key={p.id}
-                href={p.bookingId ? `/bookings/${p.bookingId}` : "#"}
-                className="flex items-center justify-between px-4 py-3 text-sm hover:bg-muted"
-              >
-                <div>
-                  <p className="font-medium">{p.business?.name ?? p.type.replace("_", " ")}</p>
-                  <p className="text-xs text-muted-foreground">{p.createdAt.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}</p>
-                </div>
-                <span className="font-medium">{formatPence(p.amountPence)}</span>
-              </Link>
-            ))}
-          </div>
-        )}
       </div>
 
       {/* Section 3 — addresses */}
