@@ -28,8 +28,8 @@ export async function POST(req: NextRequest) {
       customer_email: session.user.email ?? undefined,
       line_items: [{ price: priceId, quantity: 1 }],
       metadata: { businessId: business.id, paymentType: "SUBSCRIPTION", plan },
-      success_url: `${process.env.NEXT_PUBLIC_PROVIDER_URL}/billing?upgraded=1`,
-      cancel_url: `${process.env.NEXT_PUBLIC_PROVIDER_URL}/billing?cancelled=1`,
+      success_url: `${process.env.NEXT_PUBLIC_PROVIDER_URL}/earnings/subscription?upgraded=1`,
+      cancel_url: `${process.env.NEXT_PUBLIC_PROVIDER_URL}/earnings/subscription?cancelled=1`,
     });
     return NextResponse.json({ url: checkoutSession.url });
   }
@@ -40,8 +40,8 @@ export async function POST(req: NextRequest) {
     customer_email: session.user.email ?? undefined,
     line_items: [{ price: pack.priceId, quantity: 1 }],
     metadata: { businessId: business.id, paymentType: "LEAD_CREDIT_TOPUP", creditsQty: String(pack.qty) },
-    success_url: `${process.env.NEXT_PUBLIC_PROVIDER_URL}/billing?topup=1`,
-    cancel_url: `${process.env.NEXT_PUBLIC_PROVIDER_URL}/billing?cancelled=1`,
+    success_url: `${process.env.NEXT_PUBLIC_PROVIDER_URL}/earnings/credits?topup=1`,
+    cancel_url: `${process.env.NEXT_PUBLIC_PROVIDER_URL}/earnings/subscription?cancelled=1`,
   });
   return NextResponse.json({ url: checkoutSession.url });
 }

@@ -63,8 +63,8 @@ export default async function ProviderDashboard() {
         <DashboardStat label="Lead conversion" value={`${Math.round(analytics.conversionRate * 100)}%`} />
         <DashboardStat label="Avg. rating" value={`${Number(business.avgRating).toFixed(1)} ★`} sub={`${business.reviewCount} reviews`} />
         <DashboardStat label="Profile views" value={business.profileViews.toString()} />
-        <DashboardStat label="Plan" value={business.subscription?.plan ?? "FREE"} sub={<Link href="/billing" className="text-brand-700 hover:underline">Manage →</Link>} />
-        <DashboardStat label="Lead credits" value={(business.leadCreditWallet?.balance ?? 0).toString()} sub={<Link href="/billing" className="text-brand-700 hover:underline">Top up →</Link>} />
+        <DashboardStat label="Plan" value={business.subscription?.plan ?? "FREE"} sub={<Link href="/earnings/subscription" className="text-brand-700 hover:underline">Manage →</Link>} />
+        <DashboardStat label="Lead credits" value={(business.leadCreditWallet?.balance ?? 0).toString()} sub={<Link href="/earnings/credits" className="text-brand-700 hover:underline">Top up →</Link>} />
       </div>
 
       <div className="mt-10">

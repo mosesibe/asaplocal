@@ -5,12 +5,16 @@ import { usePathname } from "next/navigation";
 import { Menu } from "lucide-react";
 import { AccountDrawer } from "@/components/account-drawer";
 import { NotificationBell } from "@/components/notification-bell";
-import { PRIMARY_NAV, SECONDARY_NAV } from "@/lib/nav";
+import { ALL_NAV_ITEMS } from "@/lib/nav";
 
-const NAV = [...PRIMARY_NAV, ...SECONDARY_NAV];
+const NAV = ALL_NAV_ITEMS;
 
 function pageTitle(pathname: string): string {
-  const match = NAV.find(({ href }) => pathname === href || pathname.startsWith(`${href}/`));
+  // Longest match wins — "/earnings/invoices" must not resolve to the parent
+  // "/earnings" just because it appears first in the list.
+  const match = NAV.filter(({ href }) => pathname === href || pathname.startsWith(`${href}/`)).sort(
+    (a, b) => b.href.length - a.href.length
+  )[0];
   if (match) return match.label;
   const segment = pathname.split("/").filter(Boolean)[0] ?? "";
   if (!segment) return "AsapLocal";

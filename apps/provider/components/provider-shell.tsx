@@ -65,19 +65,44 @@ export function ProviderShell({ children, account }: { children: React.ReactNode
           </div>
         </div>
         <nav className="space-y-1">
-          {NAV.map(({ href, label, icon: Icon }) => {
+          {NAV.map(({ href, label, icon: Icon, children }) => {
             const active = isActive(pathname, href);
+            // A group expands whenever the user is anywhere inside it, so the
+            // sub-pages stay reachable without an extra click.
+            const inSection = children ? children.some((c) => isActive(pathname, c.href)) || active : false;
             return (
-              <Link
-                key={href}
-                href={href}
-                className={cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-                  active ? "bg-muted text-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground"
+              <div key={href}>
+                <Link
+                  href={href}
+                  className={cn(
+                    "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                    active || inSection ? "bg-muted text-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                  )}
+                >
+                  <Icon size={18} /> {label}
+                </Link>
+                {children && inSection && (
+                  <div className="ml-4 mt-1 space-y-0.5 border-l border-border pl-3">
+                    {children.map((c) => {
+                      // Exact match for the group's own index route, otherwise
+                      // "/earnings" would highlight on every child page.
+                      const childActive = c.href === href ? pathname === c.href : isActive(pathname, c.href);
+                      return (
+                        <Link
+                          key={c.href}
+                          href={c.href}
+                          className={cn(
+                            "flex items-center gap-2.5 rounded-lg px-3 py-1.5 text-sm transition-colors",
+                            childActive ? "font-medium text-foreground" : "text-muted-foreground hover:text-foreground"
+                          )}
+                        >
+                          <c.icon size={15} /> {c.label}
+                        </Link>
+                      );
+                    })}
+                  </div>
                 )}
-              >
-                <Icon size={18} /> {label}
-              </Link>
+              </div>
             );
           })}
         </nav>
