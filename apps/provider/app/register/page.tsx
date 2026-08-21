@@ -13,6 +13,8 @@ export default function RegisterPage() {
   const [phase, setPhase] = useState<Phase>("form");
   const [form, setForm] = useState({ firstName: "", lastName: "", email: "", phone: "", password: "" });
   const [termsAccepted, setTermsAccepted] = useState(false);
+  // Separate and unticked — must not be bundled with the terms checkbox.
+  const [marketingEmail, setMarketingEmail] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -51,12 +53,12 @@ export default function RegisterPage() {
       setError("You must agree to the Terms & Privacy Policy");
       return;
     }
-    submit({ ...form, termsAccepted }, form.password);
+    submit({ ...form, termsAccepted, marketingEmail }, form.password);
   }
 
   function onSubmitConfirm(e: React.FormEvent) {
     e.preventDefault();
-    submit({ ...form, confirmPassword, termsAccepted }, confirmPassword);
+    submit({ ...form, confirmPassword, termsAccepted, marketingEmail }, confirmPassword);
   }
 
   if (phase === "confirm-existing") {
@@ -116,6 +118,15 @@ export default function RegisterPage() {
                 Privacy Policy
               </a>
             </span>
+          </label>
+          <label className="flex items-start gap-2 text-sm text-muted-foreground">
+            <input
+              type="checkbox"
+              checked={marketingEmail}
+              onChange={(e) => setMarketingEmail(e.target.checked)}
+              className="mt-0.5"
+            />
+            <span>Email me product news, lead-generation tips and offers. Optional — job and payout emails are unaffected.</span>
           </label>
           {error && <p className="text-sm text-red-600">{error}</p>}
           <Button type="submit" className="w-full" disabled={loading}>{loading ? "Creating account…" : "Sign up as a provider"}</Button>

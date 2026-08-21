@@ -283,33 +283,43 @@ model AccountDeletionRequest {
 // ── Core identity ───────────────────────────────────────────────────────
 
 model User {
-  id              String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  email           String     @unique
-  emailVerified   DateTime?
-  name            String? // populated by OAuth providers (e.g. Google); not used for display — see Profile.firstName/lastName
-  phone           String?    @unique
-  passwordHash    String? // null when using OAuth-only
-  role            Role       @default(CUSTOMER)
-  status          UserStatus @default(PENDING_VERIFICATION)
-  image           String?
-  phoneVerifiedAt DateTime?
+  id                     String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email                  String     @unique
+  emailVerified          DateTime?
+  name                   String? // populated by OAuth providers (e.g. Google); not used for display — see Profile.firstName/lastName
+  phone                  String?    @unique
+  passwordHash           String? // null when using OAuth-only
+  role                   Role       @default(CUSTOMER)
+  status                 UserStatus @default(PENDING_VERIFICATION)
+  image                  String?
+  phoneVerifiedAt        DateTime?
   // Set the moment an account starts (or gains) provider access — at fresh
   // provider signup, or when an existing customer confirms their password to
   // add a business. Independent of `role` (which stays CUSTOMER for a merged
   // account, see Business relation below) and of `business` (not created
   // until onboarding completes) — this is what lets the provider app's
   // middleware admit the user before either of those is otherwise true.
-  providerSince   DateTime?
+  providerSince          DateTime?
   // Set at registration when the required Terms & Privacy Policy checkbox
   // is accepted. termsVersion records which version of the terms they saw.
-  termsAcceptedAt DateTime?
-  termsVersion    String?
-  referralCode    String?    @unique
-  createdAt       DateTime   @default(now())
-  updatedAt       DateTime   @updatedAt
-  lastLoginAt     DateTime?
-  suspendedAt     DateTime?
-  suspendedReason String?
+  termsAcceptedAt        DateTime?
+  termsVersion           String?
+  // Marketing consent is deliberately separate from termsAcceptedAt: bundling
+  // the two would make the marketing consent invalid (it must be freely given
+  // and specific, not a condition of signing up). The timestamp + source
+  // record *when and where* it was given, which a bare boolean can't evidence.
+  marketingEmail         Boolean    @default(false)
+  marketingSms           Boolean    @default(false)
+  marketingConsentAt     DateTime?
+  marketingConsentSource String?
+  // Lets an unsubscribe link work without a login, and be revoked by rotating.
+  unsubscribeToken       String?    @unique
+  referralCode           String?    @unique
+  createdAt              DateTime   @default(now())
+  updatedAt              DateTime   @updatedAt
+  lastLoginAt            DateTime?
+  suspendedAt            DateTime?
+  suspendedReason        String?
 
   profile                  Profile?
   business                 Business? // present once onboarding completes; role stays CUSTOMER for accounts that added a business on top of an existing customer account — see providerSince
@@ -1111,12 +1121,12 @@ model Booking {
   createdAt                 DateTime      @default(now())
   updatedAt                 DateTime      @updatedAt
 
-  customer        User            @relation("CustomerBookings", fields: [customerId], references: [id], onDelete: Cascade)
-  business        Business        @relation("ProviderBookings", fields: [businessId], references: [id], onDelete: Cascade)
-  service         Service?        @relation(fields: [serviceId], references: [id], onDelete: SetNull)
-  jobRequest      JobRequest?     @relation(fields: [jobRequestId], references: [id], onDelete: SetNull)
-  quote           Quote?          @relation(fields: [quoteId], references: [id], onDelete: SetNull)
-  assignedStaff   StaffMember?    @relation("AssignedStaff", fields: [assignedStaffId], references: [id], onDelete: SetNull)
+  customer        User               @relation("CustomerBookings", fields: [customerId], references: [id], onDelete: Cascade)
+  business        Business           @relation("ProviderBookings", fields: [businessId], references: [id], onDelete: Cascade)
+  service         Service?           @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+  jobRequest      JobRequest?        @relation(fields: [jobRequestId], references: [id], onDelete: SetNull)
+  quote           Quote?             @relation(fields: [quoteId], references: [id], onDelete: SetNull)
+  assignedStaff   StaffMember?       @relation("AssignedStaff", fields: [assignedStaffId], references: [id], onDelete: SetNull)
   payments        Payment[]
   review          Review?
   conversation    Conversation?

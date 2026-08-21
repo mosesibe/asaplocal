@@ -28,6 +28,8 @@ interface AccountSummary {
   isEmailVerified: boolean;
   isPhoneVerified: boolean;
   canHaveStaff: boolean;
+  marketingEmail: boolean;
+  marketingSms: boolean;
 }
 
 export function ProviderShell({ children, account }: { children: React.ReactNode; account: AccountSummary }) {

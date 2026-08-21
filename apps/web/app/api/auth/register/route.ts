@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
 import { prisma } from "@asaplocal/db";
-import { checkRateLimit, createAndSendVerificationEmail, recordReferral } from "@asaplocal/core";
+import { checkRateLimit, createAndSendVerificationEmail, recordReferral, TERMS_VERSION } from "@asaplocal/core";
 
 const schema = z.object({
   email: z.string().email(),
@@ -14,7 +14,14 @@ const schema = z.object({
     .trim()
     .regex(/^\+?[0-9\s()-]{7,20}$/, "Enter a valid phone number"),
   ref: z.string().nullish(),
+  // Required — mirrors the provider app, which already gated on this. The
+  // customer app collected no consent at all and never wrote termsAcceptedAt,
+  // despite the schema documenting it as set at registration.
+  termsAccepted: z.literal(true, { message: "You must agree to the Terms & Privacy Policy" }),
+  // Optional and separate: marketing consent must not be a condition of signup.
+  marketingEmail: z.boolean().default(false),
 });
+
 
 export async function POST(req: NextRequest) {
   const ip = req.headers.get("x-forwarded-for") ?? "unknown";
@@ -38,6 +45,12 @@ export async function POST(req: NextRequest) {
       passwordHash,
       role: "CUSTOMER",
       status: "PENDING_VERIFICATION",
+      termsAcceptedAt: new Date(),
+      termsVersion: TERMS_VERSION,
+      marketingEmail: parsed.data.marketingEmail,
+      ...(parsed.data.marketingEmail
+        ? { marketingConsentAt: new Date(), marketingConsentSource: "registration" }
+        : {}),
       profile: { create: { firstName: parsed.data.firstName, lastName: parsed.data.lastName } },
     },
   });

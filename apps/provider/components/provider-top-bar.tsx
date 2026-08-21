@@ -35,6 +35,8 @@ interface ProviderTopBarProps {
   isEmailVerified: boolean;
   isPhoneVerified: boolean;
   canHaveStaff: boolean;
+  marketingEmail: boolean;
+  marketingSms: boolean;
 }
 
 export function ProviderTopBar({ canHaveStaff, userId, ...props }: ProviderTopBarProps) {

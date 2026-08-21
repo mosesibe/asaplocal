@@ -26,7 +26,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     const [profile, business, user] = await Promise.all([
       prisma.profile.findUnique({ where: { userId: session.user.id }, select: { firstName: true, lastName: true, avatarUrl: true, city: true } }),
       prisma.business.findUnique({ where: { ownerId: session.user.id }, select: { name: true, city: true, verificationStatus: true, trustTier: true, businessType: true } }),
-      prisma.user.findUnique({ where: { id: session.user.id }, select: { phone: true } }),
+      prisma.user.findUnique({ where: { id: session.user.id }, select: { phone: true, marketingEmail: true, marketingSms: true } }),
     ]);
     account = {
       userId: session.user.id,
@@ -42,6 +42,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       isEmailVerified: session.user.isEmailVerified,
       isPhoneVerified: session.user.isPhoneVerified,
       canHaveStaff: canHaveStaff(business?.businessType),
+      marketingEmail: user?.marketingEmail ?? false,
+      marketingSms: user?.marketingSms ?? false,
     };
   }
 

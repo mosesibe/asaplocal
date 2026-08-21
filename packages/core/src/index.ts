@@ -14,6 +14,7 @@ export * from "./notify";
 export * from "./job-timeline";
 export * from "./booking-balance";
 export * from "./invoice";
+export * from "./marketing";
 export * from "./payouts";
 export * from "./lead-marketplace";
 export * from "./ai";

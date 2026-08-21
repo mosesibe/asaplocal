@@ -2,11 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
 import { prisma } from "@asaplocal/db";
-import { checkRateLimit, createAndSendVerificationEmail, sendPhoneVerificationCode, recordReferral } from "@asaplocal/core";
+import { checkRateLimit, createAndSendVerificationEmail, sendPhoneVerificationCode, recordReferral, TERMS_VERSION } from "@asaplocal/core";
 
 // Bumping this string re-prompts every provider to accept terms again next
 // time they hit a flow that checks termsVersion (none does yet — reserved).
-const TERMS_VERSION = "2026-08-04";
 
 const schema = z.object({
   email: z.string().email(),
@@ -18,6 +17,7 @@ const schema = z.object({
     .trim()
     .regex(/^\+?[0-9\s()-]{7,20}$/, "Enter a valid phone number"),
   termsAccepted: z.literal(true, { message: "You must agree to the Terms & Privacy Policy" }),
+  marketingEmail: z.boolean().default(false),
   // Only sent on the second submission, once we've told the client this
   // email already belongs to a customer account — proves they own it
   // instead of silently taking over an existing account.
@@ -98,6 +98,10 @@ export async function POST(req: NextRequest) {
       providerSince: new Date(),
       termsAcceptedAt: new Date(),
       termsVersion: TERMS_VERSION,
+      marketingEmail: parsed.data.marketingEmail,
+      ...(parsed.data.marketingEmail
+        ? { marketingConsentAt: new Date(), marketingConsentSource: "registration" }
+        : {}),
       profile: { create: { firstName: parsed.data.firstName, lastName: parsed.data.lastName } },
     },
   });

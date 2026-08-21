@@ -8,6 +8,7 @@ import { ACCOUNT_DRAWER_SECTIONS, DrawerPanelId } from "@/lib/nav";
 import { VerificationStatusBadge } from "@/lib/verification-badge";
 import { SignOutButton } from "./sign-out-button";
 import { AccountSettingsPanel } from "./account-settings-panel";
+import { MarketingPreferences } from "./marketing-preferences";
 
 interface AccountDrawerProps {
   open: boolean;
@@ -24,6 +25,8 @@ interface AccountDrawerProps {
   isEmailVerified: boolean;
   isPhoneVerified: boolean;
   canHaveStaff: boolean;
+  marketingEmail: boolean;
+  marketingSms: boolean;
 }
 
 const PANEL_TITLES: Record<DrawerPanelId, string> = {
@@ -54,6 +57,8 @@ export function AccountDrawer({
   isEmailVerified,
   isPhoneVerified,
   canHaveStaff,
+  marketingEmail,
+  marketingSms,
 }: AccountDrawerProps) {
   const [panel, setPanel] = useState<DrawerPanelId | null>(null);
   const drawerSections = ACCOUNT_DRAWER_SECTIONS.map((section) => ({
@@ -179,7 +184,7 @@ export function AccountDrawer({
 
         {panel === "preferences" && (
           <div className="flex-1 overflow-y-auto">
-            <p className="text-sm text-muted-foreground">Preferences are coming soon.</p>
+            <MarketingPreferences initialEmail={marketingEmail} initialSms={marketingSms} />
           </div>
         )}
       </SheetContent>

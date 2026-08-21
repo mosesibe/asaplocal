@@ -12,6 +12,7 @@ import { InvoicesSection } from "@/components/account/invoices-section";
 import { VerifyPhoneRow } from "@/components/account/verify-phone";
 import { VerifyEmailRow } from "@/components/account/verify-email";
 import { PreferencesRows } from "@/components/account/preferences";
+import { MarketingRows } from "@/components/account/marketing-rows";
 import { ReferralCard } from "@/components/account/referral-card";
 import { AddressesSection } from "@/components/account/addresses-section";
 import { SecuritySection } from "@/components/account/security-section";
@@ -72,6 +73,7 @@ export default async function CustomerDashboard() {
           <VerifyEmailRow email={user.email} verified={Boolean(user.emailVerified)} />
           <VerifyPhoneRow phone={user.phone} verified={Boolean(user.phoneVerifiedAt)} />
           <PreferencesRows />
+          <MarketingRows initialEmail={user.marketingEmail} initialSms={user.marketingSms} />
           <InvoicesSection
             invoices={payments.map((p) => ({
               id: p.id,
