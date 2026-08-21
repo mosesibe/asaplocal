@@ -29,9 +29,13 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
   const leadAccess = lead && business ? await prisma.leadAccess.findUnique({ where: { leadId_businessId: { leadId: lead.id, businessId: business.id } } }) : null;
 
   return (
-    <div>
-      <MobileTopBar backHref="/messages" linkAs={Link} title={customerName} className="-mx-4 mb-4 md:hidden" />
-      <Card className="mb-4 min-w-0 space-y-2 p-4">
+    // Sized to the space ProviderShell's <main> leaves: mobile is pt-8 (2rem)
+    // + ProviderTopBar (4rem, its 40px row plus mb-6) + pb-20 (5rem) = 11rem;
+    // desktop is pt-8 + pb-8 = 4rem, with both top bars hidden. The page then
+    // never scrolls, so the composer stays put and only the messages move.
+    <div className="flex h-[calc(100dvh-11rem)] flex-col overflow-hidden md:h-[calc(100dvh-4rem)]">
+      <MobileTopBar backHref="/messages" linkAs={Link} title={customerName} className="-mx-4 mb-4 shrink-0 md:hidden" />
+      <Card className="mb-4 min-w-0 shrink-0 space-y-2 p-4">
         <div className="flex min-w-0 items-center gap-3">
           <Avatar name={customerName} />
           <p className="min-w-0 flex-1 truncate font-semibold">{customerName}</p>
