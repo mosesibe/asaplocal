@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+  <style>
+    /* Tokens are the PROVIDER app's, not the customer app's: apps/provider/app/globals.css
+       runs a cool slate scale (--background 222 47% 7%), where apps/web runs warm espresso.
+       Brand terracotta is shared via packages/ui/tailwind.preset.js. */
+    :root {
+      --bg: hsl(222 47% 7%);
+      --surface: hsl(222 40% 10%);
+      --border: hsl(217 33% 20%);
+      --fg: hsl(210 20% 98%);
+      --muted-fg: hsl(215 20% 65%);
+      --brand-500: #c15f2a;
+      --brand-300: #e6975d;
+    }
+    body { margin: 0; font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
+    a { color: var(--brand-300); } a:hover { color: #f0bd91; }
+
+    .stage {
+      position: relative; width: 390px; height: 844px; overflow: hidden;
+      background: var(--bg);
+    }
+    .inner {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      animation: handoff 5s cubic-bezier(.4,0,.2,1) infinite;
+    }
+    /* Opacity 0 at BOTH ends so the loop seam crossfades instead of cutting.
+       Scale lives here, not on .stage, so the frame clips it. */
+    @keyframes handoff {
+      0%   { opacity: 0; transform: scale(1); }
+      4%   { opacity: 1; transform: scale(1); }
+      92%  { opacity: 1; transform: scale(1); }
+      100% { opacity: 0; transform: scale(1.04); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      * { animation: none !important; }
+      .promise, .card { opacity: 0 !important; }
+    }
+
+    .glow {
+      position: absolute; top: 50%; left: 50%; width: 460px; height: 460px;
+      transform: translate(-50%,-50%);
+      background: radial-gradient(circle, rgba(193,95,42,.22), rgba(193,95,42,0) 68%);
+      animation: bloom 5s ease-in-out infinite;
+    }
+    @keyframes bloom {
+      0%   { opacity: 0; transform: translate(-50%,-50%) scale(.75); }
+      14%  { opacity: .65; transform: translate(-50%,-50%) scale(1); }
+      56%  { opacity: .5; }
+      70%  { opacity: 1; transform: translate(-50%,-50%) scale(1.08); }
+      100% { opacity: 1; transform: translate(-50%,-50%) scale(1.08); }
+    }
+
+    /* Explicit tops throughout: auto-centred absolutes would share one box and
+       the crossfade would read as a superimposition, not a hand-off. */
+    .promise {
+      position: absolute; top: 132px; left: 0; right: 0; padding: 0 32px; text-align: center;
+      animation: promiseOut 5s cubic-bezier(.4,0,.2,1) infinite;
+    }
+    @keyframes promiseOut {
+      0%, 4%    { opacity: 0; transform: translateY(14px); }
+      12%, 54%  { opacity: 1; transform: translateY(0); }
+      60%, 100% { opacity: 0; transform: translateY(-18px); }
+    }
+    .promise h1 {
+      margin: 0; font-size: 27px; line-height: 1.24; font-weight: 600; letter-spacing: -.025em;
+      color: var(--fg); text-wrap: balance;
+    }
+    .promise p { margin: 10px 0 0; font-size: 15px; color: var(--muted-fg); text-wrap: balance; }
+
+    /* Lead cards, matching the marketplace card in apps/provider/app/leads/page.tsx:
+       rounded-2xl / border-border / bg-surface / shadow-card / p-5, outline badge,
+       "city - distance" and Budget lines, price on the right. */
+    .card {
+      position: absolute; left: 16px; right: 16px;
+      border-radius: 20px; border: 1px solid var(--border); background: var(--surface);
+      box-shadow: 0 1px 3px rgba(0,0,0,.35), 0 4px 10px rgba(0,0,0,.35);
+      padding: 20px;
+    }
+    .card.c1 { top: 300px; animation: deal1 5s cubic-bezier(.34,1.16,.42,1) infinite; }
+    .card.c2 { top: 424px; animation: deal2 5s cubic-bezier(.34,1.16,.42,1) infinite; }
+    .card.c3 { top: 548px; animation: deal3 5s cubic-bezier(.34,1.16,.42,1) infinite; }
+    /* Each card gets its OWN keyframes rather than a shared one plus a delay:
+       a delay would push each card's exit later too, so they would leave ragged. */
+    @keyframes deal1 {
+      0%, 12%   { opacity: 0; transform: translateY(28px) scale(.96); }
+      20%, 54%  { opacity: 1; transform: translateY(0) scale(1); }
+      60%, 100% { opacity: 0; transform: translateY(-14px) scale(.98); }
+    }
+    @keyframes deal2 {
+      0%, 18%   { opacity: 0; transform: translateY(28px) scale(.96); }
+      26%, 54%  { opacity: 1; transform: translateY(0) scale(1); }
+      60%, 100% { opacity: 0; transform: translateY(-14px) scale(.98); }
+    }
+    @keyframes deal3 {
+      0%, 24%   { opacity: 0; transform: translateY(28px) scale(.96); }
+      32%, 54%  { opacity: 1; transform: translateY(0) scale(1); }
+      60%, 100% { opacity: 0; transform: translateY(-14px) scale(.98); }
+    }
+
+    .row { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+    .lead-main { min-width: 0; }
+    .title {
+      margin: 0; font-size: 15px; line-height: 1.3; font-weight: 600; color: var(--fg);
+    }
+    .tags { margin-top: 8px; display: flex; align-items: center; gap: 8px; }
+    .badge {
+      display: inline-flex; align-items: center; border-radius: 9999px;
+      border: 1px solid var(--border); color: var(--fg);
+      padding: 2px 10px; font-size: 12px; line-height: 16px; font-weight: 500;
+    }
+    .meta { margin: 0; font-size: 13px; line-height: 18px; color: var(--muted-fg); }
+    .budget { margin: 8px 0 0; font-size: 13px; line-height: 18px; color: var(--muted-fg); }
+    .price-col { flex-shrink: 0; text-align: right; }
+    /* brand-300, not the app's text-brand-700: brand-700 on this surface is 2.1:1.
+       See the canvas note - the app has no dark-mode variant for that class yet. */
+    .price { margin: 0; font-size: 18px; line-height: 24px; font-weight: 700; color: var(--brand-300); }
+    .price-sub { margin: 2px 0 0; font-size: 11px; color: var(--muted-fg); }
+
+    .mark-wrap {
+      position: absolute; top: 318px; left: 0; right: 0;
+      display: flex; flex-direction: column; align-items: center;
+      animation: markIn 5s cubic-bezier(.34,1.3,.42,1) infinite;
+    }
+    /* Starts exactly where the cards finish leaving (60%) - no overlap. */
+    @keyframes markIn {
+      0%, 60%  { opacity: 0; transform: scale(.72); }
+      70%, 92% { opacity: 1; transform: scale(1); }
+      100%     { opacity: 1; transform: scale(1); }
+    }
+    .mark-rings { position: absolute; top: 0; width: 108px; height: 108px; }
+    .mark-ring {
+      position: absolute; inset: 0; border-radius: 50%; border: 1px solid rgba(193,95,42,.45);
+      animation: ripple 5s ease-out infinite;
+      animation-fill-mode: backwards;
+    }
+    .mark-ring.delay { animation-delay: .28s; }
+    @keyframes ripple {
+      0%, 60%   { opacity: 0; transform: scale(.6); }
+      70%       { opacity: .85; }
+      88%, 100% { opacity: 0; transform: scale(1.9); }
+    }
+    .mark { width: 108px; height: 108px; display: block; position: relative; }
+
+    /* Mirrors AuthBrand in apps/provider/components/auth-brand.tsx: the mark, the
+       wordmark, and "Business" baseline-aligned beside it at text-sm/font-normal. */
+    .lockup {
+      margin: 22px 0 0; display: flex; align-items: baseline; gap: 8px;
+      animation: wordIn 5s ease-out infinite;
+    }
+    .wordmark { margin: 0; font-size: 30px; font-weight: 800; letter-spacing: -.03em; color: var(--fg); }
+    .wordmark span { color: var(--brand-300); }
+    .qualifier { font-size: 14px; font-weight: 400; color: var(--muted-fg); }
+    .tagline {
+      margin: 8px 0 0; font-size: 14px; color: var(--muted-fg); text-align: center; text-wrap: balance;
+      animation: wordIn 5s ease-out infinite;
+    }
+    @keyframes wordIn {
+      0%, 70%  { opacity: 0; transform: translateY(8px); }
+      80%, 92% { opacity: 1; transform: translateY(0); }
+      100%     { opacity: 1; transform: translateY(0); }
+    }
+
+    .bar {
+      position: absolute; left: 50%; bottom: 96px; transform: translateX(-50%);
+      width: 108px; height: 2px; border-radius: 2px; background: rgba(226,232,240,.14); overflow: hidden;
+    }
+    .bar-fill {
+      display: block; height: 100%; width: 100%; border-radius: 2px;
+      background: linear-gradient(90deg, var(--brand-500), var(--brand-300));
+      transform-origin: left center; animation: fill 5s cubic-bezier(.4,0,.2,1) infinite;
+    }
+    @keyframes fill { 0% { transform: scaleX(0); } 88%, 100% { transform: scaleX(1); } }
+  </style>
+</helmet>
+
+<div class="stage">
+  <div class="inner">
+    <div class="glow"></div>
+
+    <div class="promise">
+      <h1>Work near you, the moment it&rsquo;s posted</h1>
+      <p>Real jobs, priced up front. Buy only the leads you want.</p>
+    </div>
+
+    <div class="card c1">
+      <div class="row">
+        <div class="lead-main">
+          <p class="title">Leaking kitchen tap needs urgent repair</p>
+          <div class="tags">
+            <span class="badge">Plumbing</span>
+            <p class="meta">Leeds &middot; 1.2 mi away</p>
+          </div>
+          <p class="budget">Budget: &pound;80.00&ndash;&pound;140.00</p>
+        </div>
+        <div class="price-col">
+          <p class="price">&pound;6.50</p>
+          <p class="price-sub">lead</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card c2">
+      <div class="row">
+        <div class="lead-main">
+          <p class="title">Rewire two bedrooms and add new sockets</p>
+          <div class="tags">
+            <span class="badge">Electrical</span>
+            <p class="meta">Leeds &middot; 2.8 mi away</p>
+          </div>
+          <p class="budget">Budget: &pound;450.00&ndash;&pound;700.00</p>
+        </div>
+        <div class="price-col">
+          <p class="price">&pound;13.50</p>
+          <p class="price-sub">lead</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card c3">
+      <div class="row">
+        <div class="lead-main">
+          <p class="title">End-of-tenancy clean, two-bed flat</p>
+          <div class="tags">
+            <span class="badge">Home Cleaning</span>
+            <p class="meta">Horsforth &middot; 0.9 mi away</p>
+          </div>
+          <p class="budget">Budget: &pound;120.00&ndash;&pound;180.00</p>
+        </div>
+        <div class="price-col">
+          <p class="price">&pound;7.50</p>
+          <p class="price-sub">lead</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="mark-wrap">
+      <div class="mark-rings">
+        <div class="mark-ring"></div>
+        <div class="mark-ring delay"></div>
+      </div>
+      <img class="mark" src="logo-mark.svg" alt="">
+      <p class="lockup"><span class="wordmark">Asap<span>Local</span></span><span class="qualifier">Business</span></p>
+      <p class="tagline">Win more local work</p>
+    </div>
+
+    <div class="bar"><span class="bar-fill"></span></div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>
