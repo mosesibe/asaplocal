@@ -4,6 +4,7 @@ import { signIn } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button, Card, Input, PasswordInput } from "@asaplocal/ui";
+import { AuthBrand } from "@/components/auth-brand";
 
 export default function LoginPage() {
   const params = useSearchParams();
@@ -31,7 +32,10 @@ export default function LoginPage() {
 
   return (
     <div className="mx-auto max-w-sm px-4 py-16 sm:px-6">
-      <h1 className="text-2xl font-bold">AsapLocal for Business</h1>
+      <AuthBrand />
+      {/* The lockup already reads "AsapLocal Business", so the old heading
+          would have repeated the brand twice on one screen. */}
+      <h1 className="mt-6 text-2xl font-bold">Log in to your account</h1>
       <Card className="mt-6 p-6">
         <form onSubmit={onSubmit} className="space-y-4">
           <Input type="email" required placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />

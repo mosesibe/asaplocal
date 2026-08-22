@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
 import { Button, Card, Input, PasswordInput } from "@asaplocal/ui";
+import { AuthBrand } from "@/components/auth-brand";
 
 type Phase = "form" | "confirm-existing";
 
@@ -64,7 +65,8 @@ export default function RegisterPage() {
   if (phase === "confirm-existing") {
     return (
       <div className="mx-auto max-w-sm px-4 py-16 sm:px-6">
-        <h1 className="text-2xl font-bold">Welcome back</h1>
+        <AuthBrand />
+        <h1 className="mt-6 text-2xl font-bold">Welcome back</h1>
         <Card className="mt-6 p-6">
           <p className="text-sm text-muted-foreground">
             You already have a customer account with <span className="font-medium">{form.email}</span>. Confirm your password to add
@@ -90,7 +92,8 @@ export default function RegisterPage() {
 
   return (
     <div className="mx-auto max-w-sm px-4 py-16 sm:px-6">
-      <h1 className="text-2xl font-bold">List your business on AsapLocal</h1>
+      <AuthBrand />
+      <h1 className="mt-6 text-2xl font-bold">List your business</h1>
       <Card className="mt-6 p-6">
         <form onSubmit={onSubmitForm} className="space-y-4">
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
