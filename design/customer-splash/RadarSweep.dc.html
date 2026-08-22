@@ -1,5 +1,5 @@
 <!doctype html>
-<html>
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <script src="./support.js"></script>
@@ -15,12 +15,23 @@
     .stage {
       position: relative; width: 390px; height: 844px; overflow: hidden;
       background: hsl(20 35% 7%);
+    }
+    .inner {
+      position: absolute; inset: 0;
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       animation: handoff 5s cubic-bezier(.4,0,.2,1) infinite;
     }
+    /* Opacity 0 at BOTH ends so the loop seam is a crossfade, not a hard cut.
+       Scale lives here, not on .stage, so it is clipped by the frame. */
     @keyframes handoff {
-      0%, 90% { opacity: 1; transform: scale(1); }
-      98%, 100% { opacity: 0; transform: scale(1.04); }
+      0%   { opacity: 0; transform: scale(1); }
+      4%   { opacity: 1; transform: scale(1); }
+      92%  { opacity: 1; transform: scale(1); }
+      100% { opacity: 0; transform: scale(1.04); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      * { animation: none !important; }
+      .lead, .radar { opacity: 0 !important; }
     }
 
     /* Concentric range rings — the same visual language as the provider radar. */
@@ -34,9 +45,9 @@
     .ring.r3 { width: 296px; height: 296px; border-color: rgba(193,95,42,.12); }
     .radar-fade { animation: radarOut 5s cubic-bezier(.4,0,.2,1) infinite; }
     @keyframes radarOut {
-      0% { opacity: 0; transform: scale(.9); }
-      12%, 46% { opacity: 1; transform: scale(1); }
-      58%, 100% { opacity: 0; transform: scale(1.06); }
+      0%, 4% { opacity: 0; transform: scale(.9); }
+      14%, 54% { opacity: 1; transform: scale(1); }
+      60%, 100% { opacity: 0; transform: scale(1.06); }
     }
 
     /* Sweep arm: a soft conic wedge rotating twice before the mark lands. */
@@ -44,8 +55,8 @@
       position: absolute; inset: 0; margin: auto; width: 296px; height: 296px; border-radius: 50%;
       background: conic-gradient(from 0deg, rgba(193,95,42,.34) 0deg, rgba(193,95,42,0) 58deg, rgba(193,95,42,0) 360deg);
       animation: spin 5s linear infinite;
-      -webkit-mask-image: radial-gradient(circle, transparent 22%, #000 24%);
-              mask-image: radial-gradient(circle, transparent 22%, #000 24%);
+      -webkit-mask-image: radial-gradient(circle closest-side, transparent 22%, #000 24%);
+              mask-image: radial-gradient(circle closest-side, transparent 22%, #000 24%);
     }
     @keyframes spin {
       0% { transform: rotate(0deg); }
@@ -58,16 +69,19 @@
       position: absolute; width: 10px; height: 10px; border-radius: 50%;
       background: #e6975d; box-shadow: 0 0 0 4px rgba(230,151,93,.18);
       animation: pop 5s ease-out infinite;
+      /* Without backwards fill the pins render un-animated during their delay,
+         i.e. all four visible at load, then blinking out. */
+      animation-fill-mode: backwards;
     }
-    .pin.p1 { top: 58px;  left: 196px; animation-delay: .35s; }
-    .pin.p2 { top: 132px; left: 74px;  animation-delay: .75s; }
-    .pin.p3 { top: 206px; left: 232px; animation-delay: 1.15s; }
-    .pin.p4 { top: 236px; left: 118px; animation-delay: 1.5s; }
+    .pin.p1 { top: 58px;  left: 196px; animation-delay: .11s; }  /* 30deg  */
+    .pin.p3 { top: 206px; left: 232px; animation-delay: .45s; }  /* 125deg */
+    .pin.p4 { top: 236px; left: 118px; animation-delay: .71s; }  /* 197deg */
+    .pin.p2 { top: 132px; left: 74px;  animation-delay: 1.01s; } /* 280deg */
     @keyframes pop {
       0%   { opacity: 0; transform: scale(.2); }
-      8%   { opacity: 1; transform: scale(1); }
-      44%  { opacity: 1; transform: scale(1); }
-      54%, 100% { opacity: 0; transform: scale(.4); }
+      6%   { opacity: 1; transform: scale(1); }
+      34%  { opacity: 1; transform: scale(1); }
+      42%, 100% { opacity: 0; transform: scale(.4); }
     }
 
     .lead {
@@ -75,9 +89,9 @@
       animation: leadOut 5s cubic-bezier(.4,0,.2,1) infinite;
     }
     @keyframes leadOut {
-      0% { opacity: 0; transform: translateY(12px); }
-      12%, 44% { opacity: 1; transform: translateY(0); }
-      54%, 100% { opacity: 0; transform: translateY(-14px); }
+      0%, 4% { opacity: 0; transform: translateY(12px); }
+      12%, 54% { opacity: 1; transform: translateY(0); }
+      60%, 100% { opacity: 0; transform: translateY(-14px); }
     }
     .lead h1 {
       margin: 0; font-size: 27px; line-height: 1.24; font-weight: 600; letter-spacing: -.025em;
@@ -86,12 +100,14 @@
     .lead p { margin: 10px 0 0; font-size: 15px; color: #a57f5f; text-wrap: balance; }
 
     .mark-wrap {
-      position: absolute; display: flex; flex-direction: column; align-items: center;
+      position: absolute; top: 318px; left: 0; right: 0;
+      display: flex; flex-direction: column; align-items: center;
       animation: markIn 5s cubic-bezier(.34,1.3,.42,1) infinite;
     }
+    /* Starts exactly where the radar finishes fading (60%) — no overlap. */
     @keyframes markIn {
-      0%, 54%  { opacity: 0; transform: scale(.74); }
-      66%, 92% { opacity: 1; transform: scale(1); }
+      0%, 60%  { opacity: 0; transform: scale(.74); }
+      70%, 92% { opacity: 1; transform: scale(1); }
       100%     { opacity: 1; transform: scale(1); }
     }
     .mark { width: 108px; height: 108px; display: block; }
@@ -105,8 +121,8 @@
       animation: wordIn 5s ease-out infinite;
     }
     @keyframes wordIn {
-      0%, 64%  { opacity: 0; transform: translateY(8px); }
-      76%, 92% { opacity: 1; transform: translateY(0); }
+      0%, 70%  { opacity: 0; transform: translateY(8px); }
+      80%, 92% { opacity: 1; transform: translateY(0); }
       100%     { opacity: 1; transform: translateY(0); }
     }
 
@@ -124,6 +140,7 @@
 </helmet>
 
 <div class="stage">
+  <div class="inner">
   <div class="lead">
     <h1>Vetted pros, right where you are</h1>
     <p>Compare, message and book — near you.</p>
@@ -141,12 +158,13 @@
   </div>
 
   <div class="mark-wrap">
-    <img class="mark" src="logo-mark.svg" alt="AsapLocal">
+    <img class="mark" src="logo-mark.svg" alt="">
     <p class="wordmark">Asap<span>Local</span></p>
     <p class="tagline">Find trusted local service providers</p>
   </div>
 
   <div class="bar"><span class="bar-fill"></span></div>
+  </div>
 </div>
 </x-dc>
 </body>

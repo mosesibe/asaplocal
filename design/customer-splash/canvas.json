@@ -2,13 +2,13 @@
   "artboards": [
     { "file": "Main.dc.html",       "x": 0,    "y": 0, "w": 390, "h": 844, "title": "A · Trade ticker" },
     { "file": "RadarSweep.dc.html", "x": 510,  "y": 0, "w": 390, "h": 844, "title": "B · Radar sweep" },
-    { "file": "IconRest.dc.html",   "x": 1020, "y": 0, "w": 390, "h": 844, "title": "Hand-off frame" }
+    { "file": "IconRest.dc.html",   "x": 1020, "y": 0, "w": 390, "h": 844, "title": "A · Hand-off frame" }
   ],
   "annotations": [
     { "id": "brief", "x": 0, "y": -190, "w": 900, "text": "AsapLocal — customer app splash\n\nBoth run the same 5s loop: promise animates in, resolves to the app icon, then lifts away to hand off to the dashboard. Tokens lifted from packages/ui/tailwind.preset.js — Inter, terracotta #c15f2a, espresso ground, real logo-mark.svg." },
     { "id": "dir-a", "x": 0, "y": 900, "w": 390, "text": "A · Trade ticker — leads on WHAT you can book, cycling the real seeded trades (cleaner, plumber, electrician, gardener).\n\nWhy: says what the product is in under two seconds, to someone who has never opened it.\nTradeoff: the ticker is the whole idea, so it needs the full ~2s — the least patient option if the app boots fast." },
     { "id": "dir-b", "x": 510, "y": 900, "w": 390, "text": "B · Radar sweep — leads on HOW it works: pros found near you. Reuses the pulsing-ring language already in the provider dashboard's radar map.\n\nWhy: more distinctive, and ties the two apps together visually.\nTradeoff: abstract — a first-time user may read it as generic 'searching' rather than local trades." },
-    { "id": "handoff", "x": 1020, "y": 900, "w": 390, "text": "Hand-off frame — the resting beat, held still so the lockup can be judged without waiting for the loop. This is the last thing on screen before the dashboard mounts." }
+    { "id": "handoff", "x": 1020, "y": 900, "w": 390, "text": "Hand-off frame — direction A's resting beat (it keeps A's warm glow, which B does not use), held still so the lockup can be judged without waiting for the loop. This is the last thing on screen before the dashboard mounts." }
   ],
   "launch": { "view": "canvas" }
 }
