@@ -35,6 +35,17 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ message: "This booking is already paid in full" }, { status: 400 });
   }
 
+  // The deposit branch above reads depositAmountPence straight off the booking,
+  // so without this a second press of "Pay deposit" would charge it again —
+  // the <= 0 check never catches it because the deposit itself is unchanged.
+  // Once any money has landed, what is owed is the balance, not a deposit.
+  if (paymentKind !== "BOOKING_BALANCE" && balance.paidPence > 0) {
+    return NextResponse.json(
+      { message: "A payment has already been made for this booking — pay the remaining balance instead." },
+      { status: 409 }
+    );
+  }
+
   const label =
     paymentKind === "BOOKING_BALANCE" ? "Balance" : paymentKind === "BOOKING_FULL" ? "Full payment" : "Deposit";
 

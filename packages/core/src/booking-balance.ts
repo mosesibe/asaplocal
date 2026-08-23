@@ -9,6 +9,17 @@ export interface BookingBalance {
   paidPence: number;
   /** What's still owed. Never negative. */
   outstandingPence: number;
+  /**
+   * The deposit taken up front, 0 if the booking has none. This is a slice of
+   * totalPence, not an addition to it.
+   */
+  depositPence: number;
+  /**
+   * The deposit if it has not been collected yet, otherwise 0. Nothing paid at
+   * all is the only state in which a deposit is still the amount due — once any
+   * money has landed, what is owed is the balance.
+   */
+  depositDuePence: number;
 }
 
 /**
@@ -21,6 +32,7 @@ export interface BookingBalance {
  */
 export function computeBookingBalance(booking: {
   totalAmountPence: number;
+  depositAmountPence?: number | null;
   variations?: { status: string; amountPence: number }[];
   payments?: { status: string; amountPence: number }[];
 }): BookingBalance {
@@ -33,6 +45,9 @@ export function computeBookingBalance(booking: {
     .reduce((sum, p) => sum + p.amountPence, 0);
 
   const totalPence = booking.totalAmountPence + extrasPence;
+  // Never quote a deposit larger than the job: a variation could in principle
+  // be declined after the deposit was set from a bigger figure.
+  const depositPence = Math.min(booking.depositAmountPence ?? 0, totalPence);
 
   return {
     basePence: booking.totalAmountPence,
@@ -40,5 +55,7 @@ export function computeBookingBalance(booking: {
     totalPence,
     paidPence,
     outstandingPence: Math.max(0, totalPence - paidPence),
+    depositPence,
+    depositDuePence: paidPence === 0 ? depositPence : 0,
   };
 }

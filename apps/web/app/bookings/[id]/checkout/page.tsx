@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { auth } from "@asaplocal/auth";
 import { prisma } from "@asaplocal/db";
 import { Card, MobileTopBar, formatPence } from "@asaplocal/ui";
+import { computeBookingBalance } from "@asaplocal/core";
 import { CheckoutButton } from "./checkout-button";
 import { InstallAppBanner } from "@/components/install-app-banner";
 
@@ -11,8 +12,16 @@ export default async function BookingCheckoutPage({ params }: { params: Promise<
   const session = await auth();
   if (!session?.user) redirect(`/login?callbackUrl=/bookings/${id}/checkout`);
 
-  const booking = await prisma.booking.findUnique({ where: { id }, include: { business: true } });
+  const booking = await prisma.booking.findUnique({
+    where: { id },
+    include: { business: true, payments: true, variations: true },
+  });
   if (!booking || booking.customerId !== session.user.id) notFound();
+
+  const balance = computeBookingBalance(booking);
+  // Landing here after paying — a stale tab, browser back, a bookmarked URL —
+  // would otherwise show "Pay deposit securely" on a booking already paid.
+  if (balance.depositDuePence <= 0) redirect(`/bookings/${id}`);
 
   return (
     <div className="mx-auto max-w-lg md:px-6 md:py-10">
@@ -25,8 +34,8 @@ export default async function BookingCheckoutPage({ params }: { params: Promise<
         <Card className="mt-2 space-y-3 p-6">
           <div className="flex justify-between text-sm"><span>Provider</span><span className="font-medium">{booking.business.name}</span></div>
           <div className="flex justify-between text-sm"><span>Scheduled</span><span className="font-medium">{booking.scheduledDate.toLocaleDateString("en-GB")}</span></div>
-          <div className="flex justify-between text-sm"><span>Total job price</span><span className="font-medium">{formatPence(booking.totalAmountPence)}</span></div>
-          <div className="flex justify-between border-t border-border pt-3 text-base font-semibold"><span>Deposit due now</span><span>{formatPence(booking.depositAmountPence ?? 0)}</span></div>
+          <div className="flex justify-between text-sm"><span>Total job price</span><span className="font-medium">{formatPence(balance.totalPence)}</span></div>
+          <div className="flex justify-between border-t border-border pt-3 text-base font-semibold"><span>Deposit due now</span><span>{formatPence(balance.depositDuePence)}</span></div>
         </Card>
         <div className="mt-6">
           <CheckoutButton bookingId={booking.id} />

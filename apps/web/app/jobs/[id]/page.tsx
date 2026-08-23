@@ -2,7 +2,8 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { auth } from "@asaplocal/auth";
 import { prisma } from "@asaplocal/db";
-import { Badge, Button, Card, MobileTopBar, formatPence } from "@asaplocal/ui";
+import { Badge, Button, Card, MobileTopBar, buttonVariants, formatPence } from "@asaplocal/ui";
+import { computeBookingBalance } from "@asaplocal/core";
 import { formatBudget, formatJobLocation, formatNeededBy } from "@/lib/job-format";
 import { AcceptQuoteButton } from "./accept-quote-button";
 import { DeleteJobButton } from "./delete-job-button";
@@ -20,10 +21,12 @@ export default async function JobStatusPage({ params }: { params: Promise<{ id: 
       category: true,
       quotes: { include: { business: true }, orderBy: { createdAt: "desc" } },
       lead: true,
-      booking: true,
+      booking: { include: { payments: true, variations: true } },
     },
   });
   if (!job || job.customerId !== session.user.id) notFound();
+
+  const depositDuePence = job.booking ? computeBookingBalance(job.booking).depositDuePence : 0;
 
   const statusCopy: Record<string, string> = {
     OPEN: "We're matching your job with local providers…",
@@ -94,6 +97,18 @@ export default async function JobStatusPage({ params }: { params: Promise<{ id: 
               </div>
               {job.status !== "ASSIGNED" && q.status === "SENT" ? (
                 <AcceptQuoteButton quoteId={q.id} />
+              ) : q.status === "ACCEPTED" && job.booking ? (
+                /* An "ACCEPTED" badge on its own was a dead end: the customer
+                   had accepted but had no way through to paying the deposit. */
+                <div className="flex flex-col items-start gap-2 sm:items-end">
+                  <Badge variant="success" className="w-fit">ACCEPTED</Badge>
+                  <Link
+                    href={depositDuePence > 0 ? `/bookings/${job.booking.id}/checkout` : `/bookings/${job.booking.id}`}
+                    className={buttonVariants({ size: "sm", variant: depositDuePence > 0 ? "default" : "outline" })}
+                  >
+                    {depositDuePence > 0 ? `Pay deposit — ${formatPence(depositDuePence)}` : "View booking"}
+                  </Link>
+                </div>
               ) : (
                 <Badge variant={q.status === "ACCEPTED" ? "success" : "outline"} className="w-fit">{q.status}</Badge>
               )}

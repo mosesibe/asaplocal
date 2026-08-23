@@ -3,6 +3,7 @@ import Link from "next/link";
 import { auth } from "@asaplocal/auth";
 import { prisma } from "@asaplocal/db";
 import { Badge, Card, formatPence } from "@asaplocal/ui";
+import { computeBookingBalance } from "@asaplocal/core";
 import { formatBudget, formatJobLocation, formatNeededBy } from "@/lib/job-format";
 
 export default async function ActivityPage() {
@@ -11,7 +12,7 @@ export default async function ActivityPage() {
 
   const [jobRequests, bookings, payments] = await Promise.all([
     prisma.jobRequest.findMany({ where: { customerId: session.user.id }, orderBy: { createdAt: "desc" }, take: 20 }),
-    prisma.booking.findMany({ where: { customerId: session.user.id }, include: { business: true }, orderBy: { createdAt: "desc" }, take: 20 }),
+    prisma.booking.findMany({ where: { customerId: session.user.id }, include: { business: true, payments: true, variations: true }, orderBy: { createdAt: "desc" }, take: 20 }),
     prisma.payment.findMany({ where: { userId: session.user.id, status: "SUCCEEDED" }, include: { business: true }, orderBy: { createdAt: "desc" }, take: 20 }),
   ]);
 
@@ -20,7 +21,7 @@ export default async function ActivityPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-10 pb-28 sm:px-6">
       <h1 className="text-2xl font-bold">Activity</h1>
-      <p className="mt-1 text-sm text-muted-foreground">Everything you've done on LocalConnect so far.</p>
+      <p className="mt-1 text-sm text-muted-foreground">Everything you've done on AsapLocal so far.</p>
 
       {!hasActivity && (
         <p className="mt-8 text-sm text-muted-foreground">
@@ -62,19 +63,28 @@ export default async function ActivityPage() {
         <section className="mt-8">
           <h2 className="mb-3 text-lg font-semibold">Bookings</h2>
           <div className="space-y-2">
-            {bookings.map((b) => (
-              <Link key={b.id} href={`/bookings/${b.id}`}>
-                <Card className="flex items-center justify-between gap-2 p-4">
-                  <div>
-                    <p className="font-medium">{b.business.name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {formatPence(b.totalAmountPence)} · {b.scheduledDate.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
-                    </p>
-                  </div>
-                  <Badge variant="outline">{b.status}</Badge>
-                </Card>
-              </Link>
-            ))}
+            {bookings.map((b) => {
+              const depositDuePence = b.status === "PENDING" ? computeBookingBalance(b).depositDuePence : 0;
+              return (
+                // Straight to checkout when money is owed: "PENDING" alone gave
+                // no clue the booking was waiting on a deposit.
+                <Link key={b.id} href={depositDuePence > 0 ? `/bookings/${b.id}/checkout` : `/bookings/${b.id}`}>
+                  <Card className="flex items-center justify-between gap-2 p-4">
+                    <div>
+                      <p className="font-medium">{b.business.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {formatPence(b.totalAmountPence)} · {b.scheduledDate.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+                      </p>
+                    </div>
+                    {depositDuePence > 0 ? (
+                      <Badge variant="warning" className="shrink-0">Deposit due · {formatPence(depositDuePence)}</Badge>
+                    ) : (
+                      <Badge variant="outline">{b.status}</Badge>
+                    )}
+                  </Card>
+                </Link>
+              );
+            })}
           </div>
         </section>
       )}

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect, notFound } from "next/navigation";
 import { auth } from "@asaplocal/auth";
 import { prisma } from "@asaplocal/db";
-import { Avatar, Badge, Card, MobileTopBar, formatPence } from "@asaplocal/ui";
+import { Avatar, Badge, Card, MobileTopBar, buttonVariants, formatPence } from "@asaplocal/ui";
 import { computeBookingBalance } from "@asaplocal/core";
 import { LeaveReviewForm } from "./leave-review-form";
 import { AcceptCompletionButton } from "./accept-completion-button";
@@ -32,6 +32,11 @@ export default async function BookingDetailPage({ params }: { params: Promise<{ 
 
   const showTracking = booking.trackingEnabled && ["CONFIRMED", "IN_PROGRESS"].includes(booking.status);
   const balance = computeBookingBalance(booking);
+  // A booking sits at PENDING from quote acceptance until the deposit lands.
+  // Until this existed the deposit was reachable only from the redirect fired
+  // straight after "Accept & book" — close that tab and it was unreachable.
+  const awaitingDeposit =
+    booking.status === "PENDING" && balance.depositDuePence > 0;
   const pendingVariations = booking.variations.filter((v) => v.status === "PENDING");
   const acceptedVariations = booking.variations.filter((v) => v.status === "ACCEPTED");
 
@@ -53,8 +58,28 @@ export default async function BookingDetailPage({ params }: { params: Promise<{ 
           ))}
           <div className="flex justify-between border-t border-border pt-2 text-sm"><span>Total</span><span className="font-semibold">{formatPence(balance.totalPence)}</span></div>
           <div className="flex justify-between text-sm text-muted-foreground"><span>Paid so far</span><span>−{formatPence(balance.paidPence)}</span></div>
-          <div className="flex justify-between text-base font-semibold"><span>{balance.outstandingPence > 0 ? "Still to pay" : "Paid in full"}</span><span>{formatPence(balance.outstandingPence)}</span></div>
+          {awaitingDeposit ? (
+            /* "Still to pay: <full price>" was true but misleading here — only
+               the deposit is due now, the rest on completion. */
+            <div className="flex justify-between text-base font-semibold"><span>Deposit due now</span><span>{formatPence(balance.depositDuePence)}</span></div>
+          ) : (
+            <div className="flex justify-between text-base font-semibold"><span>{balance.outstandingPence > 0 ? "Still to pay" : "Paid in full"}</span><span>{formatPence(balance.outstandingPence)}</span></div>
+          )}
         </Card>
+
+        {awaitingDeposit && (
+          <div className="mt-4">
+            <Link
+              href={`/bookings/${booking.id}/checkout`}
+              className={buttonVariants({ size: "lg", className: "w-full" })}
+            >
+              Pay deposit — {formatPence(balance.depositDuePence)}
+            </Link>
+            <p className="mt-2 text-center text-xs text-muted-foreground">
+              Confirms the booking with {booking.business.name}. The rest is paid when the job is done.
+            </p>
+          </div>
+        )}
 
         {balance.outstandingPence > 0 && booking.status === "COMPLETED" && (
           <div className="mt-4">
