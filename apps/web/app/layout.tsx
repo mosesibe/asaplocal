@@ -30,7 +30,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="en-GB" suppressHydrationWarning>
       <head>
-        <ThemeScript />
+        <ThemeScript defaultTheme="light" />
       </head>
       <body className={`${inter.variable} font-sans`}>
         <Providers>

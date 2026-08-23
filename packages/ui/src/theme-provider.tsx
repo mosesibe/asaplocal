@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import type { DefaultTheme } from "./theme-script";
 
 type Theme = "light" | "dark";
 
@@ -15,17 +16,37 @@ function systemTheme(): Theme {
   return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
 }
 
-export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = React.useState<Theme>("light");
+/**
+ * `defaultTheme` is what a visitor with no stored choice gets. It must match
+ * the value given to <ThemeScript>, which sets the class before first paint —
+ * this provider only reconciles React state to what is already on <html>.
+ */
+export function ThemeProvider({
+  children,
+  defaultTheme = "system",
+}: {
+  children: React.ReactNode;
+  defaultTheme?: DefaultTheme;
+}) {
+  // "system" can only be resolved in the browser, so assume light for the
+  // server render; the effect below corrects it, and ThemeScript has already
+  // put the right class on <html> either way.
+  const [theme, setTheme] = React.useState<Theme>(defaultTheme === "dark" ? "dark" : "light");
 
   React.useEffect(() => {
     const stored = localStorage.getItem("theme");
-    const initial: Theme = stored === "light" || stored === "dark" ? stored : systemTheme();
+    const hasChoice = stored === "light" || stored === "dark";
+    const initial: Theme = hasChoice
+      ? (stored as Theme)
+      : defaultTheme === "system"
+        ? systemTheme()
+        : defaultTheme;
     setTheme(initial);
 
-    // Only follow live system-preference changes when the user hasn't made
-    // an explicit choice yet — once they toggle, that choice sticks.
-    if (stored === "light" || stored === "dark") return;
+    // Only follow live system-preference changes when the app defers to the
+    // system AND the user hasn't made an explicit choice yet. An app that
+    // defaults to light must not flip when the OS goes dark at sunset.
+    if (hasChoice || defaultTheme !== "system") return;
     const mq = window.matchMedia("(prefers-color-scheme: dark)");
     const listener = (e: MediaQueryListEvent) => {
       const next: Theme = e.matches ? "dark" : "light";
@@ -34,7 +55,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     };
     mq.addEventListener("change", listener);
     return () => mq.removeEventListener("change", listener);
-  }, []);
+  }, [defaultTheme]);
 
   const toggleTheme = React.useCallback(() => {
     setTheme((prev) => {
