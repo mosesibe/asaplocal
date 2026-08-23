@@ -42,3 +42,240 @@
     display: none;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Launch splash — direction B ("radar sweep") from design/customer-splash.
+   The canvas artboard is a 5s LOOP inside a fixed 390x844 phone frame; this
+   plays it once, at any viewport size. Every percentage keyframe is unchanged
+   from RadarSweep.dc.html so the timing the design settled on still holds — only
+   the duration, the iteration count and the positioning differ.
+
+   Hidden unless the inline script in SplashScreen sets data-splash on <html>,
+   which it does before first paint so the page underneath is never seen first.
+--------------------------------------------------------------------------- */
+.asl-splash {
+  display: none;
+}
+
+html[data-splash] {
+  overflow: hidden;
+}
+
+html[data-splash] .asl-splash {
+  --asl-dur: 2.4s;
+  display: block;
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  overflow: hidden;
+  background: hsl(20 35% 7%);
+  font-family: var(--font-inter), Inter, ui-sans-serif, system-ui, sans-serif;
+  /* Tapping anywhere skips it; the handler is on window. */
+  cursor: pointer;
+}
+
+.asl-splash-inner {
+  position: absolute;
+  inset: 0;
+  animation: asl-handoff var(--asl-dur) cubic-bezier(0.4, 0, 0.2, 1) 1 forwards;
+}
+@keyframes asl-handoff {
+  0% { opacity: 0; transform: scale(1); }
+  4% { opacity: 1; transform: scale(1); }
+  92% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.04); }
+}
+
+/* The artboard positioned these at fixed pixel offsets inside an 844px frame.
+   Percentages keep the same proportions on a viewport of any height. */
+.asl-lead {
+  position: absolute;
+  /* 150/844 in the artboard. At 22% the subtitle collided with the outer ring. */
+  top: 17.8%;
+  left: 0;
+  right: 0;
+  padding: 0 40px;
+  text-align: center;
+  animation: asl-lead-out var(--asl-dur) cubic-bezier(0.4, 0, 0.2, 1) 1 forwards;
+}
+@keyframes asl-lead-out {
+  0%, 4% { opacity: 0; transform: translateY(12px); }
+  12%, 54% { opacity: 1; transform: translateY(0); }
+  60%, 100% { opacity: 0; transform: translateY(-14px); }
+}
+/* A <p>, not an <h1> — the page underneath already has the document heading. */
+.asl-lead-title {
+  margin: 0;
+  font-size: 27px;
+  line-height: 1.24;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  color: #f3eae3;
+  text-wrap: balance;
+}
+.asl-lead-sub {
+  margin: 10px 0 0;
+  font-size: 15px;
+  color: #a57f5f;
+  text-wrap: balance;
+}
+
+/* Centring lives on the slot so the animated child's transform stays pure
+   scale — combining the two on one element would fight the keyframes. */
+.asl-slot {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(var(--asl-scale, 1));
+}
+/* The radar sits fractionally below centre in the artboard (446/844); the mark
+   sits almost exactly on it. Matching that keeps the gap under the lead copy. */
+.asl-slot-radar {
+  top: 52%;
+}
+
+.asl-radar {
+  /* Containing block for the rings, sweep and pins, which are all absolute. */
+  position: relative;
+  width: 300px;
+  height: 300px;
+  animation: asl-radar-out var(--asl-dur) cubic-bezier(0.4, 0, 0.2, 1) 1 forwards;
+}
+@keyframes asl-radar-out {
+  0%, 4% { opacity: 0; transform: scale(0.9); }
+  14%, 54% { opacity: 1; transform: scale(1); }
+  60%, 100% { opacity: 0; transform: scale(1.06); }
+}
+.asl-ring {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  border-radius: 50%;
+  border: 1px solid rgba(193, 95, 42, 0.3);
+}
+.asl-ring-1 { width: 120px; height: 120px; }
+.asl-ring-2 { width: 208px; height: 208px; border-color: rgba(193, 95, 42, 0.2); }
+.asl-ring-3 { width: 296px; height: 296px; border-color: rgba(193, 95, 42, 0.12); }
+
+.asl-sweep {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 296px;
+  height: 296px;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, rgba(193, 95, 42, 0.34) 0deg, rgba(193, 95, 42, 0) 58deg, rgba(193, 95, 42, 0) 360deg);
+  animation: asl-spin var(--asl-dur) linear 1 forwards;
+  /* closest-side: percentage stops otherwise resolve against the gradient's
+     farthest corner, making the mask hole ~40% larger than the number says. */
+  -webkit-mask-image: radial-gradient(circle closest-side, transparent 22%, #000 24%);
+  mask-image: radial-gradient(circle closest-side, transparent 22%, #000 24%);
+}
+@keyframes asl-spin {
+  0% { transform: rotate(0deg); }
+  52% { transform: rotate(720deg); }
+  100% { transform: rotate(720deg); }
+}
+
+.asl-pin {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #e6975d;
+  box-shadow: 0 0 0 4px rgba(230, 151, 93, 0.18);
+  /* "both": backwards so a pin is invisible during its delay rather than
+     rendering un-animated, forwards so it holds its last frame. */
+  animation: asl-pop var(--asl-dur) ease-out 1 both;
+}
+/* Delays are each pin's bearing as a fraction of the sweep, expressed against
+   the duration so the two stay in step if --asl-dur is ever retuned. */
+.asl-pin-1 { top: 58px;  left: 196px; animation-delay: calc(var(--asl-dur) * 0.022); }  /* 30deg  */
+.asl-pin-3 { top: 206px; left: 232px; animation-delay: calc(var(--asl-dur) * 0.09); }   /* 125deg */
+.asl-pin-4 { top: 236px; left: 118px; animation-delay: calc(var(--asl-dur) * 0.142); }  /* 197deg */
+.asl-pin-2 { top: 132px; left: 74px;  animation-delay: calc(var(--asl-dur) * 0.202); }  /* 280deg */
+@keyframes asl-pop {
+  0% { opacity: 0; transform: scale(0.2); }
+  6% { opacity: 1; transform: scale(1); }
+  34% { opacity: 1; transform: scale(1); }
+  42%, 100% { opacity: 0; transform: scale(0.4); }
+}
+
+.asl-mark-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: asl-mark-in var(--asl-dur) cubic-bezier(0.34, 1.3, 0.42, 1) 1 forwards;
+}
+/* Starts exactly where the radar finishes fading (60%) — no overlap. */
+@keyframes asl-mark-in {
+  0%, 60% { opacity: 0; transform: scale(0.74); }
+  70%, 92% { opacity: 1; transform: scale(1); }
+  100% { opacity: 1; transform: scale(1); }
+}
+.asl-mark { width: 108px; height: 108px; display: block; }
+.asl-wordmark {
+  margin: 22px 0 0;
+  font-size: 30px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: #f3eae3;
+  animation: asl-word-in var(--asl-dur) ease-out 1 forwards;
+}
+.asl-wordmark span { color: #e6975d; }
+.asl-tagline {
+  margin: 8px 0 0;
+  font-size: 14px;
+  color: #a57f5f;
+  text-align: center;
+  text-wrap: balance;
+  animation: asl-word-in var(--asl-dur) ease-out 1 forwards;
+}
+@keyframes asl-word-in {
+  0%, 70% { opacity: 0; transform: translateY(8px); }
+  80%, 92% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.asl-bar {
+  position: absolute;
+  left: 50%;
+  bottom: 11%;
+  transform: translateX(-50%);
+  width: 108px;
+  height: 2px;
+  border-radius: 2px;
+  background: rgba(243, 234, 227, 0.12);
+  overflow: hidden;
+}
+.asl-bar-fill {
+  display: block;
+  height: 100%;
+  width: 100%;
+  border-radius: 2px;
+  background: linear-gradient(90deg, #c15f2a, #e6975d);
+  transform-origin: left center;
+  animation: asl-fill var(--asl-dur) cubic-bezier(0.4, 0, 0.2, 1) 1 forwards;
+}
+@keyframes asl-fill {
+  0% { transform: scaleX(0); }
+  88%, 100% { transform: scaleX(1); }
+}
+
+/* The radar is a fixed 300px square, so shrink it rather than let it collide
+   with the copy or run off the edge. One variable, so the two queries below
+   cannot fight each other the way two competing transform rules would. */
+@media (max-width: 359px) {
+  html[data-splash] .asl-splash { --asl-scale: 0.85; }
+}
+@media (max-height: 700px) {
+  html[data-splash] .asl-splash { --asl-scale: 0.78; }
+  .asl-lead { top: 8%; }
+  .asl-lead-title { font-size: 22px; }
+}
+
+/* Belt and braces: the script never sets data-splash under reduced motion,
+   but if the attribute is ever set some other way, do not animate. */
+@media (prefers-reduced-motion: reduce) {
+  html[data-splash] .asl-splash { display: none; }
+}

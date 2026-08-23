@@ -4,6 +4,7 @@ import "./globals.css";
 import { Providers } from "./providers";
 import { auth } from "@asaplocal/auth";
 import { ThemeScript, RegisterServiceWorker } from "@asaplocal/ui";
+import { SplashScreen, SplashScreenScript } from "@/components/splash-screen";
 import { SiteHeader } from "@/components/site-header";
 import { WebBottomNav } from "@/components/web-bottom-nav";
 
@@ -31,8 +32,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     <html lang="en-GB" suppressHydrationWarning>
       <head>
         <ThemeScript defaultTheme="light" />
+        <SplashScreenScript />
       </head>
       <body className={`${inter.variable} font-sans`}>
+        <SplashScreen />
         <Providers>
           <RegisterServiceWorker />
           <SiteHeader session={session} />
