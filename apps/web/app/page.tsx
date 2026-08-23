@@ -1,4 +1,5 @@
 import { prisma } from "@asaplocal/db";
+import { InstallAppBanner } from "@asaplocal/ui";
 import { HomepageAiSection } from "@/components/homepage-ai-section";
 import { CategoryFlyerCarousel } from "@/components/category-flyer-carousel";
 import { PopularCategories } from "@/components/popular-categories";
@@ -13,6 +14,8 @@ export default async function HomePage() {
 
   return (
     <div>
+      <InstallAppBanner className="mx-auto max-w-7xl px-4 pt-4 sm:px-6" />
+
       <HomepageAiSection categories={categories.map((c) => ({ id: c.id, name: c.name, parentId: c.parentId }))} />
 
       <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6">

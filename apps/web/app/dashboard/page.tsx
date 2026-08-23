@@ -4,7 +4,6 @@ import { HelpCircle, FileText, Shield } from "lucide-react";
 import { auth } from "@asaplocal/auth";
 import { prisma } from "@asaplocal/db";
 import { getCustomerAccountStats, getSignInMethods, invoiceNumber } from "@asaplocal/core";
-import { InstallAppBanner } from "@/components/install-app-banner";
 import { SignOutButton } from "@/components/sign-out-button";
 import { ProfileCard } from "@/components/account/profile-card";
 import { SectionCard, SectionRow } from "@/components/account/section-row";
@@ -50,10 +49,6 @@ export default async function CustomerDashboard() {
         <h1 className="text-2xl font-bold">My account</h1>
         <SignOutButton />
       </div>
-      <div className="mt-6">
-        <InstallAppBanner />
-      </div>
-
       {/* Section 1 — profile & activity */}
       <div className="mt-6">
         <ProfileCard

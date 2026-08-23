@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowUp, Loader2, Sparkles } from "lucide-react";
 import { Button, Card, Input, Select, Textarea } from "@asaplocal/ui";
-import { InstallAppBanner } from "./install-app-banner";
 import { LocationPicker, type LocationValue } from "./location-picker";
 import { PreferredDatePicker, toPreferredDateTime, type PreferredDateValue } from "./preferred-date-picker";
 
@@ -278,10 +277,6 @@ export function AiJobRequest({
             </p>
           )}
           {postError && <p className="mt-3 text-sm text-red-600 dark:text-red-400">{postError}</p>}
-
-          <div className="mt-4">
-            <InstallAppBanner />
-          </div>
 
           <Button size="lg" className="w-full" onClick={handlePost} disabled={posting || !location}>
             {posting ? "Posting…" : "Post job & get quotes"}

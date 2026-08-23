@@ -3,7 +3,7 @@ import Link from "next/link";
 import { auth } from "@asaplocal/auth";
 import { prisma } from "@asaplocal/db";
 import { getLeadConversionAnalytics, getEarningsSummary } from "@asaplocal/core";
-import { Badge, Card } from "@asaplocal/ui";
+import { Badge, Card, InstallAppBanner } from "@asaplocal/ui";
 import { DashboardStat } from "@/components/dashboard-stat";
 import { EarningsWidget } from "./earnings-widget";
 import { WeekCalendarStrip } from "./week-calendar-strip";
@@ -47,6 +47,9 @@ export default async function ProviderDashboard() {
 
   return (
     <div>
+      {/* <main> already supplies the horizontal padding. */}
+      <InstallAppBanner appName="AsapLocal Business" className="mb-6" />
+
       <div className="space-y-4">
         <EarningsWidget earnings={earnings} />
         <WeekCalendarStrip bookingDates={bookingDates} />

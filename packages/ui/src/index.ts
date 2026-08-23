@@ -20,3 +20,4 @@ export * from "./theme-toggle";
 export * from "./switch";
 export * from "./notification-bell";
 export * from "./register-service-worker";
+export * from "./install-app-banner";
