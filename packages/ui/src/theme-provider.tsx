@@ -3,23 +3,30 @@
 import * as React from "react";
 import type { DefaultTheme } from "./theme-script";
 
-type Theme = "light" | "dark";
+/** What the user picked. "system" defers to the OS, and keeps deferring. */
+export type ThemePreference = "system" | "light" | "dark";
+/** What is actually painted. "system" has been resolved away. */
+export type Theme = "light" | "dark";
 
 interface ThemeContextValue {
   theme: Theme;
+  preference: ThemePreference;
+  setPreference: (preference: ThemePreference) => void;
+  /** Kept for the plain two-state controls: flips to the opposite explicit theme. */
   toggleTheme: () => void;
 }
 
 const ThemeContext = React.createContext<ThemeContextValue | null>(null);
 
-function systemTheme(): Theme {
-  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+function isPreference(value: string | null): value is ThemePreference {
+  return value === "system" || value === "light" || value === "dark";
 }
 
 /**
- * `defaultTheme` is what a visitor with no stored choice gets. It must match
- * the value given to <ThemeScript>, which sets the class before first paint —
- * this provider only reconciles React state to what is already on <html>.
+ * `defaultTheme` is what a visitor with NO stored preference gets, and must match
+ * the value given to <ThemeScript>. Note this is separate from choosing "System"
+ * in the UI: an app can default to light while still letting people opt into
+ * following their OS.
  */
 export function ThemeProvider({
   children,
@@ -28,45 +35,55 @@ export function ThemeProvider({
   children: React.ReactNode;
   defaultTheme?: DefaultTheme;
 }) {
-  // "system" can only be resolved in the browser, so assume light for the
-  // server render; the effect below corrects it, and ThemeScript has already
-  // put the right class on <html> either way.
+  const [preference, setPreferenceState] = React.useState<ThemePreference>(defaultTheme);
   const [theme, setTheme] = React.useState<Theme>(defaultTheme === "dark" ? "dark" : "light");
+  // Gate the effect below until storage has been read, so it can never apply the
+  // default over a stored preference on the first commit.
+  const [hydrated, setHydrated] = React.useState(false);
 
   React.useEffect(() => {
     const stored = localStorage.getItem("theme");
-    const hasChoice = stored === "light" || stored === "dark";
-    const initial: Theme = hasChoice
-      ? (stored as Theme)
-      : defaultTheme === "system"
-        ? systemTheme()
-        : defaultTheme;
-    setTheme(initial);
-
-    // Only follow live system-preference changes when the app defers to the
-    // system AND the user hasn't made an explicit choice yet. An app that
-    // defaults to light must not flip when the OS goes dark at sunset.
-    if (hasChoice || defaultTheme !== "system") return;
-    const mq = window.matchMedia("(prefers-color-scheme: dark)");
-    const listener = (e: MediaQueryListEvent) => {
-      const next: Theme = e.matches ? "dark" : "light";
-      setTheme(next);
-      document.documentElement.classList.toggle("dark", next === "dark");
-    };
-    mq.addEventListener("change", listener);
-    return () => mq.removeEventListener("change", listener);
+    setPreferenceState(isPreference(stored) ? stored : defaultTheme);
+    // Adopt what ThemeScript already painted instead of recomputing it — this
+    // effect must never touch the class, or explicit choices flash on load.
+    setTheme(document.documentElement.classList.contains("dark") ? "dark" : "light");
+    setHydrated(true);
   }, [defaultTheme]);
 
-  const toggleTheme = React.useCallback(() => {
-    setTheme((prev) => {
-      const next: Theme = prev === "dark" ? "light" : "dark";
+  React.useEffect(() => {
+    if (!hydrated || preference !== "system") return;
+    const mq = window.matchMedia("(prefers-color-scheme: dark)");
+    const apply = (dark: boolean) => {
+      setTheme(dark ? "dark" : "light");
+      document.documentElement.classList.toggle("dark", dark);
+    };
+    apply(mq.matches);
+    const listener = (e: MediaQueryListEvent) => apply(e.matches);
+    mq.addEventListener("change", listener);
+    return () => mq.removeEventListener("change", listener);
+  }, [hydrated, preference]);
+
+  const setPreference = React.useCallback((next: ThemePreference) => {
+    localStorage.setItem("theme", next);
+    setPreferenceState(next);
+    // "system" is resolved and applied by the effect above, which also subscribes
+    // to later OS changes; the explicit choices are applied here and now.
+    if (next !== "system") {
+      setTheme(next);
       document.documentElement.classList.toggle("dark", next === "dark");
-      localStorage.setItem("theme", next);
-      return next;
-    });
+    }
   }, []);
 
-  return <ThemeContext.Provider value={{ theme, toggleTheme }}>{children}</ThemeContext.Provider>;
+  const toggleTheme = React.useCallback(() => {
+    setPreference(theme === "dark" ? "light" : "dark");
+  }, [theme, setPreference]);
+
+  const value = React.useMemo(
+    () => ({ theme, preference, setPreference, toggleTheme }),
+    [theme, preference, setPreference, toggleTheme]
+  );
+
+  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 }
 
 export function useTheme() {

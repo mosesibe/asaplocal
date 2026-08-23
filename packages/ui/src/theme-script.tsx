@@ -1,28 +1,26 @@
+/**
+ * What a visitor gets when they have never chosen: "system" follows
+ * prefers-color-scheme, "light"/"dark" ignore it. Once they DO choose — including
+ * choosing "System" explicitly — that stored preference wins from then on.
+ */
 export type DefaultTheme = "light" | "dark" | "system";
 
-/**
- * What to use when the visitor has never chosen a theme. "system" follows
- * prefers-color-scheme; "light"/"dark" ignore it until the user toggles, at
- * which point their stored choice wins for good.
- */
-function fallbackExpression(defaultTheme: DefaultTheme) {
-  if (defaultTheme === "dark") return "true";
-  if (defaultTheme === "light") return "false";
-  return 'window.matchMedia("(prefers-color-scheme: dark)").matches';
-}
+const SYSTEM_DARK = 'window.matchMedia("(prefers-color-scheme: dark)").matches';
 
 /**
  * Runs synchronously in <head>, before <body> paints, so the correct class
  * is already on <html> by first paint — avoids a flash of the wrong theme.
- * Pairs with ThemeProvider, which reconciles React state after hydration.
- * Pass the SAME defaultTheme to both or they will disagree on first load.
+ * Pairs with ThemeProvider, which adopts whatever this decided rather than
+ * repainting. Pass the SAME defaultTheme to both or they will disagree.
  */
 export function ThemeScript({ defaultTheme = "system" }: { defaultTheme?: DefaultTheme } = {}) {
+  // defaultTheme is a closed union, so this interpolation cannot inject anything.
   const script = `
 (function() {
   try {
-    var stored = localStorage.getItem("theme");
-    var dark = stored === "dark" || (stored !== "light" && ${fallbackExpression(defaultTheme)});
+    var pref = localStorage.getItem("theme");
+    if (pref !== "light" && pref !== "dark" && pref !== "system") pref = ${JSON.stringify(defaultTheme)};
+    var dark = pref === "dark" || (pref === "system" && ${SYSTEM_DARK});
     document.documentElement.classList.toggle("dark", dark);
   } catch (e) {}
 })();

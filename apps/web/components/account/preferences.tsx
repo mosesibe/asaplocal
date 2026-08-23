@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Globe, Moon } from "lucide-react";
-import { Select, useTheme } from "@asaplocal/ui";
-import { SectionRow, Switch } from "./section-row";
+import { Globe, Monitor } from "lucide-react";
+import { Select, useTheme, type ThemePreference } from "@asaplocal/ui";
+import { SectionRow } from "./section-row";
 
 const LANGUAGES = [
   { code: "en-GB", label: "English (UK)" },
@@ -12,8 +12,16 @@ const LANGUAGES = [
   { code: "es", label: "Español" },
 ];
 
+// System first: it is the option most people want, and the one that keeps
+// working when they change their phone's setting later.
+const THEMES: { value: ThemePreference; label: string }[] = [
+  { value: "system", label: "System" },
+  { value: "light", label: "Light" },
+  { value: "dark", label: "Dark" },
+];
+
 export function PreferencesRows() {
-  const { theme, toggleTheme } = useTheme();
+  const { preference, setPreference } = useTheme();
   const [language, setLanguage] = useState("en-GB");
 
   useEffect(() => {
@@ -44,9 +52,21 @@ export function PreferencesRows() {
         }
       />
       <SectionRow
-        icon={Moon}
-        label="Dark mode"
-        right={<Switch checked={theme === "dark"} onChange={toggleTheme} label="Toggle dark mode" />}
+        icon={Monitor}
+        label="Theme"
+        right={
+          <Select
+            value={preference}
+            onChange={(e) => setPreference(e.target.value as ThemePreference)}
+            className="h-9 w-40 text-sm"
+            onClick={(e) => e.stopPropagation()}
+            aria-label="Theme"
+          >
+            {THEMES.map((t) => (
+              <option key={t.value} value={t.value}>{t.label}</option>
+            ))}
+          </Select>
+        }
       />
     </>
   );
