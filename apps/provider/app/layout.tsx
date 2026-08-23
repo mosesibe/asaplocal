@@ -6,6 +6,7 @@ import { auth } from "@asaplocal/auth";
 import { prisma } from "@asaplocal/db";
 import { canHaveStaff } from "@asaplocal/core";
 import { ThemeScript, RegisterServiceWorker } from "@asaplocal/ui";
+import { SplashScreen, SplashScreenScript } from "@/components/splash-screen";
 import { ProviderShell } from "@/components/provider-shell";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
@@ -51,8 +52,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     <html lang="en-GB" suppressHydrationWarning>
       <head>
         <ThemeScript defaultTheme="light" />
+        <SplashScreenScript />
       </head>
       <body className={`${inter.variable} font-sans`}>
+        <SplashScreen />
         <Providers>
           <RegisterServiceWorker />
           {account ? <ProviderShell account={account}>{children}</ProviderShell> : children}
