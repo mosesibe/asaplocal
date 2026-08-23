@@ -3,6 +3,7 @@ import { auth } from "@asaplocal/auth";
 import { prisma } from "@asaplocal/db";
 import { StarRating } from "@asaplocal/ui";
 import { RespondForm } from "./respond-form";
+import { PageHeading } from "@/components/page-heading";
 
 export default async function ReviewsPage() {
   const session = await auth();
@@ -18,7 +19,7 @@ export default async function ReviewsPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold">Reviews ({business.reviewCount})</h1>
+      <PageHeading>Reviews ({business.reviewCount})</PageHeading>
       <div className="mt-6 space-y-5">
         {reviews.map((r) => (
           <div key={r.id} className="border-b border-border pb-5">

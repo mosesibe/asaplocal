@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@asaplocal/auth";
 import { prisma } from "@asaplocal/db";
 import { SuppliesManager } from "./supplies-manager";
+import { PageHeading } from "@/components/page-heading";
 
 export default async function SuppliesPage() {
   const session = await auth();
@@ -20,7 +21,7 @@ export default async function SuppliesPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold">Supplies</h1>
+      <PageHeading>Supplies</PageHeading>
       <p className="mt-1 text-muted-foreground">
         Products you sell alongside your work — parts, materials, consumables. These show on your public listing so customers
         know they can get them from you.

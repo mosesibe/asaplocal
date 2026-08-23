@@ -5,6 +5,7 @@ import { auth } from "@asaplocal/auth";
 import { prisma } from "@asaplocal/db";
 import { computeProviderBalance } from "@asaplocal/core";
 import { Badge, Card, formatPence } from "@asaplocal/ui";
+import { PageHeading } from "@/components/page-heading";
 
 export const metadata = { title: "Earnings" };
 
@@ -30,7 +31,7 @@ export default async function EarningsOverviewPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold">Earnings</h1>
+      <PageHeading>Earnings</PageHeading>
       <p className="mt-1 text-sm text-muted-foreground">What you've earned, what's been paid out, and what you're paying us.</p>
 
       <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">

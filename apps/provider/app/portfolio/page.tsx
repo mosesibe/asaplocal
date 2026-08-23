@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@asaplocal/auth";
 import { prisma } from "@asaplocal/db";
 import { PortfolioManager } from "./portfolio-manager";
+import { PageHeading } from "@/components/page-heading";
 
 export default async function PortfolioPage() {
   const session = await auth();
@@ -15,7 +16,7 @@ export default async function PortfolioPage() {
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-10 sm:px-6">
-      <h1 className="text-2xl font-bold">Portfolio</h1>
+      <PageHeading>Portfolio</PageHeading>
       <p className="mt-1 text-muted-foreground">Show off completed projects — before/after photos, videos, and descriptions.</p>
       <PortfolioManager
         categories={business.services.map((s) => ({ id: s.category.id, name: s.category.name }))}

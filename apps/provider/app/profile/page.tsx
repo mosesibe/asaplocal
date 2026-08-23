@@ -4,6 +4,7 @@ import { auth } from "@asaplocal/auth";
 import { prisma } from "@asaplocal/db";
 import { ProfileForm } from "./profile-form";
 import { AddressesSection } from "./addresses-section";
+import { PageHeading } from "@/components/page-heading";
 
 export default async function BusinessProfilePage() {
   const session = await auth();
@@ -18,7 +19,7 @@ export default async function BusinessProfilePage() {
     <div>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold">Business profile</h1>
+          <PageHeading>Business profile</PageHeading>
           <p className="mt-1 text-muted-foreground">This is what customers see on your public listing.</p>
         </div>
         <Link href="/profile/preview" className="text-sm font-medium text-brand-700 hover:underline">

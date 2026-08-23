@@ -4,6 +4,7 @@ import { auth } from "@asaplocal/auth";
 import { prisma } from "@asaplocal/db";
 import { computeProviderBalance } from "@asaplocal/core";
 import { Badge, Card, formatPence } from "@asaplocal/ui";
+import { PageHeading } from "@/components/page-heading";
 
 export const metadata = { title: "Invoices & payouts" };
 
@@ -25,7 +26,7 @@ export default async function EarningsInvoicesPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold">Invoices &amp; payouts</h1>
+      <PageHeading>Invoices &amp; payouts</PageHeading>
       <p className="mt-1 text-sm text-muted-foreground">Every completed job, what the customer paid, and what reached you.</p>
 
       <div className="mt-6 grid grid-cols-3 gap-3">

@@ -7,6 +7,7 @@ import { canHaveStaff } from "@asaplocal/core";
 import { Badge, Card, cn, formatPence } from "@asaplocal/ui";
 import { AssignStaffSelect } from "./assign-staff-select";
 import { MonthGrid, STATUS_DOT, type CalendarDayJob } from "./month-grid";
+import { PageHeading } from "@/components/page-heading";
 
 /** Local YYYY-MM-DD — never toISOString(), which would shift evening jobs a day back in BST. */
 function dayKey(d: Date) {
@@ -81,7 +82,7 @@ export default async function CalendarPage({
 
   return (
     <div>
-      <h1 className="text-2xl font-bold">Calendar</h1>
+      <PageHeading>Calendar</PageHeading>
       <p className="mt-1 text-sm text-muted-foreground">Every job you've booked, in progress and completed.</p>
 
       <div className="mt-6 grid grid-cols-3 gap-3">

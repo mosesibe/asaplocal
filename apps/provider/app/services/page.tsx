@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@asaplocal/auth";
 import { prisma } from "@asaplocal/db";
 import { ServicesManager } from "./services-manager";
+import { PageHeading } from "@/components/page-heading";
 
 export default async function ServicesPage() {
   const session = await auth();
@@ -23,7 +24,7 @@ export default async function ServicesPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold">Services</h1>
+      <PageHeading>Services</PageHeading>
       <p className="mt-1 text-muted-foreground">
         The work you offer. Pause anything you're not taking on right now and it stops appearing in your lead marketplace.
       </p>

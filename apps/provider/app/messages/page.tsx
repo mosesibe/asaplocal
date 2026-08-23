@@ -3,6 +3,7 @@ import Link from "next/link";
 import { auth } from "@asaplocal/auth";
 import { prisma } from "@asaplocal/db";
 import { Avatar, Card } from "@asaplocal/ui";
+import { PageHeading } from "@/components/page-heading";
 
 export default async function MessagesPage() {
   const session = await auth();
@@ -16,7 +17,7 @@ export default async function MessagesPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold">Messages</h1>
+      <PageHeading>Messages</PageHeading>
       <div className="mt-6 space-y-3">
         {conversations.map((c) => {
           const other = c.participants.find((p) => p.userId !== session.user.id);

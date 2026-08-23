@@ -5,6 +5,7 @@ import { prisma } from "@asaplocal/db";
 import { Badge, Card, cn } from "@asaplocal/ui";
 import { CheckoutButton } from "../../billing/checkout-button";
 import { PlanAction } from "./plan-actions";
+import { PageHeading } from "@/components/page-heading";
 
 export const metadata = { title: "Subscription" };
 
@@ -34,7 +35,7 @@ export default async function SubscriptionPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold">Subscription</h1>
+      <PageHeading>Subscription</PageHeading>
       <p className="mt-1 text-sm text-muted-foreground">Your plan, allowance, and how to change it.</p>
 
       <Card className="mt-6 p-5">

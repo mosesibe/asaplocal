@@ -4,6 +4,7 @@ import { auth } from "@asaplocal/auth";
 import { prisma } from "@asaplocal/db";
 import { canHaveStaff } from "@asaplocal/core";
 import { Avatar, Badge, Button, Card } from "@asaplocal/ui";
+import { PageHeading } from "@/components/page-heading";
 
 const STATUS_VARIANT = {
   VERIFIED: "success",
@@ -23,7 +24,7 @@ export default async function StaffPage() {
   if (!canHaveStaff(business.businessType)) {
     return (
       <div>
-        <h1 className="text-2xl font-bold">Staff</h1>
+        <PageHeading>Staff</PageHeading>
         <Card className="mt-6 p-6">
           <p className="text-sm text-muted-foreground">
             Staff management is for limited companies and partnerships that send employees out to jobs. As a sole trader / self-employed
@@ -39,7 +40,7 @@ export default async function StaffPage() {
   return (
     <div>
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Staff</h1>
+        <PageHeading>Staff</PageHeading>
         <Link href="/staff/new"><Button>Add staff member</Button></Link>
       </div>
       <p className="mt-1 text-sm text-muted-foreground">

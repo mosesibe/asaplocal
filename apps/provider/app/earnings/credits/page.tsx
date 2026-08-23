@@ -3,6 +3,7 @@ import { auth } from "@asaplocal/auth";
 import { prisma } from "@asaplocal/db";
 import { Card, formatPence } from "@asaplocal/ui";
 import { CheckoutButton } from "../../billing/checkout-button";
+import { PageHeading } from "@/components/page-heading";
 
 export const metadata = { title: "Lead credits" };
 
@@ -19,7 +20,7 @@ export default async function LeadCreditsPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold">Lead credits</h1>
+      <PageHeading>Lead credits</PageHeading>
       <p className="mt-1 text-sm text-muted-foreground">
         Credits buy leads beyond your plan allowance. They never expire.
       </p>

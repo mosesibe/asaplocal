@@ -4,6 +4,7 @@ import { auth } from "@asaplocal/auth";
 import { prisma } from "@asaplocal/db";
 import { Card } from "@asaplocal/ui";
 import { VerificationStatusBadge } from "@/lib/verification-badge";
+import { PageHeading } from "@/components/page-heading";
 
 // Rolls up a list of individual VerificationStatus values into one status
 // for the summary row: complete only once everything submitted has been
@@ -52,7 +53,7 @@ export default async function VerificationCenterPage() {
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-10 sm:px-6">
-      <h1 className="text-2xl font-bold">Verification Center</h1>
+      <PageHeading>Verification Center</PageHeading>
       <p className="mt-1 text-muted-foreground">
         Current trust tier: <span className="font-medium">{business.trustTier}</span>. Complete more sections to unlock higher tiers.
       </p>

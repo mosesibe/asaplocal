@@ -5,6 +5,7 @@ import { prisma } from "@asaplocal/db";
 import { getLeadsNearBusiness } from "@asaplocal/core";
 import { Badge, Card, buttonVariants, cn, formatPence } from "@asaplocal/ui";
 import { AcquireLeadButtons } from "./acquire-lead-buttons";
+import { PageHeading } from "@/components/page-heading";
 
 export const metadata = { title: "Lead marketplace" };
 
@@ -27,7 +28,7 @@ export default async function LeadsMarketplacePage({ searchParams }: { searchPar
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Lead marketplace</h1>
+        <PageHeading>Lead marketplace</PageHeading>
         <p className="text-sm text-muted-foreground">
           {allowanceRemaining > 0 ? `${allowanceRemaining} plan leads left this month` : "No plan allowance left"} · {creditBalance} credits
         </p>

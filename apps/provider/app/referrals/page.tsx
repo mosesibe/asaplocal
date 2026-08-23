@@ -3,6 +3,7 @@ import { auth } from "@asaplocal/auth";
 import { getReferralSummary } from "@asaplocal/core";
 import { Card, formatPence } from "@asaplocal/ui";
 import { CopyLink } from "./copy-link";
+import { PageHeading } from "@/components/page-heading";
 
 export default async function ReferralsPage() {
   const session = await auth();
@@ -12,7 +13,7 @@ export default async function ReferralsPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold">Referrals</h1>
+      <PageHeading>Referrals</PageHeading>
       <p className="mt-1 text-muted-foreground">
         Invite another tradesperson to AsapLocal. When they make their first payment, you both get{" "}
         {formatPence(summary.rewardPence)} in credit.
