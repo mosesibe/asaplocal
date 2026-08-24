@@ -12,6 +12,7 @@ import {
   UserCog,
   UserX,
   Flag,
+  AlertTriangle,
   ListTree,
   CreditCard,
   Truck,
@@ -73,6 +74,7 @@ const OPERATIONS_GROUP: NavItem = {
   icon: Wrench,
   children: [
     { href: "/operations/jobs", label: "Jobs", icon: ClipboardList },
+    { href: "/operations/disputes", label: "Disputes", icon: AlertTriangle },
     { href: "/operations/services", label: "Services", icon: ListTree },
     { href: "/operations/verification", label: "Verification queue", icon: ShieldCheck },
     { href: "/operations/staff", label: "Field staff approvals", icon: IdCard },

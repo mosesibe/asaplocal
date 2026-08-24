@@ -5,8 +5,8 @@ import { Badge, Card, formatPence } from "@asaplocal/ui";
 import { buildJobTimeline } from "@asaplocal/core";
 
 function statusVariant(status: string): "success" | "destructive" | "outline" | "warning" | "secondary" {
-  if (["COMPLETED", "WON", "SUCCEEDED", "ACCEPTED", "CONFIRMED"].includes(status)) return "success";
-  if (["CANCELLED", "EXPIRED", "LOST", "FAILED", "DECLINED", "DISPUTED"].includes(status)) return "destructive";
+  if (["COMPLETED", "WON", "SUCCEEDED", "ACCEPTED", "CONFIRMED", "RESOLVED"].includes(status)) return "success";
+  if (["CANCELLED", "EXPIRED", "LOST", "FAILED", "DECLINED", "DISPUTED", "OPEN"].includes(status)) return "destructive";
   if (["ASSIGNED", "IN_PROGRESS", "AWAITING_APPROVAL", "PENDING", "CONTACTED", "SENT"].includes(status)) return "warning";
   if (["QUOTED"].includes(status)) return "secondary";
   return "outline";
@@ -33,6 +33,7 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
           jobSheetEntries: { orderBy: { loggedAt: "asc" } },
           review: true,
           variations: { orderBy: { createdAt: "asc" } },
+          disputes: { include: { raisedBy: { include: { profile: true } } }, orderBy: { createdAt: "asc" } },
         },
       },
       lead: { include: { accesses: { include: { business: true }, orderBy: { createdAt: "asc" } } } },
@@ -280,6 +281,52 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
                 {job.booking.review.comment && <p className="mt-1 text-sm text-muted-foreground">{job.booking.review.comment}</p>}
               </div>
             )}
+          </Card>
+        )}
+
+        {job.booking && job.booking.disputes.length > 0 && (
+          <Card className="p-4">
+            <h2 className="font-semibold">Disputes ({job.booking.disputes.length})</h2>
+            <div className="mt-2 space-y-3">
+              {job.booking.disputes.map((d) => {
+                const raisedByName = d.raisedBy.profile ? `${d.raisedBy.profile.firstName} ${d.raisedBy.profile.lastName}` : d.raisedBy.email;
+                return (
+                  <div key={d.id} className="rounded-lg border border-border p-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <p className="text-sm"><span className="text-muted-foreground">{raisedByName}: </span>{d.reason}</p>
+                      <Badge variant={statusVariant(d.status)} className="shrink-0">{d.status}</Badge>
+                    </div>
+                    {d.photos.length > 0 && (
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {d.photos.map((url, i) => (
+                          <a key={i} href={url} target="_blank" rel="noreferrer">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={url} alt="" className="h-16 w-16 rounded-lg border border-border object-cover" />
+                          </a>
+                        ))}
+                      </div>
+                    )}
+                    <p className="mt-1 text-xs text-muted-foreground">{fmtDateTime(d.createdAt)}</p>
+                    {d.status === "RESOLVED" && (
+                      <div className="mt-2 border-t border-border pt-2">
+                        <p className="text-xs font-semibold text-muted-foreground">Provider response</p>
+                        <p className="mt-1 text-sm">{d.providerResponse}</p>
+                        {d.providerPhotos.length > 0 && (
+                          <div className="mt-2 flex flex-wrap gap-2">
+                            {d.providerPhotos.map((url, i) => (
+                              <a key={i} href={url} target="_blank" rel="noreferrer">
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img src={url} alt="" className="h-16 w-16 rounded-lg border border-border object-cover" />
+                              </a>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           </Card>
         )}
 
