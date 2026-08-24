@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@asaplocal/auth";
 import { prisma } from "@asaplocal/db";
-import { stripHtml } from "@asaplocal/core";
+import { stripHtml, recomputeTrustTier, writeAuditLog } from "@asaplocal/core";
 import { z } from "zod";
 
 const workingHoursDay = z.object({ open: z.string(), close: z.string() }).nullable();
@@ -16,6 +16,7 @@ const workingHoursSchema = z.object({
 });
 
 const schema = z.object({
+  name: z.string().min(2).max(200).optional(),
   tradingName: z.string().max(200).optional(),
   description: z.string().min(20).optional(),
   logoUrl: z.string().url().optional(),
@@ -53,16 +54,36 @@ export async function PATCH(req: NextRequest) {
     (data.languagesSpoken ?? business.languagesSpoken).length > 0 &&
     (data.workingHours ?? business.workingHours) != null;
 
+  const nextName = data.name ? stripHtml(data.name) : undefined;
+  // A registered business's name is what Companies House / manual-document
+  // verification was checked against — changing it invalidates that check,
+  // so renaming resets verification rather than silently keeping a stale pass.
+  const nameChanged = nextName !== undefined && nextName !== business.name;
+
   const updated = await prisma.business.update({
     where: { id: business.id },
     data: {
       ...data,
+      name: nextName,
       tradingName: data.tradingName ? stripHtml(data.tradingName) : undefined,
       description: data.description ? stripHtml(data.description) : undefined,
       workingHours: data.workingHours as any,
       profileCompletedAt: hasCoreProfileFields ? new Date() : undefined,
+      ...(nameChanged ? { verificationStatus: "UNVERIFIED" as const, verifiedAt: null } : {}),
     },
   });
 
-  return NextResponse.json({ business: updated });
+  if (nameChanged) {
+    await recomputeTrustTier(business.id);
+    await writeAuditLog({
+      actorId: session.user.id,
+      actorRole: session.user.role,
+      action: "business.renamed_unverified",
+      targetType: "Business",
+      targetId: business.id,
+      metadata: { from: business.name, to: nextName },
+    });
+  }
+
+  return NextResponse.json({ business: updated, verificationReset: nameChanged });
 }

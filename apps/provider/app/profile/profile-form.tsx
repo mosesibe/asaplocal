@@ -17,6 +17,7 @@ const DAYS: { key: keyof WorkingHours; label: string }[] = [
 ];
 
 interface BusinessProfile {
+  name: string;
   tradingName: string;
   description: string;
   logoUrl: string;
@@ -38,7 +39,9 @@ export function ProfileForm({ business }: { business: BusinessProfile }) {
     languagesInput: business.languagesSpoken.join(", "),
     targetResponseMins: business.targetResponseMins ?? "",
   });
+  const [savedName, setSavedName] = useState(business.name);
   const [saved, setSaved] = useState(false);
+  const [verificationReset, setVerificationReset] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
@@ -125,13 +128,22 @@ export function ProfileForm({ business }: { business: BusinessProfile }) {
   }
 
   async function save() {
+    const nameChanged = form.name !== savedName;
+    if (nameChanged) {
+      const confirmed = window.confirm(
+        "Changing your business name will remove your verified status — you'll need to go through verification again before it shows as verified. Continue?"
+      );
+      if (!confirmed) return;
+    }
     setLoading(true);
     setSaved(false);
+    setVerificationReset(false);
     setError(null);
     const res = await fetch("/api/business", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
+        name: form.name,
         tradingName: form.tradingName || undefined,
         description: form.description,
         logoUrl: form.logoUrl || undefined,
@@ -152,11 +164,22 @@ export function ProfileForm({ business }: { business: BusinessProfile }) {
       setError(body?.message ?? "Something went wrong — your changes weren't saved.");
       return;
     }
+    const body = await res.json().catch(() => ({}));
+    if (nameChanged) setSavedName(form.name);
+    setVerificationReset(Boolean(body?.verificationReset));
     setSaved(true);
   }
 
   return (
     <Card className="max-w-xl space-y-4 p-6">
+      <div>
+        <label className="text-sm font-medium">Business name</label>
+        <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="mt-1" />
+        <p className="mt-1 text-xs text-muted-foreground">
+          Changing this removes your verified status — you'll need to re-verify your business (especially if you're a limited company).
+        </p>
+      </div>
+
       <div>
         <label className="text-sm font-medium">Trade name</label>
         <Input value={form.tradingName} onChange={(e) => setForm({ ...form, tradingName: e.target.value })} placeholder="Trading name (optional)" className="mt-1" />
@@ -281,7 +304,12 @@ export function ProfileForm({ business }: { business: BusinessProfile }) {
         </div>
       </div>
 
-      {saved && <p className="text-sm text-emerald-700">Saved.</p>}
+      {saved && !verificationReset && <p className="text-sm text-emerald-700">Saved.</p>}
+      {saved && verificationReset && (
+        <p className="text-sm text-amber-700">
+          Saved. Your business is no longer verified — head to <a href="/verification" className="underline">Verification</a> to re-verify.
+        </p>
+      )}
       {error && <p className="text-sm text-red-600">{error}</p>}
       <Button onClick={save} disabled={loading}>{loading ? "Saving…" : "Save changes"}</Button>
     </Card>

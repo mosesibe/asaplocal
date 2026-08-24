@@ -29,6 +29,7 @@ export default async function BusinessProfilePage() {
       <div className="mt-6">
         <ProfileForm
           business={{
+            name: business.name,
             tradingName: business.tradingName ?? "",
             description: business.description ?? "",
             logoUrl: business.logoUrl ?? "",
