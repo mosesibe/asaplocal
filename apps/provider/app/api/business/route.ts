@@ -85,5 +85,15 @@ export async function PATCH(req: NextRequest) {
     });
   }
 
+  // ServiceArea rows are seeded once at onboarding with that day's
+  // baseRadiusMiles and never touched again — without this they drift from
+  // whatever radius the provider sets here, and since lead matching and the
+  // dashboard map both prefer a service area's own radius when one exists,
+  // a stale wider row keeps surfacing leads (and drawing a circle) beyond
+  // the radius the provider thinks they've set.
+  if (data.baseRadiusMiles !== undefined) {
+    await prisma.serviceArea.updateMany({ where: { businessId: business.id }, data: { radiusMiles: data.baseRadiusMiles } });
+  }
+
   return NextResponse.json({ business: updated, verificationReset: nameChanged });
 }
