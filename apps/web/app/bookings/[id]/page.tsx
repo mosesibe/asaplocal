@@ -10,6 +10,7 @@ import { TrackingMap } from "./tracking-map";
 import { JobPhotoGallery } from "./job-photo-gallery";
 import { VariationDecision } from "./variation-decision";
 import { PayBalanceButton } from "./pay-balance-button";
+import { DisputeForm } from "./dispute-form";
 
 export default async function BookingDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -26,6 +27,7 @@ export default async function BookingDetailPage({ params }: { params: Promise<{ 
       jobRequest: true,
       variations: { orderBy: { createdAt: "asc" } },
       payments: true,
+      disputes: { orderBy: { createdAt: "asc" } },
     },
   });
   if (!booking || booking.customerId !== session.user.id) notFound();
@@ -44,7 +46,9 @@ export default async function BookingDetailPage({ params }: { params: Promise<{ 
     <div className="mx-auto max-w-2xl md:px-6 md:py-10">
       <MobileTopBar backHref="/dashboard" linkAs={Link} title="Booking" className="md:hidden" />
       <div className="px-4 py-6 md:p-0">
-        <Badge variant={booking.status === "COMPLETED" ? "success" : "secondary"}>{booking.status.replace(/_/g, " ")}</Badge>
+        <Badge variant={booking.status === "COMPLETED" ? "success" : booking.status === "DISPUTED" ? "destructive" : "secondary"}>
+          {booking.status.replace(/_/g, " ")}
+        </Badge>
         <h1 className="mt-3 text-2xl font-bold">Booking with {booking.business.name}</h1>
         <Card className="mt-6 space-y-2 p-6">
           <div className="flex justify-between text-sm"><span>Scheduled</span><span>{booking.scheduledDate.toLocaleDateString("en-GB")}</span></div>
@@ -171,9 +175,38 @@ export default async function BookingDetailPage({ params }: { params: Promise<{ 
             {booking.status === "AWAITING_APPROVAL" && (
               <div className="pt-2">
                 <p className="mb-2 text-sm text-muted-foreground">{booking.business.name} has marked this job as done — review the work above and confirm.</p>
-                <AcceptCompletionButton bookingId={booking.id} />
+                <div className="flex flex-wrap gap-2">
+                  <AcceptCompletionButton bookingId={booking.id} />
+                  <DisputeForm bookingId={booking.id} />
+                </div>
               </div>
             )}
+            {booking.status === "DISPUTED" && (
+              <p className="pt-2 text-sm text-muted-foreground">
+                You've reported an issue with this job — {booking.business.name} has been notified and needs to respond before you can confirm.
+              </p>
+            )}
+          </Card>
+        )}
+
+        {booking.disputes.length > 0 && (
+          <Card className="mt-6 space-y-3 p-6">
+            <h2 className="font-semibold">Reported issues</h2>
+            {booking.disputes.map((dispute) => (
+              <div key={dispute.id} className="rounded-lg border border-border p-3">
+                <p className="text-sm">{dispute.reason}</p>
+                <JobPhotoGallery photos={dispute.photos} label={dispute.reason} />
+                {dispute.status === "RESOLVED" ? (
+                  <div className="mt-3 border-t border-border pt-3">
+                    <p className="text-xs font-medium text-muted-foreground">{booking.business.name}'s response</p>
+                    <p className="mt-1 text-sm">{dispute.providerResponse}</p>
+                    <JobPhotoGallery photos={dispute.providerPhotos} label={dispute.providerResponse ?? "Response"} />
+                  </div>
+                ) : (
+                  <p className="mt-2 text-xs text-muted-foreground">Waiting for {booking.business.name} to respond.</p>
+                )}
+              </div>
+            ))}
           </Card>
         )}
 

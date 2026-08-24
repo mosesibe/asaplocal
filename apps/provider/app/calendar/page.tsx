@@ -57,7 +57,7 @@ export default async function CalendarPage({
       include: { customer: { include: { profile: true } }, assignedStaff: true, jobRequest: true },
     }),
     prisma.booking.findMany({
-      where: { businessId: business.id, status: { in: ["PENDING", "CONFIRMED", "IN_PROGRESS", "AWAITING_APPROVAL"] }, scheduledDate: { gte: now } },
+      where: { businessId: business.id, status: { in: ["PENDING", "CONFIRMED", "IN_PROGRESS", "AWAITING_APPROVAL", "DISPUTED"] }, scheduledDate: { gte: now } },
       orderBy: { scheduledDate: "asc" },
       take: 5,
       include: { customer: { include: { profile: true } }, assignedStaff: true, jobRequest: true },

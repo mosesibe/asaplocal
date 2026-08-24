@@ -27,7 +27,8 @@ export type UploadPurpose =
   | "staff-id-front"
   | "staff-id-back"
   | "user-avatar"
-  | "supply-image";
+  | "supply-image"
+  | "dispute-photo";
 
 const ALLOWED_MIME = new Set(["image/jpeg", "image/png", "image/webp", "image/heic", "application/pdf"]);
 const DEFAULT_MAX_BYTES = 10 * 1024 * 1024; // 10MB

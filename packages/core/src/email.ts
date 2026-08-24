@@ -379,6 +379,37 @@ export const emailTemplates = {
       cta: { label: "View booking", url: opts.link },
     }),
 
+  /** Customer disputed a completed job instead of accepting it. */
+  disputeRaisedProvider: (opts: { businessName: string; jobTitle: string; reason: string; link: string }): EmailBody =>
+    docket({
+      eyebrow: "Issue reported",
+      title: "The customer reported an issue with this job",
+      blocks: [
+        {
+          kind: "paragraph",
+          text: `Hi ${opts.businessName} — instead of accepting completion, your customer has raised an issue. Take a look, respond, and mark it resolved once it's sorted.`,
+        },
+        { kind: "highlight", title: opts.jobTitle, meta: opts.reason },
+      ],
+      cta: { label: "View and respond", url: opts.link },
+      footnote: "The booking won't be signed off (or paid out) until the customer reconfirms.",
+    }),
+
+  /** Provider responded to a dispute — customer needs to reconfirm completion. */
+  disputeResolvedCustomer: (opts: { businessName: string; jobTitle: string; response: string; link: string }): EmailBody =>
+    docket({
+      eyebrow: "Response received",
+      title: `${opts.businessName} responded to your issue`,
+      blocks: [
+        {
+          kind: "paragraph",
+          text: "They've marked it resolved. Take a look at their response, then confirm completion — or raise it again if it's still not right.",
+        },
+        { kind: "highlight", title: opts.jobTitle, meta: opts.response },
+      ],
+      cta: { label: "Review and confirm", url: opts.link },
+    }),
+
   /** Customer left a rating/review on a completed booking. */
   reviewReceivedProvider: (opts: {
     businessName: string;

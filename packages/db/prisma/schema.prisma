@@ -161,6 +161,11 @@ enum BookingStatus {
   DISPUTED
 }
 
+enum DisputeStatus {
+  OPEN
+  RESOLVED
+}
+
 enum PayoutMethod {
   STRIPE_CONNECT // automatic transfer to the provider's connected account
   MANUAL // bank transfer done by hand and recorded by an admin
@@ -242,6 +247,8 @@ enum NotificationType {
   PROVIDER_ON_THE_WAY
   VARIATION_PROPOSED
   VARIATION_DECIDED
+  BOOKING_DISPUTED
+  DISPUTE_RESOLVED
 }
 
 enum ApprovalActionType {
@@ -350,6 +357,7 @@ model User {
   deletionRequestsReviewed AccountDeletionRequest[]  @relation("AccountDeletionReviewer")
   payoutsRecorded          Payout[]                  @relation("PayoutRecorder")
   staffMemberReviews       StaffMember[]             @relation("StaffMemberReviewer")
+  disputesRaised           BookingDispute[]          @relation("DisputesRaised")
 
   @@index([role])
   @@index([status])
@@ -1133,12 +1141,39 @@ model Booking {
   jobSheetEntries JobSheetEntry[]
   variations      BookingVariation[]
   payouts         Payout[]
+  disputes        BookingDispute[]
 
   @@index([customerId])
   @@index([assignedStaffId])
   @@index([businessId])
   @@index([status])
   @@index([scheduledDate])
+}
+
+// Raised by the customer when they don't accept a job the provider marked
+// done (Booking.status AWAITING_APPROVAL → DISPUTED). The provider responds
+// — with photos of any further work — and marks it resolved, which returns
+// the booking to AWAITING_APPROVAL so the customer reconfirms through the
+// same accept-completion gate as before. A booking can cycle through this
+// more than once, so disputes are a list, not a single row on Booking.
+model BookingDispute {
+  id               String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  bookingId        String        @db.Uuid
+  raisedById       String        @db.Uuid
+  reason           String        @db.Text
+  photos           String[]
+  status           DisputeStatus @default(OPEN)
+  providerResponse String?       @db.Text
+  providerPhotos   String[]
+  resolvedAt       DateTime?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  booking  Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  raisedBy User    @relation("DisputesRaised", fields: [raisedById], references: [id], onDelete: Cascade)
+
+  @@index([bookingId])
+  @@index([status])
 }
 
 // A running log of what the provider actually did during a booking — added

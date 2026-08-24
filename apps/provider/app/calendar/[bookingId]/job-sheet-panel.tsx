@@ -208,6 +208,14 @@ export function JobSheetPanel({ bookingId, status, entryCount }: Props) {
     );
   }
 
+  if (status === "DISPUTED") {
+    return (
+      <Card className="p-6">
+        <p className="text-sm text-muted-foreground">The customer reported an issue with this job — see below to respond.</p>
+      </Card>
+    );
+  }
+
   if (status === "COMPLETED") {
     return (
       <Card className="p-6">

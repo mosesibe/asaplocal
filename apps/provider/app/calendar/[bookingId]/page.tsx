@@ -6,6 +6,7 @@ import { Badge, Card } from "@asaplocal/ui";
 import { JobSheetPanel } from "./job-sheet-panel";
 import { OnTheWayPanel } from "./on-the-way-panel";
 import { VariationPanel } from "./variation-panel";
+import { DisputePanel } from "./dispute-panel";
 
 export default async function ProviderBookingDetailPage({ params }: { params: Promise<{ bookingId: string }> }) {
   const { bookingId } = await params;
@@ -23,6 +24,7 @@ export default async function ProviderBookingDetailPage({ params }: { params: Pr
       assignedStaff: true,
       jobRequest: { include: { lead: true } },
       variations: { orderBy: { createdAt: "asc" } },
+      disputes: { orderBy: { createdAt: "asc" } },
     },
   });
   if (!booking || booking.businessId !== business.id) notFound();
@@ -72,6 +74,12 @@ export default async function ProviderBookingDetailPage({ params }: { params: Pr
       {["CONFIRMED", "IN_PROGRESS", "AWAITING_APPROVAL"].includes(booking.status) && (
         <div className="mt-6">
           <VariationPanel bookingId={booking.id} variations={booking.variations} />
+        </div>
+      )}
+
+      {booking.disputes.length > 0 && (
+        <div className="mt-6">
+          <DisputePanel bookingId={booking.id} disputes={booking.disputes} />
         </div>
       )}
 

@@ -15,6 +15,7 @@ const BOOKING_NEXT_STEP: Record<string, string> = {
   CONFIRMED: "Share your ETA, then start the job when you arrive.",
   IN_PROGRESS: "Log what you're doing as you go, then finish the job to send it for sign-off.",
   AWAITING_APPROVAL: "Sent to the customer — waiting for them to confirm the work is complete.",
+  DISPUTED: "The customer reported an issue — respond from the booking to send it back for sign-off.",
   COMPLETED: "The customer confirmed this job as complete.",
   CANCELLED: "This booking was cancelled.",
 };
