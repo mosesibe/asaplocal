@@ -17,6 +17,7 @@ const DAYS: { key: keyof WorkingHours; label: string }[] = [
 ];
 
 interface BusinessProfile {
+  tradingName: string;
   description: string;
   logoUrl: string;
   coverImageUrl: string;
@@ -131,6 +132,7 @@ export function ProfileForm({ business }: { business: BusinessProfile }) {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
+        tradingName: form.tradingName || undefined,
         description: form.description,
         logoUrl: form.logoUrl || undefined,
         coverImageUrl: form.coverImageUrl || undefined,
@@ -155,6 +157,11 @@ export function ProfileForm({ business }: { business: BusinessProfile }) {
 
   return (
     <Card className="max-w-xl space-y-4 p-6">
+      <div>
+        <label className="text-sm font-medium">Trade name</label>
+        <Input value={form.tradingName} onChange={(e) => setForm({ ...form, tradingName: e.target.value })} placeholder="Trading name (optional)" className="mt-1" />
+      </div>
+
       <div>
         <label className="text-sm font-medium">Description</label>
         <Textarea rows={5} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="mt-1" />

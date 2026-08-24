@@ -16,6 +16,7 @@ const workingHoursSchema = z.object({
 });
 
 const schema = z.object({
+  tradingName: z.string().max(200).optional(),
   description: z.string().min(20).optional(),
   logoUrl: z.string().url().optional(),
   coverImageUrl: z.string().url().optional(),
@@ -56,6 +57,7 @@ export async function PATCH(req: NextRequest) {
     where: { id: business.id },
     data: {
       ...data,
+      tradingName: data.tradingName ? stripHtml(data.tradingName) : undefined,
       description: data.description ? stripHtml(data.description) : undefined,
       workingHours: data.workingHours as any,
       profileCompletedAt: hasCoreProfileFields ? new Date() : undefined,
