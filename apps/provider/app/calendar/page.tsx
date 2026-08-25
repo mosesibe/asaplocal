@@ -6,7 +6,7 @@ import { prisma } from "@asaplocal/db";
 import { canHaveStaff } from "@asaplocal/core";
 import { Badge, Card, cn, formatPence } from "@asaplocal/ui";
 import { AssignStaffSelect } from "./assign-staff-select";
-import { MonthGrid, STATUS_DOT, type CalendarDayJob, type CalendarSpanJob } from "./month-grid";
+import { MonthGrid, STATUS_COLOR, type CalendarSpanJob } from "./month-grid";
 import { PageHeading } from "@/components/page-heading";
 
 /** Local YYYY-MM-DD — never toISOString(), which would shift evening jobs a day back in BST. */
@@ -83,24 +83,16 @@ export default async function CalendarPage({
   // scheduledDate) — dedup in case a job qualifies for both.
   const gridBookings = [...monthBookings, ...spanningIntoMonth.filter((b) => !monthBookings.some((m) => m.id === b.id))];
 
-  // A job only gets a multi-day ribbon once there's real elapsed time to draw
-  // from (startedAt set) — a job that's merely scheduled has no known length.
-  // Still-running jobs use "now" as a provisional end so the ribbon keeps
-  // growing until it's actually finished.
-  const jobsByDay = new Map<string, CalendarDayJob[]>();
-  const multiDayJobs: CalendarSpanJob[] = [];
-  for (const b of gridBookings) {
-    const title = b.jobRequest?.title ?? "Booking";
+  // Every job is a bar on the grid — before it's started, pinned to its
+  // scheduledDate; once started, it stretches from startedAt and keeps
+  // growing day by day (using "now" as a provisional end) for as long as
+  // it's unresolved, then freezes at completedAt/cancelledAt.
+  const jobs: CalendarSpanJob[] = gridBookings.map((b) => {
+    const resolved = b.status === "COMPLETED" || b.status === "CANCELLED";
     const start = b.startedAt ?? b.scheduledDate;
-    const end = b.startedAt ? (b.completedAt ?? (b.status === "IN_PROGRESS" ? now : b.startedAt)) : b.scheduledDate;
-    const startKey = dayKey(start);
-    const endKey = dayKey(end);
-    if (startKey === endKey) {
-      jobsByDay.set(startKey, [...(jobsByDay.get(startKey) ?? []), { id: b.id, status: b.status, title }]);
-    } else {
-      multiDayJobs.push({ id: b.id, status: b.status, title, startKey, endKey });
-    }
-  }
+    const end = !b.startedAt ? b.scheduledDate : resolved ? (b.completedAt ?? b.cancelledAt ?? b.startedAt) : now;
+    return { id: b.id, status: b.status, title: b.jobRequest?.title ?? "Booking", startKey: dayKey(start), endKey: dayKey(end) };
+  });
 
   const completedThisMonth = monthBookings.filter((b) => b.status === "COMPLETED");
   const earnedThisMonth = monthBookings.reduce((sum, b) => sum + (b.settledAt ? (b.providerNetPence ?? 0) : 0), 0);
@@ -142,14 +134,14 @@ export default async function CalendarPage({
           </Link>
         </div>
 
-        <MonthGrid year={year} month={month} jobsByDay={jobsByDay} multiDayJobs={multiDayJobs} selectedDay={dayParam} todayKey={dayKey(now)} />
+        <MonthGrid year={year} month={month} jobs={jobs} selectedDay={dayParam} todayKey={dayKey(now)} />
 
         <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1.5 border-t border-border pt-3 text-xs text-muted-foreground">
-          {Object.entries(STATUS_DOT)
+          {Object.entries(STATUS_COLOR)
             .filter(([s]) => s !== "DISPUTED")
-            .map(([status, dot]) => (
+            .map(([status, color]) => (
               <span key={status} className="flex items-center gap-1.5">
-                <span className={cn("h-2 w-2 rounded-full", dot)} />
+                <span className={cn("h-2 w-4 rounded-sm", color)} />
                 {status.replace(/_/g, " ").toLowerCase()}
               </span>
             ))}
