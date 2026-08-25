@@ -50,14 +50,27 @@ interface Category {
   icon: string | null;
 }
 
-export function PopularCategories({ categories, citySlug }: { categories: Category[]; citySlug: string }) {
+// Middle of the "within 10-20 miles" range the customer actually cares about,
+// not an exact-city match — see /search's lat/lng/radius handling.
+const SEARCH_RADIUS_MILES = 15;
+
+export function PopularCategories({
+  categories,
+  location,
+}: {
+  categories: Category[];
+  location: { lat: number; lng: number } | null;
+}) {
   return (
     <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
       {categories.map((c) => {
         const Icon = (c.icon ? ICONS[c.icon] : undefined) ?? Tag;
         const accent = (c.icon && ACCENTS[c.icon]) ?? "bg-muted text-muted-foreground";
+        const href = location
+          ? `/search?category=${c.slug}&lat=${location.lat}&lng=${location.lng}&radius=${SEARCH_RADIUS_MILES}`
+          : `/search?category=${c.slug}`;
         return (
-          <Link key={c.id} href={`/${c.slug}-${citySlug}`}>
+          <Link key={c.id} href={href}>
             <Card className="bg-gradient-to-br from-surface to-muted/60 p-4 text-center transition-shadow hover:border-brand-300 hover:shadow-accent dark:hover:border-brand-700">
               <div className={cn("mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full", accent)}>
                 <Icon size={22} strokeWidth={2} />

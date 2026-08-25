@@ -55,7 +55,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
       <h1 className="mb-6 text-2xl font-semibold">
         {sp.category ? categories.find((c) => c.slug === sp.category)?.name : "All providers"}
-        {sp.city ? ` in ${sp.city}` : ""}
+        {sp.city ? ` in ${sp.city}` : lat !== undefined && lng !== undefined ? ` within ${radius} miles` : ""}
       </h1>
       <div className="grid grid-cols-1 gap-4 md:grid-cols-[280px_1fr] md:gap-8">
         <SearchFiltersContainer categories={categories.map((c) => ({ slug: c.slug, name: c.name }))} initial={sp} />

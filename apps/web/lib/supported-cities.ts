@@ -1,5 +1,4 @@
 import { headers } from "next/headers";
-import { milesBetween } from "@asaplocal/core";
 
 /**
  * Cities with pre-rendered SEO landing pages (see app/[slug]/page.tsx's
@@ -13,28 +12,16 @@ export const SUPPORTED_CITIES = [
   { slug: "birmingham", name: "Birmingham", lat: 52.4862, lng: -1.8904 },
 ] as const;
 
-export const DEFAULT_CITY_SLUG = "manchester";
-
 /**
- * Picks the nearest supported city from Vercel's IP-geolocation headers, so
- * homepage category links land on a relevant local SEO page instead of
- * always Manchester. Those headers are only present on Vercel's network —
- * local dev and other hosts fall back to the default.
+ * Visitor's approximate coordinates straight from Vercel's IP-geolocation
+ * headers — unlike SUPPORTED_CITIES' city-centre points, precise enough for
+ * a "within N miles" radius filter. Only present on Vercel's network; local
+ * dev and other hosts get null (callers fall back to no location filter).
  */
-export async function resolveNearestCitySlug(): Promise<string> {
+export async function resolveVisitorLatLng(): Promise<{ lat: number; lng: number } | null> {
   const h = await headers();
   const lat = parseFloat(h.get("x-vercel-ip-latitude") ?? "");
   const lng = parseFloat(h.get("x-vercel-ip-longitude") ?? "");
-  if (Number.isNaN(lat) || Number.isNaN(lng)) return DEFAULT_CITY_SLUG;
-
-  let nearestSlug: string = DEFAULT_CITY_SLUG;
-  let nearestMiles = Infinity;
-  for (const city of SUPPORTED_CITIES) {
-    const miles = milesBetween(lat, lng, city.lat, city.lng);
-    if (miles < nearestMiles) {
-      nearestMiles = miles;
-      nearestSlug = city.slug;
-    }
-  }
-  return nearestSlug;
+  if (Number.isNaN(lat) || Number.isNaN(lng)) return null;
+  return { lat, lng };
 }

@@ -61,7 +61,17 @@ interface Category {
   icon: string | null;
 }
 
-export function CategoryFlyerCarousel({ categories, citySlug }: { categories: Category[]; citySlug: string }) {
+// Middle of the "within 10-20 miles" range the customer actually cares about,
+// not an exact-city match — see /search's lat/lng/radius handling.
+const SEARCH_RADIUS_MILES = 15;
+
+export function CategoryFlyerCarousel({
+  categories,
+  location,
+}: {
+  categories: Category[];
+  location: { lat: number; lng: number } | null;
+}) {
   const scrollerRef = useRef<HTMLDivElement>(null);
 
   function scrollBy(delta: number) {
@@ -76,10 +86,13 @@ export function CategoryFlyerCarousel({ categories, citySlug }: { categories: Ca
         {categories.map((c, i) => {
           const Icon = (c.icon ? ICONS[c.icon] : undefined) ?? Tag;
           const tagline = TAGLINES[c.slug] ?? "Trusted local pros near you";
+          const href = location
+            ? `/search?category=${c.slug}&lat=${location.lat}&lng=${location.lng}&radius=${SEARCH_RADIUS_MILES}`
+            : `/search?category=${c.slug}`;
           return (
             <Link
               key={c.id}
-              href={`/${c.slug}-${citySlug}`}
+              href={href}
               className={cn(
                 "relative flex w-64 shrink-0 snap-start flex-col justify-between overflow-hidden rounded-2xl bg-gradient-to-br p-5 text-white shadow-card sm:w-72",
                 GRADIENTS[i % GRADIENTS.length]
