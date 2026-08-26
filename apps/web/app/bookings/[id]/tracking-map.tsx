@@ -37,7 +37,7 @@ function LiveMarkers({ providerPosition, destination }: { providerPosition: LatL
       providerMarkerRef.current = new google.maps.Marker({
         map,
         position: providerPosition,
-        icon: { path: google.maps.SymbolPath.CIRCLE, scale: 8, fillColor: "#c15f2a", fillOpacity: 1, strokeColor: "#fff", strokeWeight: 2 },
+        icon: { path: google.maps.SymbolPath.CIRCLE, scale: 8, fillColor: "#FF5A00", fillOpacity: 1, strokeColor: "#fff", strokeWeight: 2 },
       });
     } else {
       providerMarkerRef.current.setPosition(providerPosition);

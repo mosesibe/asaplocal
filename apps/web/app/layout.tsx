@@ -24,7 +24,7 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true },
 };
 
-export const viewport: Viewport = { viewportFit: "cover", themeColor: "#c15f2a" };
+export const viewport: Viewport = { viewportFit: "cover", themeColor: "#002059" };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();

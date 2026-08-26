@@ -42,7 +42,7 @@ export function SplashScreen() {
             {/* Plain <img>: next/image would lazily swap the src in, which is
                 exactly wrong for something that must be painted immediately. */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img className="asl-mark" src="/logo-mark.svg" alt="" width={108} height={108} />
+            <img className="asl-mark" src="/logo-mark-dark.png" alt="" width={108} height={108} />
             <p className="asl-wordmark">
               Asap<span>Local</span>
             </p>

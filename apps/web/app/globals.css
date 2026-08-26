@@ -3,21 +3,26 @@
 @tailwind utilities;
 
 @layer base {
+  /* Trial rebrand — see apps/web/tailwind.config.ts */
   :root {
-    --background: 30 25% 97%;
-    --foreground: 20 30% 12%;
-    --surface: 30 30% 99%;
-    --muted: 28 20% 93%;
-    --muted-foreground: 25 12% 42%;
-    --border: 26 18% 86%;
+    --background: 216 45% 98%; /* #F7F9FC */
+    --foreground: 221 39% 11%; /* #111827 */
+    --surface: 0 0% 100%; /* #FFFFFF */
+    --muted: 21 100% 95%; /* #FFF0E8 Orange Soft */
+    --muted-foreground: 215 16% 47%; /* #64748B */
+    --border: 214 32% 91%; /* #E2E8F0 */
+    --primary: 21 100% 50%; /* #FF5A00 Action Orange */
+    --primary-foreground: 0 0% 100%;
   }
   .dark {
-    --background: 20 35% 7%;
-    --foreground: 30 25% 96%;
-    --surface: 20 28% 11%;
-    --muted: 22 22% 17%;
-    --muted-foreground: 25 14% 65%;
-    --border: 22 20% 22%;
+    --background: 220 100% 12%; /* #00143D Navy Dark */
+    --foreground: 216 45% 98%;
+    --surface: 218 100% 17%; /* #002059 Primary Navy */
+    --muted: 218 60% 22%;
+    --muted-foreground: 215 20% 65%;
+    --border: 218 40% 26%;
+    --primary: 21 100% 50%;
+    --primary-foreground: 0 0% 100%;
   }
   * {
     @apply border-border;
@@ -68,7 +73,7 @@ html[data-splash] .asl-splash {
   inset: 0;
   z-index: 100;
   overflow: hidden;
-  background: hsl(20 35% 7%);
+  background: hsl(220 100% 12%); /* Navy Dark */
   font-family: var(--font-inter), Inter, ui-sans-serif, system-ui, sans-serif;
   /* Tapping anywhere skips it; the handler is on window. */
   cursor: pointer;
@@ -110,13 +115,13 @@ html[data-splash] .asl-splash {
   line-height: 1.24;
   font-weight: 600;
   letter-spacing: -0.025em;
-  color: #f3eae3;
+  color: #f7f9fc;
   text-wrap: balance;
 }
 .asl-lead-sub {
   margin: 10px 0 0;
   font-size: 15px;
-  color: #a57f5f;
+  color: hsl(215 20% 65%);
   text-wrap: balance;
 }
 
@@ -151,11 +156,11 @@ html[data-splash] .asl-splash {
   inset: 0;
   margin: auto;
   border-radius: 50%;
-  border: 1px solid rgba(193, 95, 42, 0.3);
+  border: 1px solid rgba(255, 90, 0, 0.3);
 }
 .asl-ring-1 { width: 120px; height: 120px; }
-.asl-ring-2 { width: 208px; height: 208px; border-color: rgba(193, 95, 42, 0.2); }
-.asl-ring-3 { width: 296px; height: 296px; border-color: rgba(193, 95, 42, 0.12); }
+.asl-ring-2 { width: 208px; height: 208px; border-color: rgba(255, 90, 0, 0.2); }
+.asl-ring-3 { width: 296px; height: 296px; border-color: rgba(255, 90, 0, 0.12); }
 
 .asl-sweep {
   position: absolute;
@@ -164,7 +169,7 @@ html[data-splash] .asl-splash {
   width: 296px;
   height: 296px;
   border-radius: 50%;
-  background: conic-gradient(from 0deg, rgba(193, 95, 42, 0.34) 0deg, rgba(193, 95, 42, 0) 58deg, rgba(193, 95, 42, 0) 360deg);
+  background: conic-gradient(from 0deg, rgba(255, 90, 0, 0.34) 0deg, rgba(255, 90, 0, 0) 58deg, rgba(255, 90, 0, 0) 360deg);
   animation: asl-spin var(--asl-dur) linear 1 forwards;
   /* closest-side: percentage stops otherwise resolve against the gradient's
      farthest corner, making the mask hole ~40% larger than the number says. */
@@ -182,8 +187,8 @@ html[data-splash] .asl-splash {
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: #e6975d;
-  box-shadow: 0 0 0 4px rgba(230, 151, 93, 0.18);
+  background: #ff9f6b;
+  box-shadow: 0 0 0 4px rgba(255, 159, 107, 0.18);
   /* "both": backwards so a pin is invisible during its delay rather than
      rendering un-animated, forwards so it holds its last frame. */
   animation: asl-pop var(--asl-dur) ease-out 1 both;
@@ -219,14 +224,14 @@ html[data-splash] .asl-splash {
   font-size: 30px;
   font-weight: 800;
   letter-spacing: -0.03em;
-  color: #f3eae3;
+  color: #f7f9fc;
   animation: asl-word-in var(--asl-dur) ease-out 1 forwards;
 }
-.asl-wordmark span { color: #e6975d; }
+.asl-wordmark span { color: #ff9f6b; }
 .asl-tagline {
   margin: 8px 0 0;
   font-size: 14px;
-  color: #a57f5f;
+  color: hsl(215 20% 65%);
   text-align: center;
   text-wrap: balance;
   animation: asl-word-in var(--asl-dur) ease-out 1 forwards;
@@ -245,7 +250,7 @@ html[data-splash] .asl-splash {
   width: 108px;
   height: 2px;
   border-radius: 2px;
-  background: rgba(243, 234, 227, 0.12);
+  background: rgba(247, 249, 252, 0.12);
   overflow: hidden;
 }
 .asl-bar-fill {
@@ -253,7 +258,7 @@ html[data-splash] .asl-splash {
   height: 100%;
   width: 100%;
   border-radius: 2px;
-  background: linear-gradient(90deg, #c15f2a, #e6975d);
+  background: linear-gradient(90deg, #ff5a00, #ff9f6b);
   transform-origin: left center;
   animation: asl-fill var(--asl-dur) cubic-bezier(0.4, 0, 0.2, 1) 1 forwards;
 }
