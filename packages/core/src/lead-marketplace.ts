@@ -4,7 +4,8 @@
  *
  * Lifecycle:
  *   1. Customer creates a JobRequest → createJobRequestWithLead() computes a
- *      price (£5–£20) and opens a Lead (status AVAILABLE).
+ *      price (£5–£250, scaling with the job's budget) and opens a Lead
+ *      (status AVAILABLE).
  *   2. findEligibleProviders() matches businesses whose category + service
  *      area radius covers the job, and are active/verified.
  *   3. A provider acquires access via acquireLead():
@@ -33,15 +34,60 @@ import { notify } from "./notify";
 import { emailTemplates, sendEmail } from "./email";
 
 const LEAD_PRICE_MIN_PENCE = Number(process.env.LEAD_PRICE_MIN_PENCE ?? 500);
+// Price at the top of the everyday-jobs band (a £1,000 job). Jobs above that
+// keep scaling — see LEAD_PRICE_CEILING_PENCE and the curve below.
 const LEAD_PRICE_MAX_PENCE = Number(process.env.LEAD_PRICE_MAX_PENCE ?? 2000);
+// Absolute ceiling, reached at a £50,000 job.
+const LEAD_PRICE_CEILING_PENCE = Number(process.env.LEAD_PRICE_CEILING_PENCE ?? 25_000);
 const DEFAULT_RADIUS_MILES = Number(process.env.LEAD_DEFAULT_RADIUS_MILES ?? 15);
 
-/** Simple, explainable pricing: scales with budget midpoint, clamped to the £5–£20 band. */
+/**
+ * Breakpoints on the price curve: job budget midpoint (pence) → lead price
+ * (pence). Interpolated linearly between adjacent points, so the curve is
+ * continuous and every extra £ of job value raises the lead price a little.
+ *
+ *   £0       → £5        £5,000   → £60
+ *   £1,000   → £20       £15,000  → £120
+ *                        £50,000+ → £250
+ *
+ * The effective rate deliberately falls as jobs get bigger (5% → 0.5%): a
+ * lead on a big renovation is worth more, but not proportionally more, and a
+ * four-figure lead fee would be unsellable.
+ */
+const LEAD_PRICE_CURVE: { jobPence: number; leadPence: number }[] = [
+  { jobPence: 0, leadPence: LEAD_PRICE_MIN_PENCE },
+  { jobPence: 100_000, leadPence: LEAD_PRICE_MAX_PENCE },
+  { jobPence: 500_000, leadPence: 6_000 },
+  { jobPence: 1_500_000, leadPence: 12_000 },
+  { jobPence: 5_000_000, leadPence: LEAD_PRICE_CEILING_PENCE },
+];
+
+/**
+ * Simple, explainable pricing: scales with the job's budget midpoint along the
+ * curve above. Below £1,000 this is identical to the original £5–£20 linear
+ * band, so everyday maintenance leads are unaffected; above it, a £25,000
+ * renovation now prices at ~£157 instead of collapsing to the old £20 cap.
+ */
 export function computeLeadPrice(budgetMinPence?: number | null, budgetMaxPence?: number | null): number {
   const mid = budgetMinPence && budgetMaxPence ? (budgetMinPence + budgetMaxPence) / 2 : budgetMinPence ?? budgetMaxPence ?? 10_000;
-  // £0–£100 job → £5 lead, £100–£1000 → scales linearly, capped at £20
-  const scaled = LEAD_PRICE_MIN_PENCE + (mid / 100_000) * (LEAD_PRICE_MAX_PENCE - LEAD_PRICE_MIN_PENCE);
-  return Math.round(Math.min(LEAD_PRICE_MAX_PENCE, Math.max(LEAD_PRICE_MIN_PENCE, scaled)) / 50) * 50; // round to nearest 50p
+  const jobValue = Math.max(0, mid);
+
+  // Walk the curve to find the segment this job falls in. Past the final
+  // breakpoint the loop never matches and the price flattens at the ceiling.
+  let leadPence = LEAD_PRICE_CEILING_PENCE;
+  let lo = LEAD_PRICE_CURVE[0]!;
+  for (const hi of LEAD_PRICE_CURVE.slice(1)) {
+    if (jobValue <= hi.jobPence) {
+      const span = hi.jobPence - lo.jobPence;
+      const t = span === 0 ? 0 : (jobValue - lo.jobPence) / span;
+      leadPence = lo.leadPence + t * (hi.leadPence - lo.leadPence);
+      break;
+    }
+    lo = hi;
+  }
+
+  const clamped = Math.min(LEAD_PRICE_CEILING_PENCE, Math.max(LEAD_PRICE_MIN_PENCE, leadPence));
+  return Math.round(clamped / 50) * 50; // round to nearest 50p
 }
 
 export async function createJobRequestWithLead(input: {
