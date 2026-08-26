@@ -3,6 +3,35 @@ import { auth } from "@asaplocal/auth";
 import { prisma } from "@asaplocal/db";
 import { jobRequestSchema, createJobRequestWithLead, checkRateLimit, geocodeAddress, stripHtml, categoriseJobRequest, upsertUserAddress } from "@asaplocal/core";
 
+// Used by the mobile app's "my jobs" list — the web app's /activity page
+// fetches this (plus bookings/payments, out of scope here) directly via
+// Prisma in a server component instead.
+export async function GET() {
+  const session = await auth();
+  if (!session?.user) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+
+  const jobRequests = await prisma.jobRequest.findMany({
+    where: { customerId: session.user.id },
+    include: { category: true, quotes: { select: { id: true } } },
+    orderBy: { createdAt: "desc" },
+    take: 50,
+  });
+
+  return NextResponse.json({
+    jobRequests: jobRequests.map((j) => ({
+      id: j.id,
+      title: j.title,
+      categoryName: j.category.name,
+      city: j.city,
+      status: j.status,
+      quoteCount: j.quotes.length,
+      budgetMinPence: j.budgetMinPence,
+      budgetMaxPence: j.budgetMaxPence,
+      createdAt: j.createdAt,
+    })),
+  });
+}
+
 export async function POST(req: NextRequest) {
   const session = await auth();
   if (!session?.user || session.user.role !== "CUSTOMER") {

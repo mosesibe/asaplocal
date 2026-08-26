@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { authMiddleware as auth } from "@asaplocal/auth";
 
-const PUBLIC_PREFIXES = ["/login", "/register", "/forgot-password", "/reset-password", "/verify-email", "/api/webhooks", "/api/auth"];
+const PUBLIC_PREFIXES = ["/login", "/register", "/forgot-password", "/reset-password", "/verify-email", "/api/webhooks", "/api/auth", "/api/mobile/auth"];
 
 export default auth((req) => {
   const { pathname } = req.nextUrl;

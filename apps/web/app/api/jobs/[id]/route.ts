@@ -5,6 +5,48 @@ import { jobRequestEditSchema, checkRateLimit, geocodeAddress, stripHtml, writeA
 
 const EDITABLE_STATUSES = ["OPEN", "MATCHING", "QUOTED"] as const;
 
+// JSON counterpart to the /jobs/[id] server-rendered page — the mobile app
+// has no server components, so this mirrors the same queries as plain JSON.
+export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const session = await auth();
+  if (!session?.user) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+
+  const job = await prisma.jobRequest.findUnique({
+    where: { id },
+    include: {
+      category: true,
+      quotes: { include: { business: true }, orderBy: { createdAt: "desc" } },
+      booking: true,
+    },
+  });
+  if (!job || job.customerId !== session.user.id) return NextResponse.json({ message: "Not found" }, { status: 404 });
+
+  return NextResponse.json({
+    job: {
+      id: job.id,
+      title: job.title,
+      description: job.description,
+      categoryName: job.category.name,
+      city: job.city,
+      status: job.status,
+      photos: job.photos,
+      budgetMinPence: job.budgetMinPence,
+      budgetMaxPence: job.budgetMaxPence,
+      preferredDate: job.preferredDate,
+      flexibleDate: job.flexibleDate,
+    },
+    quotes: job.quotes.map((q) => ({
+      id: q.id,
+      businessName: q.business.name,
+      amountPence: q.amountPence,
+      message: q.message,
+      status: q.status,
+    })),
+    booking: job.booking ? { id: job.booking.id, status: job.booking.status } : null,
+  });
+}
+
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const session = await auth();

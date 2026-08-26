@@ -7,7 +7,7 @@ import { authMiddleware as auth } from "@asaplocal/auth";
  * are bounced to their own apps rather than allowed into customer-only
  * routes (each role has its own deployed app).
  */
-const PUBLIC_PREFIXES = ["/", "/search", "/providers", "/jobs/new", "/api/jobs/suggest", "/api/ai-buddy", "/api/geo", "/login", "/register", "/forgot-password", "/reset-password", "/verify-email", "/references", "/api/references", "/api/webhooks", "/api/auth", "/sitemap.xml", "/robots.txt", "/how-it-works", "/pricing", "/about", "/trust-safety", "/terms", "/privacy", "/unsubscribe"];
+const PUBLIC_PREFIXES = ["/", "/search", "/providers", "/jobs/new", "/api/jobs/suggest", "/api/ai-buddy", "/api/geo", "/login", "/register", "/forgot-password", "/reset-password", "/verify-email", "/references", "/api/references", "/api/webhooks", "/api/auth", "/api/mobile/auth", "/sitemap.xml", "/robots.txt", "/how-it-works", "/pricing", "/about", "/trust-safety", "/terms", "/privacy", "/unsubscribe"];
 
 // Account-area routes that must never be swallowed by the /[slug] SEO
 // catch-all's public match below, even though they're single path segments.

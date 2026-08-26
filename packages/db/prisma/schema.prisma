@@ -359,6 +359,8 @@ model User {
   payoutsRecorded          Payout[]                  @relation("PayoutRecorder")
   staffMemberReviews       StaffMember[]             @relation("StaffMemberReviewer")
   disputesRaised           BookingDispute[]          @relation("DisputesRaised")
+  mobileSessions           MobileSession[]
+  mobilePushTokens         MobilePushToken[]
 
   @@index([role])
   @@index([status])
@@ -493,6 +495,41 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+// Refresh-token session for the native mobile apps (Expo), which
+// authenticate API requests with a short-lived Bearer access token instead
+// of the cookie-based session the web apps use. One row per logged-in
+// device; refreshing rotates the token (old row revoked, new row created)
+// so a stolen refresh token has a limited window and "log out everywhere"
+// is a single bulk revoke. See packages/auth/src/mobile-tokens.ts.
+model MobileSession {
+  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId           String    @db.Uuid
+  refreshTokenHash String    @unique
+  deviceInfo       String?
+  createdAt        DateTime  @default(now())
+  expiresAt        DateTime
+  revokedAt        DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// Expo push token per device, for the native mobile apps. Kept separate
+// from PushSubscription (web push's endpoint/p256dh/auth keypair) since
+// Expo's push service takes a single opaque token per device instead.
+model MobilePushToken {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String   @db.Uuid
+  token     String   @unique
+  platform  String // "ios" | "android"
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model Profile {

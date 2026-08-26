@@ -29,5 +29,21 @@
   },
   "prisma": {
     "schema": "packages/db/prisma/schema.prisma"
+  },
+  "pnpm": {
+    "packageExtensions": {
+      "lucide-react": {
+        "peerDependencies": { "@types/react": "*" },
+        "peerDependenciesMeta": { "@types/react": { "optional": true } }
+      },
+      "next": {
+        "peerDependencies": { "@types/react": "*", "@types/react-dom": "*" },
+        "peerDependenciesMeta": { "@types/react": { "optional": true }, "@types/react-dom": { "optional": true } }
+      },
+      "recharts": {
+        "peerDependencies": { "@types/react": "*" },
+        "peerDependenciesMeta": { "@types/react": { "optional": true } }
+      }
+    }
   }
 }

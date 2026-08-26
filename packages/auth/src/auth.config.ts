@@ -1,8 +1,9 @@
 import NextAuth, { type NextAuthConfig } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
-import bcrypt from "bcryptjs";
-import { prisma } from "@asaplocal/db";
+import type { NextRequest } from "next/server";
+import { verifyCredentials } from "./credentials";
+import { verifyAccessToken } from "./mobile-tokens";
 
 /**
  * Edge-safe auth config (no Node-only APIs besides bcrypt in the
@@ -34,24 +35,7 @@ export const authConfig = {
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null;
-        const user = await prisma.user.findUnique({
-          where: { email: credentials.email as string },
-          include: { business: { select: { id: true } } },
-        });
-        if (!user?.passwordHash) return null;
-        if (user.status === "SUSPENDED" || user.status === "DEACTIVATED") return null;
-        const valid = await bcrypt.compare(credentials.password as string, user.passwordHash);
-        if (!valid) return null;
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.email,
-          role: user.role,
-          status: user.status,
-          isEmailVerified: !!user.emailVerified,
-          isPhoneVerified: !!user.phoneVerifiedAt,
-          isProvider: user.role === "PROVIDER" || !!user.business || !!user.providerSince,
-        };
+        return verifyCredentials(credentials.email as string, credentials.password as string);
       },
     }),
   ],
@@ -88,4 +72,42 @@ export const authConfig = {
  * Next.js middleware executes in, so middleware.ts files must import
  * `authMiddleware` here rather than the full `auth` from ./auth.ts.
  */
-export const { auth: authMiddleware } = NextAuth(authConfig);
+const { auth: rawAuthMiddleware } = NextAuth(authConfig);
+
+/**
+ * Wraps the raw cookie-session middleware so the native mobile apps' bearer
+ * access token is recognised too — otherwise every request from a mobile
+ * client (which never carries the web session cookie) looks logged-out to
+ * middleware and gets bounced before it reaches the route handler, even
+ * though `auth()` inside the route (see ./bearer.ts) would have accepted it.
+ * Stays Edge-safe: `verifyAccessToken` only decodes the JWT (no Prisma), the
+ * same way the cookie session's `session` callback above avoids a DB call by
+ * trusting the claims already baked into the token.
+ */
+export function authMiddleware(handler: (req: NextRequest & { auth: any }) => any) {
+  return rawAuthMiddleware(async (req) => {
+    if (!req.auth?.user) {
+      const authHeader = req.headers.get("authorization");
+      if (authHeader?.startsWith("Bearer ")) {
+        const payload = await verifyAccessToken(authHeader.slice("Bearer ".length));
+        if (payload?.uid) {
+          Object.assign(req, {
+            auth: {
+              user: {
+                id: payload.uid,
+                email: payload.email,
+                role: payload.role,
+                status: payload.status,
+                isEmailVerified: payload.isEmailVerified,
+                isPhoneVerified: payload.isPhoneVerified,
+                isProvider: payload.isProvider,
+              },
+              expires: new Date(payload.exp * 1000).toISOString(),
+            },
+          });
+        }
+      }
+    }
+    return handler(req as any);
+  });
+}
