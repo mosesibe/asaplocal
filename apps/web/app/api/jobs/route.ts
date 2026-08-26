@@ -38,7 +38,21 @@ export async function POST(req: NextRequest) {
   const categories = await prisma.category.findMany({ where: { isActive: true }, select: { id: true, name: true } });
   const aiSuggestion = await categoriseJobRequest(parsed.data.description, categories).catch(() => null);
 
-  const jobRequest = await createJobRequestWithLead({ ...parsed.data, customerId: session.user.id });
+  // designSessionId links the Redesign Studio session afterwards; it isn't a
+  // column on JobRequest, so keep it out of the create payload.
+  const { designSessionId, ...jobFields } = parsed.data;
+  const jobRequest = await createJobRequestWithLead({ ...jobFields, customerId: session.user.id });
+
+  if (designSessionId) {
+    // Best-effort: the job is already live, and a broken link shouldn't fail
+    // the post. Scoped to this customer so a session can't be hijacked.
+    await prisma.designStudioSession
+      .updateMany({
+        where: { id: designSessionId, customerId: session.user.id, jobRequestId: null },
+        data: { jobRequestId: jobRequest.id, status: "POSTED" },
+      })
+      .catch(() => {});
+  }
 
   // The customer typed a brand-new address (as opposed to GPS or a previously
   // saved one) — save it to their account so it shows up as a "saved address"

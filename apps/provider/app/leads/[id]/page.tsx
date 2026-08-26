@@ -100,8 +100,32 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
       <Card className="mt-6 p-5">
         <p className="whitespace-pre-line">{lead.jobRequest.description}</p>
         {lead.jobRequest.photos.length > 0 && (
-          <div className="mt-3 flex gap-2">
-            {lead.jobRequest.photos.map((p, i) => <img key={i} src={p} alt="" className="h-20 w-20 rounded-lg object-cover" />)}
+          <>
+            <p className="mt-4 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              Photos of the space now
+            </p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {lead.jobRequest.photos.map((p, i) => <img key={i} src={p} alt="" className="h-20 w-20 rounded-lg object-cover" />)}
+            </div>
+          </>
+        )}
+        {/* Kept visually distinct from the real photos above — this is what the
+            customer would like, not what is there. Pricing off it would be a
+            mistake, so it is labelled rather than shown as another photo. */}
+        {lead.jobRequest.designRenderUrl && (
+          <div className="mt-5 rounded-xl border border-amber-300 bg-amber-50 p-3 dark:border-amber-800/60 dark:bg-amber-950/30">
+            <p className="text-xs font-medium uppercase tracking-wide text-amber-800 dark:text-amber-300">
+              Customer&apos;s AI concept — not the current state
+            </p>
+            <img
+              src={lead.jobRequest.designRenderUrl}
+              alt="AI-generated concept of how the customer would like the space to look"
+              className="mt-2 w-full max-w-sm rounded-lg object-cover"
+            />
+            <p className="mt-2 text-xs text-amber-800 dark:text-amber-300">
+              Generated from the customer&apos;s photo to show the look they&apos;re after. They&apos;ve been told
+              it&apos;s inspiration only and that you&apos;ll advise on what&apos;s actually achievable.
+            </p>
           </div>
         )}
       </Card>

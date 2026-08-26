@@ -16,13 +16,33 @@ interface Category {
 
 type Step = "describe" | "confirm";
 
+/**
+ * Handoff from Redesign Studio. Unlike AI Buddy's text-only prefill this
+ * arrives fully formed — the space has already been classified, the scope
+ * written, and the estimate agreed — so it skips the describe step entirely
+ * and drops the customer straight into confirm.
+ */
+export interface StudioPrefill {
+  nonce: number;
+  title: string;
+  description: string;
+  categoryId: string;
+  photos: string[];
+  designRenderUrl: string;
+  designSessionId: string;
+  budgetMinPence: number;
+  budgetMaxPence: number;
+}
+
 export function AiJobRequest({
   categories,
   prefillDescription,
+  studioPrefill,
 }: {
   categories: Category[];
   /** Set by AI Buddy's handoff — bump `nonce` (not just `text`) to retrigger even with identical text. */
   prefillDescription?: { text: string; nonce: number };
+  studioPrefill?: StudioPrefill;
 }) {
   const parentCategories = categories.filter((c) => !c.parentId);
   const childrenByParent = new Map<string, Category[]>();
@@ -101,6 +121,19 @@ export function AiJobRequest({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [prefillDescription?.nonce]);
 
+  // Handoff from Redesign Studio: everything is already decided, so skip
+  // straight to confirm rather than re-running categorisation.
+  useEffect(() => {
+    if (!studioPrefill) return;
+    setTitle(studioPrefill.title);
+    setConfirmDescription(studioPrefill.description);
+    setCategoryId(studioPrefill.categoryId);
+    setBudgetMin(String(Math.round(studioPrefill.budgetMinPence / 100)));
+    setBudgetMax(String(Math.round(studioPrefill.budgetMaxPence / 100)));
+    setStep("confirm");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [studioPrefill?.nonce]);
+
   async function handlePost() {
     setPostError(null);
     setNeedsLogin(false);
@@ -131,6 +164,12 @@ export function AiJobRequest({
           flexibleDate: preferredDate ? preferredDate.time === null : true,
           budgetMinPence: budgetMin ? Math.round(Number(budgetMin) * 100) : undefined,
           budgetMaxPence: budgetMax ? Math.round(Number(budgetMax) * 100) : undefined,
+          // Redesign Studio jobs carry the real photos of the space plus the
+          // chosen concept, kept in separate fields so a provider can tell
+          // them apart when pricing.
+          photos: studioPrefill?.photos,
+          designRenderUrl: studioPrefill?.designRenderUrl,
+          designSessionId: studioPrefill?.designSessionId,
         }),
       });
       if (res.status === 401) {

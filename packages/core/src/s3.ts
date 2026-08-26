@@ -28,7 +28,8 @@ export type UploadPurpose =
   | "staff-id-back"
   | "user-avatar"
   | "supply-image"
-  | "dispute-photo";
+  | "dispute-photo"
+  | "design-concept";
 
 const ALLOWED_MIME = new Set(["image/jpeg", "image/png", "image/webp", "image/heic", "application/pdf"]);
 const DEFAULT_MAX_BYTES = 10 * 1024 * 1024; // 10MB
@@ -68,4 +69,33 @@ export async function createPresignedUpload(opts: { purpose: UploadPurpose; cont
 
 export async function deleteObject(key: string) {
   await s3.send(new DeleteObjectCommand({ Bucket: BUCKET, Key: key }));
+}
+
+/**
+ * Copies a remote image into our own bucket and returns its public URL.
+ *
+ * AI image providers hand back URLs on their own expiring CDN, so anything we
+ * intend to keep — a Redesign Studio concept that becomes part of a job
+ * request — has to be mirrored before the link dies. Server-side only: unlike
+ * createPresignedUpload, the bytes pass through us, so the size ceiling is
+ * enforced here rather than by S3 policy.
+ */
+export async function mirrorRemoteImage(remoteUrl: string, purpose: UploadPurpose, ownerId: string): Promise<string> {
+  const res = await fetch(remoteUrl);
+  if (!res.ok) throw Object.assign(new Error("Could not fetch the generated image"), { statusCode: 502 });
+
+  const contentType = (res.headers.get("content-type") ?? "").split(";")[0]!.trim();
+  if (!ALLOWED_MIME.has(contentType)) {
+    throw Object.assign(new Error(`Unsupported generated image type: ${contentType || "unknown"}`), { statusCode: 415 });
+  }
+
+  const bytes = Buffer.from(await res.arrayBuffer());
+  if (bytes.byteLength > DEFAULT_MAX_BYTES) {
+    throw Object.assign(new Error("Generated image is too large to store"), { statusCode: 413 });
+  }
+
+  const ext = contentType.split("/")[1];
+  const key = `${purpose}/${ownerId}/${randomUUID()}.${ext}`;
+  await s3.send(new PutObjectCommand({ Bucket: BUCKET, Key: key, Body: bytes, ContentType: contentType }));
+  return `https://${BUCKET}.s3.${REGION}.amazonaws.com/${key}`;
 }

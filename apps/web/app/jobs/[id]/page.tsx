@@ -69,6 +69,23 @@ export default async function JobStatusPage({ params }: { params: Promise<{ id: 
             </div>
           )}
 
+          {job.designRenderUrl && (
+            <div className="mt-4 rounded-xl border border-border bg-muted/40 p-3">
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Your design concept
+              </p>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={job.designRenderUrl}
+                alt="The design concept you chose in Redesign Studio"
+                className="mt-2 w-full max-w-sm rounded-lg border border-border object-cover"
+              />
+              <p className="mt-2 text-xs text-muted-foreground">
+                Shared with pros as inspiration. They&apos;ll advise on what&apos;s achievable in your space.
+              </p>
+            </div>
+          )}
+
           <dl className="mt-5 grid grid-cols-1 gap-x-6 gap-y-3 border-t border-border pt-4 text-sm sm:grid-cols-2">
             <div>
               <dt className="text-muted-foreground">Expected cost</dt>

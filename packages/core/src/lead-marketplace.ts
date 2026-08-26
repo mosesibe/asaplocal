@@ -28,6 +28,7 @@
 import { prisma } from "@asaplocal/db";
 import type { Business, JobRequest, Lead } from "@prisma/client";
 import { milesBetween, jitterLocation } from "./geo";
+import { filterEligibleForCategory } from "./category-access";
 import { stripe, PLAN_LEAD_ALLOWANCE } from "./stripe";
 import { writeAuditLog } from "./audit";
 import { notify } from "./notify";
@@ -96,6 +97,7 @@ export async function createJobRequestWithLead(input: {
   title: string;
   description: string;
   photos: string[];
+  designRenderUrl?: string;
   budgetMinPence?: number;
   budgetMaxPence?: number;
   preferredDate?: Date;
@@ -157,11 +159,15 @@ export async function findEligibleProviders(jobRequest: JobRequest & { category?
     include: { serviceAreas: true },
   });
 
-  return candidates.filter((biz) =>
+  const inRange = candidates.filter((biz) =>
     biz.serviceAreas.some(
       (area) => milesBetween(Number(area.lat), Number(area.lng), Number(jobRequest.lat), Number(jobRequest.lng)) <= area.radiusMiles
     ) || milesBetween(Number(biz.lat), Number(biz.lng), Number(jobRequest.lat), Number(jobRequest.lng)) <= biz.baseRadiusMiles
   );
+
+  // Gated categories (Builders & Renovation) additionally require verified
+  // insurance and a minimum trust tier — a no-op for ordinary categories.
+  return filterEligibleForCategory(inRange, jobRequest.categoryId);
 }
 
 export interface NearbyLead {

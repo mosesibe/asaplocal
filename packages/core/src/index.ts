@@ -18,6 +18,8 @@ export * from "./marketing";
 export * from "./payouts";
 export * from "./lead-marketplace";
 export * from "./ai";
+export * from "./ai-images";
+export * from "./category-access";
 export * from "./csrf";
 export * from "./sms";
 export * from "./phone-verification";

@@ -7,6 +7,10 @@ export const jobRequestBaseSchema = z.object({
   title: z.string().min(8).max(120),
   description: z.string().min(20).max(2000),
   photos: z.array(z.string().url()).max(10).default([]),
+  // Set only when the job came from Redesign Studio. Kept apart from `photos`
+  // so providers can always tell the real space from the AI concept.
+  designRenderUrl: z.string().url().optional(),
+  designSessionId: z.string().uuid().optional(),
   budgetMinPence: z.number().int().positive().optional(),
   budgetMaxPence: z.number().int().positive().optional(),
   preferredDate: z.coerce.date().optional(),

@@ -8,7 +8,7 @@
  * a review, and a lead credit wallet — enough to exercise every core flow
  * (search, quote, lead marketplace, dispatcher approval, reviews) locally.
  */
-import { PrismaClient, Role, VerificationStatus, SubscriptionPlan, SubscriptionStatus, LeadStatus, LeadAcquisitionType, ProviderLeadStatus, BookingStatus, ReviewStatus, JobRequestStatus, PriceType } from "@prisma/client";
+import { PrismaClient, Role, VerificationStatus, SubscriptionPlan, SubscriptionStatus, LeadStatus, LeadAcquisitionType, ProviderLeadStatus, BookingStatus, ReviewStatus, JobRequestStatus, PriceType, InsuranceType, TrustTier, type BusinessType } from "@prisma/client";
 import { randomUUID } from "crypto";
 
 const prisma = new PrismaClient();
@@ -22,7 +22,21 @@ interface CategoryDef {
   // verification step — not enforced (Qualification.name stays free text).
   isRegulatedTrade?: boolean;
   suggestedQualifications?: string[];
+  // Enforced access rules (see packages/core/src/category-access.ts). Children
+  // inherit the parent's gate — a category is only as safe as its subcategories.
+  requiredBusinessTypes?: BusinessType[];
+  requiresInsuranceTypes?: InsuranceType[];
+  minTrustTier?: TrustTier;
   children: { name: string; slug: string; isEmergency?: boolean }[];
+}
+
+/** The enforced access rules for a category, in the shape Prisma expects. */
+function categoryGate(c: CategoryDef) {
+  return {
+    requiredBusinessTypes: c.requiredBusinessTypes ?? [],
+    requiresInsuranceTypes: c.requiresInsuranceTypes ?? [],
+    minTrustTier: c.minTrustTier ?? null,
+  };
 }
 
 // Phase-1 launch categories (isFeatured) per the "best categories to launch
@@ -89,11 +103,39 @@ const CATEGORIES: CategoryDef[] = [
     ],
   },
   {
+    // Target category for Redesign Studio: high-value renovation work where a
+    // single firm analyses, plans and delivers the whole project. Gated on
+    // verified public liability insurance and a SILVER+ trust tier rather than
+    // company structure — plenty of excellent UK builders are sole traders,
+    // and insurance is what actually protects the customer.
+    name: "Builders & Renovation",
+    slug: "builders",
+    icon: "hammer",
+    isFeatured: true,
+    isRegulatedTrade: true,
+    suggestedQualifications: ["FMB", "TrustMark", "NVQ Construction", "CSCS Card"],
+    requiresInsuranceTypes: [InsuranceType.PUBLIC_LIABILITY],
+    minTrustTier: TrustTier.SILVER,
+    children: [
+      { name: "Kitchen fitting", slug: "kitchen-fitting" },
+      { name: "Bathroom fitting", slug: "bathroom-fitting" },
+      { name: "Loft conversion", slug: "loft-conversion" },
+      { name: "Garage conversion", slug: "garage-conversion" },
+      { name: "Home extensions", slug: "home-extensions" },
+      { name: "Carpentry & joinery", slug: "carpentry-joinery" },
+      { name: "Plastering", slug: "plastering" },
+      { name: "Tiling", slug: "tiling" },
+      { name: "Flooring installation", slug: "flooring-installation" },
+      { name: "Structural work", slug: "structural-work" },
+    ],
+  },
+  {
     name: "Gardening & Outdoor",
     slug: "gardening",
     icon: "leaf",
     isFeatured: true,
     children: [
+      { name: "Garden design & landscaping", slug: "garden-design-landscaping" },
       { name: "Lawn mowing", slug: "lawn-mowing" },
       { name: "Hedge trimming", slug: "hedge-trimming" },
       { name: "Weeding", slug: "weeding" },
@@ -259,6 +301,7 @@ async function main() {
           sortOrder: i,
           isRegulatedTrade: !!c.isRegulatedTrade,
           suggestedQualifications: c.suggestedQualifications ?? [],
+          ...categoryGate(c),
         },
         create: {
           name: c.name,
@@ -268,6 +311,7 @@ async function main() {
           sortOrder: i,
           isRegulatedTrade: !!c.isRegulatedTrade,
           suggestedQualifications: c.suggestedQualifications ?? [],
+          ...categoryGate(c),
         },
       })
     )
@@ -278,10 +322,14 @@ async function main() {
   for (const c of CATEGORIES) {
     const parent = catBySlug[c.slug];
     for (const [i, child] of c.children.entries()) {
+      // Children inherit the parent's access gate — a gated category is only
+      // as safe as its subcategories, and providers list services against the
+      // child, not the parent.
+      const gate = categoryGate(c);
       const row = await prisma.category.upsert({
         where: { slug: child.slug },
-        update: { name: child.name, parentId: parent.id, isEmergency: !!child.isEmergency, sortOrder: i },
-        create: { name: child.name, slug: child.slug, parentId: parent.id, isEmergency: !!child.isEmergency, sortOrder: i },
+        update: { name: child.name, parentId: parent.id, isEmergency: !!child.isEmergency, sortOrder: i, ...gate },
+        create: { name: child.name, slug: child.slug, parentId: parent.id, isEmergency: !!child.isEmergency, sortOrder: i, ...gate },
       });
       childCategories.push(row);
     }

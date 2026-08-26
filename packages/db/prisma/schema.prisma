@@ -331,6 +331,7 @@ model User {
   profile                  Profile?
   business                 Business? // present once onboarding completes; role stays CUSTOMER for accounts that added a business on top of an existing customer account — see providerSince
   jobRequests              JobRequest[]              @relation("CustomerJobRequests")
+  designSessions           DesignStudioSession[]     @relation("CustomerDesignSessions")
   favourites               Favourite[]
   reviewsWritten           Review[]                  @relation("ReviewAuthor")
   bookingsAsCustomer       Booking[]                 @relation("CustomerBookings")
@@ -555,6 +556,19 @@ model Category {
   // enforced; Qualification.name stays free text.
   isRegulatedTrade        Boolean  @default(false)
   suggestedQualifications String[] @default([])
+  // Gated categories (e.g. Builders & Renovation): a provider must satisfy all
+  // of these before they can offer services here, be matched to its leads, or
+  // appear in its search results. Enforced by canProvideInCategory() in
+  // packages/core/src/category-access.ts — unlike isRegulatedTrade above,
+  // which is advisory guidance only.
+  //
+  // Deliberately not restricted to limited companies: a large share of UK
+  // building trades are sole traders, and verified public liability insurance
+  // protects the customer far better than company structure does. Leave
+  // requiredBusinessTypes empty to allow any structure.
+  requiredBusinessTypes   BusinessType[]  @default([])
+  requiresInsuranceTypes  InsuranceType[] @default([])
+  minTrustTier            TrustTier?
 
   parent         Category?       @relation("CategoryChildren", fields: [parentId], references: [id], onDelete: SetNull)
   children       Category[]      @relation("CategoryChildren")
@@ -941,7 +955,13 @@ model JobRequest {
   categoryId            String           @db.Uuid
   title                 String
   description           String           @db.Text
+  // Real photographs of the space as it is now.
   photos                String[]
+  // The AI concept the customer chose in Redesign Studio, if this job came
+  // from there. Deliberately NOT merged into `photos` — a provider must never
+  // mistake an aspirational render for the current state of the space when
+  // pricing the work.
+  designRenderUrl       String?
   budgetMinPence        Int?
   budgetMaxPence        Int?
   preferredDate         DateTime?
@@ -962,6 +982,7 @@ model JobRequest {
 
   customer              User                   @relation("CustomerJobRequests", fields: [customerId], references: [id], onDelete: Cascade)
   category              Category               @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  designSession         DesignStudioSession?
   lead                  Lead?
   quotes                Quote[]
   booking               Booking?
@@ -974,6 +995,76 @@ model JobRequest {
   @@index([status])
   @@index([city])
   @@index([lat, lng])
+}
+
+enum SpaceType {
+  KITCHEN
+  BATHROOM
+  BEDROOM
+  LIVING_ROOM
+  DINING_ROOM
+  LOFT
+  BASEMENT
+  GARAGE
+  HALLWAY
+  HOME_OFFICE
+  GARDEN
+  OUTDOOR_OTHER
+  COMMERCIAL
+  OTHER
+}
+
+enum DesignSessionStatus {
+  ANALYSING
+  GENERATING
+  READY
+  SELECTED
+  POSTED
+  FAILED
+}
+
+// One run through Redesign Studio: the customer's photos of a space, the
+// concepts AI generated from them, and the estimate attached to the concept
+// they chose. Survives independently of JobRequest so an abandoned session is
+// still measurable (conversion rate, AI spend) and so a customer can come back
+// to concepts they generated earlier.
+model DesignStudioSession {
+  id                   String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  customerId           String              @db.Uuid
+  // Every photo the customer uploaded — all of these ride along to the job as
+  // real context for the tradesperson.
+  sourcePhotos         String[]
+  // The single angle concepts are rendered from. Image models cannot hold a
+  // design consistent across multiple viewpoints, so the customer picks one.
+  heroPhotoUrl         String
+  spaceType            SpaceType           @default(OTHER)
+  briefText            String?             @db.Text
+  // What the vision pass read out of the hero photo. Kept for debugging and to
+  // calibrate estimates against the quote eventually accepted.
+  analysis             Json?
+  // [{ url, styleKey, styleLabel, scope, costMinPence, costMaxPence, durationDays }]
+  concepts             Json                @default("[]")
+  selectedIndex        Int?
+  status               DesignSessionStatus @default(ANALYSING)
+  failureReason        String?
+  // Estimate carried from the chosen concept, mirrored here so it can be
+  // compared against the accepted quote without parsing the concepts JSON.
+  estimateMinPence     Int?
+  estimateMaxPence     Int?
+  estimateDurationDays Int?
+  // AI spend for this session in pence, so unit economics are measured rather
+  // than projected.
+  aiCostPence          Int                 @default(0)
+  jobRequestId         String?             @unique @db.Uuid
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
+
+  customer   User        @relation("CustomerDesignSessions", fields: [customerId], references: [id], onDelete: Cascade)
+  jobRequest JobRequest? @relation(fields: [jobRequestId], references: [id], onDelete: SetNull)
+
+  @@index([customerId])
+  @@index([status])
+  @@index([createdAt])
 }
 
 model Lead {
