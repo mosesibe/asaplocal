@@ -128,10 +128,10 @@ function CoverageCircles({ areas }: { areas: ServiceAreaCircleDef[] }) {
           map,
           center: { lat: area.lat, lng: area.lng },
           radius: area.radiusMiles * MILES_TO_METERS,
-          strokeColor: "#FF5A00",
+          strokeColor: "#c15f2a",
           strokeOpacity: 0.5,
           strokeWeight: 2,
-          fillColor: "#FF5A00",
+          fillColor: "#c15f2a",
           fillOpacity: 0.07,
           clickable: false,
         })
@@ -194,7 +194,7 @@ function LeadMarkers({ leads, onView }: { leads: NearbyLead[]; onView: (lead: Ne
         icon: {
           path: google.maps.SymbolPath.CIRCLE,
           scale: 8,
-          fillColor: "#FF5A00",
+          fillColor: "#c15f2a",
           fillOpacity: 1,
           strokeColor: "#fff",
           strokeWeight: 2,

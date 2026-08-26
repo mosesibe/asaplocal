@@ -16,11 +16,11 @@ export default function manifest(): MetadataRoute.Manifest {
     description: "Manage leads, bookings, and your business profile on AsapLocal.",
     start_url: "/",
     display: "standalone",
-    // Matches the launch splash's ground (Navy Dark), so the system splash
-    // Android draws before the page loads reads as the same screen rather
-    // than a white one in front of it.
-    background_color: "#00143D",
-    theme_color: "#002059",
+    // Matches the launch splash's ground (hsl(222 47% 7%)), so the system
+    // splash Android draws before the page loads reads as the same screen
+    // rather than a white one in front of it.
+    background_color: "#090e1a",
+    theme_color: "#c15f2a",
     icons: [
       { src: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
       { src: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },

@@ -3,31 +3,8 @@
 @tailwind utilities;
 
 @layer base {
-  /* Navy/orange rebrand — see apps/provider/tailwind.config.ts for the
-     brand/espresso scale this pairs with. --muted uses Orange Soft (the
-     palette's "chips / highlighted cards" swatch); --primary is new (see
-     tailwind.config.ts) and fixes what were previously no-op bg-primary/
-     border-primary classes in a few provider components. */
-  :root {
-    --background: 216 45% 98%; /* #F7F9FC */
-    --foreground: 221 39% 11%; /* #111827 */
-    --surface: 0 0% 100%; /* #FFFFFF */
-    --muted: 21 100% 95%; /* #FFF0E8 Orange Soft */
-    --muted-foreground: 215 16% 47%; /* #64748B */
-    --border: 214 32% 91%; /* #E2E8F0 */
-    --primary: 21 100% 50%; /* #FF5A00 Action Orange */
-    --primary-foreground: 0 0% 100%;
-  }
-  .dark {
-    --background: 220 100% 12%; /* #00143D Navy Dark */
-    --foreground: 216 45% 98%;
-    --surface: 218 100% 17%; /* #002059 Primary Navy */
-    --muted: 218 60% 22%;
-    --muted-foreground: 215 20% 65%;
-    --border: 218 40% 26%;
-    --primary: 21 100% 50%; /* Action Orange stays the same in both themes */
-    --primary-foreground: 0 0% 100%;
-  }
+  :root { --background: 0 0% 100%; --foreground: 222 47% 11%; --surface: 0 0% 100%; --muted: 220 14% 96%; --border: 220 13% 91%; }
+  .dark { --background: 222 47% 7%; --foreground: 210 20% 98%; --surface: 222 40% 10%; --muted: 217 33% 17%; --border: 217 33% 20%; }
   * {
     @apply border-border;
   }
@@ -59,13 +36,13 @@ html[data-splash] {
 html[data-splash] .asl-splash {
   --asl-dur: 2.4s;
   --asl-scale: 1;
-  --asl-bg: hsl(220 100% 12%); /* Navy Dark */
-  --asl-surface: hsl(218 100% 17%); /* Primary Navy */
-  --asl-border: hsl(218 40% 26%);
-  --asl-fg: hsl(216 45% 98%);
+  --asl-bg: hsl(222 47% 7%);
+  --asl-surface: hsl(222 40% 10%);
+  --asl-border: hsl(217 33% 20%);
+  --asl-fg: hsl(210 20% 98%);
   --asl-muted: hsl(215 20% 65%);
-  --asl-brand: #ff5a00; /* Action Orange */
-  --asl-brand-300: #ffa06d;
+  --asl-brand: #c15f2a;
+  --asl-brand-300: #e6975d;
   display: block;
   position: fixed;
   inset: 0;
@@ -95,7 +72,7 @@ html[data-splash] .asl-splash {
   width: 460px;
   height: 460px;
   transform: translate(-50%, -50%);
-  background: radial-gradient(circle, rgba(255, 90, 0, 0.22), rgba(255, 90, 0, 0) 68%);
+  background: radial-gradient(circle, rgba(193, 95, 42, 0.22), rgba(193, 95, 42, 0) 68%);
   animation: asl-bloom var(--asl-dur) ease-in-out 1 forwards;
 }
 @keyframes asl-bloom {
@@ -233,7 +210,7 @@ html[data-splash] .asl-splash {
   position: absolute;
   inset: 0;
   border-radius: 50%;
-  border: 1px solid rgba(255, 90, 0, 0.45);
+  border: 1px solid rgba(193, 95, 42, 0.45);
   animation: asl-ripple var(--asl-dur) ease-out 1 both;
 }
 .asl-mark-ring.asl-delay { animation-delay: calc(var(--asl-dur) * 0.056); }
