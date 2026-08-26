@@ -9,7 +9,7 @@ import { Logo } from "@asaplocal/ui";
 export function AuthBrand() {
   return (
     <Link href="/login" aria-label="AsapLocal for Business" className="inline-flex items-baseline gap-2">
-      <Logo markClassName="h-9 w-9" className="text-2xl" />
+      <Logo markClassName="h-9 w-9" className="text-2xl" markSrcLight="/logo-mark-light.png" markSrcDark="/logo-mark-dark.png" />
       <span className="text-sm font-normal text-muted-foreground">Business</span>
     </Link>
   );

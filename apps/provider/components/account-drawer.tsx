@@ -89,7 +89,7 @@ export function AccountDrawer({
             </>
           ) : (
             <>
-              <Logo markClassName="h-7 w-7" />
+              <Logo markClassName="h-7 w-7" markSrcLight="/logo-mark-light.png" markSrcDark="/logo-mark-dark.png" />
               <div className="flex items-center gap-1">
                 <ThemeToggle />
                 <SheetClose

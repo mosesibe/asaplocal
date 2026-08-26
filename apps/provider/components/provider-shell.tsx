@@ -41,7 +41,7 @@ export function ProviderShell({ children, account }: { children: React.ReactNode
       <aside className="hidden w-64 shrink-0 border-r border-border bg-surface p-4 md:block">
         <div className="mb-8 flex items-center justify-between">
           <Link href="/dashboard" className="flex items-center gap-2">
-            <Logo markClassName="h-7 w-7" />
+            <Logo markClassName="h-7 w-7" markSrcLight="/logo-mark-light.png" markSrcDark="/logo-mark-dark.png" />
             <span className="text-sm font-normal text-muted-foreground">Business</span>
           </Link>
           <div className="flex items-center gap-1">
