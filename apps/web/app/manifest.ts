@@ -10,10 +10,10 @@ export default function manifest(): MetadataRoute.Manifest {
     // The installed app cannot skip the system splash — Android 12+ draws one
     // for every launch, and Chrome generates one for any standalone PWA. It is
     // painted with background_color and the app icon on top, so matching it to
-    // the animated splash's ground (Navy Dark, see .asl-splash in globals.css)
-    // is what stops it reading as a separate white screen in front of the
-    // real one.
-    background_color: "#00143D",
+    // the animated splash's ground (hsl(222 47% 7%) = #090e1a, see .asl-splash
+    // in globals.css) is what stops it reading as a separate white screen in
+    // front of the real one.
+    background_color: "#090e1a",
     theme_color: "#002059",
     icons: [
       { src: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },

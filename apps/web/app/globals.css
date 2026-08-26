@@ -13,16 +13,23 @@
     --border: 214 32% 91%; /* #E2E8F0 */
     --primary: 21 100% 50%; /* #FF5A00 Action Orange */
     --primary-foreground: 0 0% 100%;
+    --secondary: 25 97% 61%; /* #FC8C3A */
+    --secondary-foreground: 221 39% 11%;
   }
   .dark {
-    --background: 220 100% 12%; /* #00143D Navy Dark */
-    --foreground: 216 45% 98%;
-    --surface: 218 100% 17%; /* #002059 Primary Navy */
-    --muted: 218 60% 22%;
+    /* Was Navy Dark (hsl 220 100% 12%) — too saturated to read as genuinely
+       dark. Matches the provider app's own (unrebranded) dark palette, which
+       is desaturated enough at this lightness to actually look dark. */
+    --background: 222 47% 7%;
+    --foreground: 210 20% 98%;
+    --surface: 222 40% 10%;
+    --muted: 217 33% 17%;
     --muted-foreground: 215 20% 65%;
-    --border: 218 40% 26%;
+    --border: 217 33% 20%;
     --primary: 21 100% 50%;
     --primary-foreground: 0 0% 100%;
+    --secondary: 25 97% 61%;
+    --secondary-foreground: 221 39% 11%;
   }
   * {
     @apply border-border;
@@ -73,7 +80,7 @@ html[data-splash] .asl-splash {
   inset: 0;
   z-index: 100;
   overflow: hidden;
-  background: hsl(220 100% 12%); /* Navy Dark */
+  background: hsl(222 47% 7%); /* matches .dark --background */
   font-family: var(--font-inter), Inter, ui-sans-serif, system-ui, sans-serif;
   /* Tapping anywhere skips it; the handler is on window. */
   cursor: pointer;

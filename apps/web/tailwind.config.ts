@@ -46,6 +46,10 @@ const config: Config = {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
         },
+        secondary: {
+          DEFAULT: "hsl(var(--secondary))",
+          foreground: "hsl(var(--secondary-foreground))",
+        },
       },
       boxShadow: {
         accent: "0 1px 2px rgba(255,90,0,.18), 0 4px 12px rgba(255,90,0,.16)",
