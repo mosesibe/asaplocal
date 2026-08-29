@@ -2,9 +2,8 @@ import { useCallback, useEffect, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { Screen, Card, Text, useAppTheme } from '@asaplocal/ui-native';
+import { Screen, Card, Text, useAppTheme, useBottomNavInset } from '@asaplocal/ui-native';
 
-import { BottomTabInset } from '@/constants/theme';
 import { api } from '@/lib/api';
 
 interface ConversationSummary {
@@ -19,6 +18,7 @@ interface ConversationSummary {
 export default function MessagesScreen() {
   const router = useRouter();
   const { colors, spacing } = useAppTheme();
+  const bottomInset = useBottomNavInset();
   const [conversations, setConversations] = useState<ConversationSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -59,7 +59,7 @@ export default function MessagesScreen() {
         <FlatList
           data={conversations}
           keyExtractor={(c) => c.id}
-          contentContainerStyle={[styles.list, { paddingHorizontal: spacing.four, paddingBottom: BottomTabInset + spacing.four }]}
+          contentContainerStyle={[styles.list, { paddingHorizontal: spacing.four, paddingBottom: bottomInset }]}
           refreshing={refreshing}
           onRefresh={handleRefresh}
           ListEmptyComponent={

@@ -2,11 +2,10 @@ import { useCallback, useEffect, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { Screen, Card, Text, Button, useAppTheme } from '@asaplocal/ui-native';
+import { Screen, Card, Text, Button, useAppTheme, useBottomNavInset } from '@asaplocal/ui-native';
 import { ApiError } from '@asaplocal/api-client';
 
 import { api } from '@/lib/api';
-import { BottomTabInset } from '@/constants/theme';
 
 interface NearbyLead {
   id: string;
@@ -36,6 +35,7 @@ function formatPence(pence: number): string {
 export default function LeadsInboxScreen() {
   const router = useRouter();
   const { colors, spacing } = useAppTheme();
+  const bottomInset = useBottomNavInset();
   const [data, setData] = useState<LeadsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -101,7 +101,7 @@ export default function LeadsInboxScreen() {
         <FlatList
           data={data?.leads ?? []}
           keyExtractor={(l) => l.id}
-          contentContainerStyle={[styles.list, { paddingHorizontal: spacing.four, paddingBottom: BottomTabInset + spacing.four }]}
+          contentContainerStyle={[styles.list, { paddingHorizontal: spacing.four, paddingBottom: bottomInset }]}
           refreshing={refreshing}
           onRefresh={handleRefresh}
           ListEmptyComponent={

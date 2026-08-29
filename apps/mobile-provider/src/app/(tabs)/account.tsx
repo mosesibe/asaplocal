@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Screen, Card, Text, Button, TextField, useAppTheme } from '@asaplocal/ui-native';
+import { Screen, Card, Text, Button, TextField, useAppTheme, useBottomNavInset } from '@asaplocal/ui-native';
 
-import { BottomTabInset } from '@/constants/theme';
 import { useSession } from '@/lib/session';
 import { api } from '@/lib/api';
 
@@ -17,6 +16,7 @@ const PRESETS = [
 export default function AccountScreen() {
   const { user, logout } = useSession();
   const { spacing } = useAppTheme();
+  const bottomInset = useBottomNavInset();
   const [currentUrl, setCurrentUrl] = useState('');
   const [draftUrl, setDraftUrl] = useState('');
   const [saving, setSaving] = useState(false);
@@ -46,7 +46,7 @@ export default function AccountScreen() {
   return (
     <Screen>
       <SafeAreaView style={styles.safeArea} edges={['top']}>
-        <ScrollView contentContainerStyle={[styles.scroll, { paddingHorizontal: spacing.four, paddingBottom: BottomTabInset + spacing.four }]}>
+        <ScrollView contentContainerStyle={[styles.scroll, { paddingHorizontal: spacing.four, paddingBottom: bottomInset }]}>
           <Text variant="title" style={[styles.heading, { fontSize: 28, lineHeight: 34 }]}>
             Account
           </Text>

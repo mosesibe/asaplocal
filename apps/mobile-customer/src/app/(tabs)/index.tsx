@@ -2,10 +2,9 @@ import { useCallback, useEffect, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { Screen, Card, Text, Badge, Button, useAppTheme } from '@asaplocal/ui-native';
+import { Screen, Card, Text, Badge, Button, useAppTheme, useBottomNavInset } from '@asaplocal/ui-native';
 
 import { api } from '@/lib/api';
-import { BottomTabInset } from '@/constants/theme';
 
 interface JobSummary {
   id: string;
@@ -25,6 +24,7 @@ function formatPence(pence: number): string {
 export default function JobsScreen() {
   const router = useRouter();
   const { colors, spacing } = useAppTheme();
+  const bottomInset = useBottomNavInset();
   const [jobs, setJobs] = useState<JobSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -69,7 +69,7 @@ export default function JobsScreen() {
         <FlatList
           data={jobs}
           keyExtractor={(j) => j.id}
-          contentContainerStyle={[styles.list, { paddingHorizontal: spacing.four, paddingBottom: BottomTabInset + spacing.four }]}
+          contentContainerStyle={[styles.list, { paddingHorizontal: spacing.four, paddingBottom: bottomInset }]}
           refreshing={refreshing}
           onRefresh={handleRefresh}
           ListEmptyComponent={

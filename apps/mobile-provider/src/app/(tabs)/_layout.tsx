@@ -1,58 +1,40 @@
 import { Tabs, TabList, TabTrigger, TabSlot, type TabTriggerSlotProps } from 'expo-router/ui';
-import { Pressable, StyleSheet, View } from 'react-native';
-import { Text, useAppTheme } from '@asaplocal/ui-native';
+import { StyleSheet } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Target, MessageSquare, User } from 'lucide-react-native';
+import { BottomNav, BottomNavItem } from '@asaplocal/ui-native';
 
 // expo-router/ui's cross-platform Tabs (rather than unstable-native-tabs) —
 // chosen so this renders identically under `expo start --web` for
 // verification without a device/simulator, at the cost of not being a true
 // native tab bar. Revisit once there's a device to test the native chrome.
 export default function TabLayout() {
-  const { colors } = useAppTheme();
+  const insets = useSafeAreaInsets();
 
   return (
     <Tabs>
       <TabSlot style={styles.slot} />
-      <TabList style={styles.tabList} asChild>
-        <View style={StyleSheet.flatten([styles.tabListInner, { backgroundColor: colors.surface, borderTopColor: colors.border }])}>
+      <TabList asChild>
+        <BottomNav style={{ position: 'absolute', left: 0, right: 0, bottom: 16 + insets.bottom }}>
           <TabTrigger name="leads" href="/" asChild>
-            <TabButton>Leads</TabButton>
+            <TabButton icon={Target} label="Leads" />
           </TabTrigger>
           <TabTrigger name="messages" href="/messages" asChild>
-            <TabButton>Messages</TabButton>
+            <TabButton icon={MessageSquare} label="Messages" />
           </TabTrigger>
           <TabTrigger name="account" href="/account" asChild>
-            <TabButton>Account</TabButton>
+            <TabButton icon={User} label="Account" />
           </TabTrigger>
-        </View>
+        </BottomNav>
       </TabList>
     </Tabs>
   );
 }
 
-function TabButton({ children, isFocused, ...props }: TabTriggerSlotProps) {
-  const { colors } = useAppTheme();
-  return (
-    <Pressable {...props} style={styles.tabButton}>
-      <Text variant={isFocused ? 'smallMedium' : 'small'} style={{ color: isFocused ? colors.brand[600] : colors.mutedForeground }}>
-        {children}
-      </Text>
-    </Pressable>
-  );
+function TabButton({ icon, label, isFocused, ...props }: TabTriggerSlotProps & { icon: typeof Target; label: string }) {
+  return <BottomNavItem icon={icon} label={label} active={isFocused} {...props} />;
 }
 
 const styles = StyleSheet.create({
   slot: { flex: 1 },
-  tabList: { flexDirection: 'row' },
-  tabListInner: {
-    flex: 1,
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    paddingVertical: 12,
-    borderTopWidth: StyleSheet.hairlineWidth,
-  },
-  tabButton: {
-    paddingVertical: 4,
-    paddingHorizontal: 16,
-    alignItems: 'center',
-  },
 });
