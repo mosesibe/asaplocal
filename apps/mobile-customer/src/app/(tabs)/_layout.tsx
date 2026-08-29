@@ -1,20 +1,19 @@
 import { Tabs, TabList, TabTrigger, TabSlot, type TabTriggerSlotProps } from 'expo-router/ui';
-import { Pressable, StyleSheet } from 'react-native';
-
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Spacing } from '@/constants/theme';
+import { Pressable, StyleSheet, View } from 'react-native';
+import { Text, useAppTheme } from '@asaplocal/ui-native';
 
 // expo-router/ui's cross-platform Tabs (rather than unstable-native-tabs) —
 // chosen so this renders identically under `expo start --web` for
 // verification without a device/simulator, at the cost of not being a true
 // native tab bar. Revisit once there's a device to test the native chrome.
 export default function TabLayout() {
+  const { colors } = useAppTheme();
+
   return (
     <Tabs>
       <TabSlot style={styles.slot} />
       <TabList style={styles.tabList} asChild>
-        <ThemedView type="backgroundElement" style={styles.tabListInner}>
+        <View style={StyleSheet.flatten([styles.tabListInner, { backgroundColor: colors.surface, borderTopColor: colors.border }])}>
           <TabTrigger name="jobs" href="/" asChild>
             <TabButton>My jobs</TabButton>
           </TabTrigger>
@@ -24,18 +23,19 @@ export default function TabLayout() {
           <TabTrigger name="account" href="/account" asChild>
             <TabButton>Account</TabButton>
           </TabTrigger>
-        </ThemedView>
+        </View>
       </TabList>
     </Tabs>
   );
 }
 
 function TabButton({ children, isFocused, ...props }: TabTriggerSlotProps) {
+  const { colors } = useAppTheme();
   return (
-    <Pressable {...props} style={[styles.tabButton, isFocused && styles.tabButtonFocused]}>
-      <ThemedText type={isFocused ? 'smallBold' : 'small'} themeColor={isFocused ? 'text' : 'textSecondary'}>
+    <Pressable {...props} style={styles.tabButton}>
+      <Text variant={isFocused ? 'smallMedium' : 'small'} style={{ color: isFocused ? colors.brand[600] : colors.mutedForeground }}>
         {children}
-      </ThemedText>
+      </Text>
     </Pressable>
   );
 }
@@ -46,16 +46,13 @@ const styles = StyleSheet.create({
   tabListInner: {
     flex: 1,
     flexDirection: 'row',
-    justifyContent: 'center',
-    gap: Spacing.two,
-    paddingVertical: Spacing.two,
+    justifyContent: 'space-around',
+    paddingVertical: 12,
+    borderTopWidth: StyleSheet.hairlineWidth,
   },
   tabButton: {
-    paddingVertical: Spacing.two,
-    paddingHorizontal: Spacing.four,
-    borderRadius: Spacing.three,
-  },
-  tabButtonFocused: {
-    backgroundColor: 'rgba(0,32,89,0.08)',
+    paddingVertical: 4,
+    paddingHorizontal: 16,
+    alignItems: 'center',
   },
 });

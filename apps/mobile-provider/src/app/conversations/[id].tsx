@@ -1,10 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, Pressable, StyleSheet, View } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
+import { Screen, Text, TextField, useAppTheme } from '@asaplocal/ui-native';
 
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Spacing } from '@/constants/theme';
 import { api } from '@/lib/api';
 import { useSession } from '@/lib/session';
 
@@ -23,6 +21,7 @@ const POLL_INTERVAL_MS = 5000;
 export default function ConversationScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { user } = useSession();
+  const { colors, radius, spacing } = useAppTheme();
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
   const [draft, setDraft] = useState('');
@@ -65,93 +64,87 @@ export default function ConversationScreen() {
 
   if (loading) {
     return (
-      <ThemedView style={styles.centered}>
-        <ActivityIndicator />
-      </ThemedView>
+      <Screen style={styles.centered}>
+        <ActivityIndicator color={colors.brand[600]} />
+      </Screen>
     );
   }
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      keyboardVerticalOffset={90}>
-      <ThemedView style={styles.container}>
+    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={90}>
+      <Screen>
         <FlatList
           ref={listRef}
           data={messages}
           keyExtractor={(m) => m.id}
-          contentContainerStyle={styles.list}
+          contentContainerStyle={[styles.list, { padding: spacing.four }]}
           onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: false })}
           renderItem={({ item }) => {
             const mine = item.senderId === user?.id;
             return (
               <View style={[styles.bubbleRow, mine && styles.bubbleRowMine]}>
-                <ThemedView type={mine ? 'backgroundSelected' : 'backgroundElement'} style={styles.bubble}>
-                  <ThemedText type="small">{item.body}</ThemedText>
-                </ThemedView>
+                <View
+                  style={[
+                    styles.bubble,
+                    { borderRadius: radius.lg, backgroundColor: mine ? colors.brand[600] : colors.muted },
+                  ]}
+                >
+                  <Text variant="small" color={mine ? 'inverse' : 'foreground'}>
+                    {item.body}
+                  </Text>
+                </View>
               </View>
             );
           }}
           ListEmptyComponent={
-            <ThemedText type="small" themeColor="textSecondary" style={styles.empty}>
+            <Text variant="small" color="muted" style={styles.empty}>
               No messages yet — say hello.
-            </ThemedText>
+            </Text>
           }
         />
-        <View style={styles.inputRow}>
-          <TextInput
-            style={styles.input}
-            placeholder="Message"
-            value={draft}
-            onChangeText={setDraft}
-            multiline
-          />
-          <Pressable style={styles.sendButton} onPress={handleSend} disabled={sending || !draft.trim()}>
-            <ThemedText style={styles.sendButtonText}>Send</ThemedText>
+        <View style={[styles.inputRow, { borderTopColor: colors.border }]}>
+          <TextField style={styles.input} placeholder="Message" value={draft} onChangeText={setDraft} multiline />
+          <Pressable
+            style={[styles.sendButton, { borderRadius: radius.lg, backgroundColor: colors.brand[600] }]}
+            onPress={handleSend}
+            disabled={sending || !draft.trim()}
+          >
+            <Text variant="smallMedium" color="inverse">
+              Send
+            </Text>
           </Pressable>
         </View>
-      </ThemedView>
+      </Screen>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  centered: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  list: { padding: Spacing.four, gap: Spacing.two },
+  centered: { alignItems: 'center', justifyContent: 'center' },
+  list: { gap: 8 },
   bubbleRow: { flexDirection: 'row' },
   bubbleRowMine: { justifyContent: 'flex-end' },
   bubble: {
     maxWidth: '80%',
-    borderRadius: Spacing.three,
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.two,
-    marginBottom: Spacing.one,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    marginBottom: 4,
   },
-  empty: { textAlign: 'center', marginTop: Spacing.six },
+  empty: { textAlign: 'center', marginTop: 64 },
   inputRow: {
     flexDirection: 'row',
     alignItems: 'flex-end',
-    gap: Spacing.two,
-    padding: Spacing.three,
+    gap: 8,
+    padding: 16,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: '#8888',
   },
   input: {
     flex: 1,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: '#8888',
-    borderRadius: Spacing.three,
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.two,
     maxHeight: 100,
   },
   sendButton: {
-    backgroundColor: '#002059',
-    borderRadius: Spacing.three,
-    paddingHorizontal: Spacing.four,
-    paddingVertical: Spacing.two,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
   },
-  sendButtonText: { color: '#ffffff', fontWeight: '600' },
 });

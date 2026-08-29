@@ -2,10 +2,8 @@ import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
+import { Screen, Card, Text, Badge, Button, useAppTheme } from '@asaplocal/ui-native';
 
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Spacing } from '@/constants/theme';
 import { api } from '@/lib/api';
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:3000';
@@ -42,6 +40,7 @@ function formatPence(pence: number): string {
 
 export default function JobDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const { colors, spacing } = useAppTheme();
   const [data, setData] = useState<JobDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -88,118 +87,105 @@ export default function JobDetailScreen() {
 
   if (loading) {
     return (
-      <ThemedView style={styles.centered}>
-        <ActivityIndicator />
-      </ThemedView>
+      <Screen style={styles.centered}>
+        <ActivityIndicator color={colors.brand[600]} />
+      </Screen>
     );
   }
 
   if (!data) {
     return (
-      <ThemedView style={styles.centered}>
-        <ThemedText>{error ?? 'Job not found.'}</ThemedText>
-      </ThemedView>
+      <Screen style={styles.centered}>
+        <Text>{error ?? 'Job not found.'}</Text>
+      </Screen>
     );
   }
 
   const { job, quotes, booking } = data;
 
   return (
-    <ThemedView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scroll}>
-        <ThemedText type="small" themeColor="textSecondary">
-          {job.status.replace(/_/g, ' ')}
-        </ThemedText>
-        <ThemedText type="subtitle">{job.title}</ThemedText>
-        <ThemedText type="small" themeColor="textSecondary">
+    <Screen>
+      <ScrollView contentContainerStyle={[styles.scroll, { padding: spacing.four }]}>
+        <Badge variant="outline">{job.status.replace(/_/g, ' ')}</Badge>
+        <Text variant="title" style={{ fontSize: 22, lineHeight: 28 }}>
+          {job.title}
+        </Text>
+        <Text variant="small" color="muted">
           {STATUS_COPY[job.status] ?? ''}
-        </ThemedText>
+        </Text>
 
-        <ThemedView type="backgroundElement" style={styles.card}>
-          <ThemedText type="small" themeColor="textSecondary">
+        <Card style={styles.card}>
+          <Text variant="small" color="muted">
             {job.categoryName} · {job.city}
-          </ThemedText>
-          <ThemedText style={styles.description}>{job.description}</ThemedText>
-          <ThemedText type="small" themeColor="textSecondary">
+          </Text>
+          <Text style={styles.description}>{job.description}</Text>
+          <Text variant="small" color="muted">
             Budget: {job.budgetMinPence ? formatPence(job.budgetMinPence) : '?'}–{job.budgetMaxPence ? formatPence(job.budgetMaxPence) : '?'}
-          </ThemedText>
-        </ThemedView>
+          </Text>
+        </Card>
 
         {error && (
-          <ThemedText type="small" style={styles.error}>
+          <Text variant="small" style={styles.error}>
             {error}
-          </ThemedText>
+          </Text>
         )}
 
         {booking && (
           <Pressable onPress={() => handleOpenBooking(booking.id)}>
-            <ThemedView type="backgroundElement" style={styles.card}>
-              <ThemedText type="smallBold">Booking: {booking.status.replace(/_/g, ' ')}</ThemedText>
-              <ThemedText type="linkPrimary">
+            <Card style={styles.card}>
+              <Text variant="bodyMedium">Booking: {booking.status.replace(/_/g, ' ')}</Text>
+              <Text variant="link" color="brand">
                 {booking.status === 'PENDING' ? 'Complete deposit payment →' : 'View booking on web →'}
-              </ThemedText>
-            </ThemedView>
+              </Text>
+            </Card>
           </Pressable>
         )}
 
-        <ThemedText type="smallBold" style={styles.sectionHeading}>
+        <Text variant="bodyMedium" style={styles.sectionHeading}>
           Quotes ({quotes.length})
-        </ThemedText>
+        </Text>
         {quotes.length === 0 && (
-          <ThemedText type="small" themeColor="textSecondary">
+          <Text variant="small" color="muted">
             No quotes yet — providers typically respond within a few hours.
-          </ThemedText>
+          </Text>
         )}
         {quotes.map((q) => (
-          <ThemedView key={q.id} type="backgroundElement" style={styles.card}>
+          <Card key={q.id} style={styles.card}>
             <View style={styles.quoteHeader}>
-              <ThemedText type="smallBold" style={styles.quoteBusiness}>
+              <Text variant="bodyMedium" style={styles.quoteBusiness}>
                 {q.businessName}
-              </ThemedText>
-              <ThemedText type="smallBold">{formatPence(q.amountPence)}</ThemedText>
+              </Text>
+              <Text variant="bodyMedium">{formatPence(q.amountPence)}</Text>
             </View>
             {q.message && (
-              <ThemedText type="small" themeColor="textSecondary">
+              <Text variant="small" color="muted">
                 {q.message}
-              </ThemedText>
+              </Text>
             )}
             {job.status !== 'ASSIGNED' && q.status === 'SENT' ? (
-              <Pressable style={styles.acceptButton} onPress={() => handleAccept(q.id)} disabled={acceptingId === q.id}>
-                <ThemedText style={styles.acceptButtonText}>{acceptingId === q.id ? 'Accepting…' : 'Accept quote'}</ThemedText>
-              </Pressable>
+              <Button onPress={() => handleAccept(q.id)} loading={acceptingId === q.id} style={styles.acceptButton}>
+                Accept quote
+              </Button>
             ) : (
-              <ThemedText type="small" themeColor="textSecondary">
+              <Text variant="small" color="muted">
                 {q.status}
-              </ThemedText>
+              </Text>
             )}
-          </ThemedView>
+          </Card>
         ))}
       </ScrollView>
-    </ThemedView>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  centered: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  scroll: { padding: Spacing.four, gap: Spacing.two },
-  card: {
-    borderRadius: Spacing.three,
-    padding: Spacing.three,
-    gap: Spacing.one,
-    marginVertical: Spacing.one,
-  },
+  centered: { alignItems: 'center', justifyContent: 'center' },
+  scroll: { gap: 8 },
+  card: { gap: 4, marginVertical: 4 },
   description: { lineHeight: 22 },
-  sectionHeading: { marginTop: Spacing.four },
+  sectionHeading: { marginTop: 24 },
   quoteHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   quoteBusiness: { flexShrink: 1 },
-  acceptButton: {
-    marginTop: Spacing.one,
-    backgroundColor: '#002059',
-    borderRadius: Spacing.two,
-    paddingVertical: Spacing.two,
-    alignItems: 'center',
-  },
-  acceptButtonText: { color: '#ffffff', fontWeight: '600' },
+  acceptButton: { marginTop: 4 },
   error: { color: '#dc2626' },
 });

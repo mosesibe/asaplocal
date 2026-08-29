@@ -1,10 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useRouter } from 'expo-router';
+import { Screen, Text, Button, TextField, useAppTheme } from '@asaplocal/ui-native';
 
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Spacing } from '@/constants/theme';
 import { api } from '@/lib/api';
 import { ApiError } from '@asaplocal/api-client';
 
@@ -17,6 +15,7 @@ interface Category {
 
 export default function NewJobScreen() {
   const router = useRouter();
+  const { colors, radius, spacing } = useAppTheme();
   const [categories, setCategories] = useState<Category[]>([]);
   const [categoryId, setCategoryId] = useState<string | null>(null);
   const [title, setTitle] = useState('');
@@ -68,123 +67,91 @@ export default function NewJobScreen() {
 
   if (loading) {
     return (
-      <ThemedView style={styles.centered}>
-        <ActivityIndicator />
-      </ThemedView>
+      <Screen style={styles.centered}>
+        <ActivityIndicator color={colors.brand[600]} />
+      </Screen>
     );
   }
 
   return (
-    <ThemedView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scroll}>
-        <ThemedText type="smallBold">Category</ThemedText>
+    <Screen>
+      <ScrollView contentContainerStyle={[styles.scroll, { padding: spacing.four }]}>
+        <Text variant="bodyMedium">Category</Text>
         <View style={styles.chipRow}>
-          {categories.map((c) => (
-            <Pressable
-              key={c.id}
-              onPress={() => setCategoryId(c.id)}
-              style={[styles.chip, categoryId === c.id && styles.chipSelected]}>
-              <ThemedText type="small" themeColor={categoryId === c.id ? undefined : 'textSecondary'}>
-                {c.name}
-              </ThemedText>
-            </Pressable>
-          ))}
+          {categories.map((c) => {
+            const selected = categoryId === c.id;
+            return (
+              <Pressable
+                key={c.id}
+                onPress={() => setCategoryId(c.id)}
+                style={[
+                  styles.chip,
+                  {
+                    borderRadius: radius.full,
+                    borderColor: selected ? colors.brand[600] : colors.border,
+                    backgroundColor: selected ? colors.brand[600] : 'transparent',
+                  },
+                ]}
+              >
+                <Text variant="small" color={selected ? 'inverse' : 'muted'}>
+                  {c.name}
+                </Text>
+              </Pressable>
+            );
+          })}
         </View>
 
-        <ThemedText type="smallBold" style={styles.label}>
+        <Text variant="bodyMedium" style={styles.label}>
           Title
-        </ThemedText>
-        <TextInput
-          style={styles.input}
-          placeholder="e.g. Leaking kitchen tap needs urgent repair"
-          value={title}
-          onChangeText={setTitle}
-        />
+        </Text>
+        <TextField placeholder="e.g. Leaking kitchen tap needs urgent repair" value={title} onChangeText={setTitle} />
 
-        <ThemedText type="smallBold" style={styles.label}>
+        <Text variant="bodyMedium" style={styles.label}>
           Description
-        </ThemedText>
-        <TextInput
-          style={[styles.input, styles.textArea]}
-          placeholder="Describe what you need done"
-          multiline
-          value={description}
-          onChangeText={setDescription}
-        />
+        </Text>
+        <TextField placeholder="Describe what you need done" multiline value={description} onChangeText={setDescription} />
 
-        <ThemedText type="smallBold" style={styles.label}>
+        <Text variant="bodyMedium" style={styles.label}>
           Location
-        </ThemedText>
-        <TextInput style={styles.input} placeholder="City" value={city} onChangeText={setCity} />
-        <TextInput style={[styles.input, styles.spacedInput]} placeholder="Postcode (optional)" value={postcode} onChangeText={setPostcode} />
+        </Text>
+        <TextField placeholder="City" value={city} onChangeText={setCity} />
+        <TextField style={styles.spacedInput} placeholder="Postcode (optional)" value={postcode} onChangeText={setPostcode} />
 
-        <ThemedText type="smallBold" style={styles.label}>
+        <Text variant="bodyMedium" style={styles.label}>
           Budget (optional)
-        </ThemedText>
+        </Text>
         <View style={styles.row}>
-          <TextInput
-            style={[styles.input, styles.halfInput]}
-            placeholder="Min £"
-            keyboardType="decimal-pad"
-            value={budgetMin}
-            onChangeText={setBudgetMin}
-          />
-          <TextInput
-            style={[styles.input, styles.halfInput]}
-            placeholder="Max £"
-            keyboardType="decimal-pad"
-            value={budgetMax}
-            onChangeText={setBudgetMax}
-          />
+          <TextField style={styles.halfInput} placeholder="Min £" keyboardType="decimal-pad" value={budgetMin} onChangeText={setBudgetMin} />
+          <TextField style={styles.halfInput} placeholder="Max £" keyboardType="decimal-pad" value={budgetMax} onChangeText={setBudgetMax} />
         </View>
 
         {error && (
-          <ThemedText type="small" style={styles.error}>
+          <Text variant="small" style={styles.error}>
             {error}
-          </ThemedText>
+          </Text>
         )}
 
-        <Pressable style={styles.button} onPress={handleSubmit} disabled={submitting}>
-          {submitting ? <ActivityIndicator color="#fff" /> : <ThemedText style={styles.buttonText}>Post job</ThemedText>}
-        </Pressable>
+        <Button onPress={handleSubmit} loading={submitting} style={styles.submitButton}>
+          Post job
+        </Button>
       </ScrollView>
-    </ThemedView>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  centered: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  scroll: { padding: Spacing.four, gap: Spacing.two },
-  label: { marginTop: Spacing.three },
-  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two, marginTop: Spacing.one },
+  centered: { alignItems: 'center', justifyContent: 'center' },
+  scroll: { gap: 8 },
+  label: { marginTop: 16 },
+  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 4 },
   chip: {
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.two,
-    borderRadius: Spacing.five,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: '#8888',
   },
-  chipSelected: { backgroundColor: '#002059', borderColor: '#002059' },
-  input: {
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: '#8888',
-    borderRadius: Spacing.two,
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.two,
-    marginTop: Spacing.one,
-  },
-  spacedInput: { marginTop: Spacing.two },
-  textArea: { minHeight: 100, textAlignVertical: 'top' },
-  row: { flexDirection: 'row', gap: Spacing.two },
+  spacedInput: { marginTop: 8 },
+  row: { flexDirection: 'row', gap: 8 },
   halfInput: { flex: 1 },
-  button: {
-    backgroundColor: '#002059',
-    borderRadius: Spacing.two,
-    paddingVertical: Spacing.three,
-    alignItems: 'center',
-    marginTop: Spacing.four,
-  },
-  buttonText: { color: '#ffffff', fontWeight: '600' },
-  error: { color: '#dc2626', marginTop: Spacing.two },
+  submitButton: { marginTop: 24 },
+  error: { color: '#dc2626', marginTop: 8 },
 });

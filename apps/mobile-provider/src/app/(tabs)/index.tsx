@@ -1,13 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
-import { FlatList, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
+import { FlatList, Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { BottomTabInset, Spacing } from '@/constants/theme';
-import { api } from '@/lib/api';
+import { Screen, Card, Text, Button, useAppTheme } from '@asaplocal/ui-native';
 import { ApiError } from '@asaplocal/api-client';
+
+import { api } from '@/lib/api';
+import { BottomTabInset } from '@/constants/theme';
 
 interface NearbyLead {
   id: string;
@@ -36,6 +35,7 @@ function formatPence(pence: number): string {
 
 export default function LeadsInboxScreen() {
   const router = useRouter();
+  const { colors, spacing } = useAppTheme();
   const [data, setData] = useState<LeadsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -79,119 +79,96 @@ export default function LeadsInboxScreen() {
   );
 
   return (
-    <ThemedView style={styles.container}>
+    <Screen>
       <SafeAreaView style={styles.safeArea} edges={['top']}>
-        <View style={styles.header}>
-          <ThemedText type="subtitle">Lead marketplace</ThemedText>
+        <View style={[styles.header, { paddingHorizontal: spacing.four }]}>
+          <Text variant="title" style={{ fontSize: 28, lineHeight: 34 }}>
+            Lead marketplace
+          </Text>
           {data && (
-            <ThemedText type="small" themeColor="textSecondary">
+            <Text variant="small" color="muted">
               {data.allowanceRemaining > 0 ? `${data.allowanceRemaining} plan leads left` : 'No plan allowance left'} · {data.creditBalance} credits
-            </ThemedText>
+            </Text>
           )}
         </View>
 
         {error && (
-          <ThemedText type="small" style={styles.error}>
+          <Text variant="small" style={[styles.error, { paddingHorizontal: spacing.four }]}>
             {error}
-          </ThemedText>
+          </Text>
         )}
 
         <FlatList
           data={data?.leads ?? []}
           keyExtractor={(l) => l.id}
-          contentContainerStyle={[styles.list, { paddingBottom: BottomTabInset + Spacing.four }]}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
+          contentContainerStyle={[styles.list, { paddingHorizontal: spacing.four, paddingBottom: BottomTabInset + spacing.four }]}
+          refreshing={refreshing}
+          onRefresh={handleRefresh}
           ListEmptyComponent={
             !loading ? (
-              <ThemedText type="small" themeColor="textSecondary" style={styles.empty}>
+              <Text variant="small" color="muted" style={styles.empty}>
                 No open leads in your category/area right now — check back soon.
-              </ThemedText>
+              </Text>
             ) : null
           }
           renderItem={({ item }) => (
-            <Pressable
-              onPress={() => (item.alreadyAcquired ? router.push(`/leads/${item.id}`) : undefined)}
-              disabled={acquiringId === item.id}>
-              <ThemedView type="backgroundElement" style={styles.card}>
+            <Pressable onPress={() => (item.alreadyAcquired ? router.push(`/leads/${item.id}`) : undefined)} disabled={acquiringId === item.id}>
+              <Card style={styles.card}>
                 <View style={styles.cardHeader}>
-                  <ThemedText type="smallBold" style={styles.cardTitle}>
+                  <Text variant="bodyMedium" style={styles.cardTitle}>
                     {item.title}
-                  </ThemedText>
-                  <ThemedText type="small" themeColor="textSecondary">
+                  </Text>
+                  <Text variant="small" color="muted">
                     {formatPence(item.leadPricePence)}
-                  </ThemedText>
+                  </Text>
                 </View>
-                <ThemedText type="small" themeColor="textSecondary">
+                <Text variant="small" color="muted">
                   {item.categoryName} · {item.city} · {item.distanceMiles.toFixed(1)} mi
-                </ThemedText>
-                <ThemedText type="small" style={styles.description}>
+                </Text>
+                <Text variant="small" style={styles.description}>
                   {item.alreadyAcquired ? item.description : `${item.description.slice(0, 90)}… (full details after acquiring)`}
-                </ThemedText>
-                <ThemedText type="small" themeColor="textSecondary">
+                </Text>
+                <Text variant="small" color="muted">
                   Budget: {item.budgetMinPence ? formatPence(item.budgetMinPence) : '?'}–{item.budgetMaxPence ? formatPence(item.budgetMaxPence) : '?'} · {item.salesCount}/{item.maxLeadSales} providers
-                </ThemedText>
+                </Text>
                 {item.alreadyAcquired ? (
-                  <ThemedText type="linkPrimary">View & send quote →</ThemedText>
+                  <Text variant="link" color="brand">
+                    View & send quote →
+                  </Text>
                 ) : (
-                  <Pressable
-                    style={styles.acquireButton}
-                    onPress={() => handleAcquire(item.id)}
-                    disabled={acquiringId === item.id}>
-                    <ThemedText style={styles.acquireButtonText}>
-                      {acquiringId === item.id ? 'Acquiring…' : 'Acquire lead'}
-                    </ThemedText>
-                  </Pressable>
+                  <Button size="sm" onPress={() => handleAcquire(item.id)} loading={acquiringId === item.id} style={styles.acquireButton}>
+                    Acquire lead
+                  </Button>
                 )}
-              </ThemedView>
+              </Card>
             </Pressable>
           )}
         />
       </SafeAreaView>
-    </ThemedView>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
   safeArea: { flex: 1 },
   header: {
-    paddingHorizontal: Spacing.four,
-    paddingTop: Spacing.three,
-    paddingBottom: Spacing.two,
-    gap: Spacing.half,
+    paddingTop: 12,
+    paddingBottom: 8,
+    gap: 2,
   },
-  list: {
-    paddingHorizontal: Spacing.four,
-    gap: Spacing.three,
-  },
-  card: {
-    borderRadius: Spacing.three,
-    padding: Spacing.three,
-    gap: Spacing.one,
-    marginBottom: Spacing.three,
-  },
+  list: { gap: 12 },
+  card: { gap: 4, marginBottom: 12 },
   cardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
   cardTitle: { flexShrink: 1 },
-  description: { marginVertical: Spacing.one },
-  acquireButton: {
-    marginTop: Spacing.two,
-    backgroundColor: '#002059',
-    borderRadius: Spacing.two,
-    paddingVertical: Spacing.two,
-    alignItems: 'center',
-  },
-  acquireButtonText: { color: '#ffffff', fontWeight: '600' },
-  error: {
-    color: '#dc2626',
-    paddingHorizontal: Spacing.four,
-    paddingBottom: Spacing.two,
-  },
+  description: { marginVertical: 4 },
+  acquireButton: { marginTop: 8 },
+  error: { color: '#dc2626', paddingBottom: 8 },
   empty: {
     textAlign: 'center',
-    marginTop: Spacing.six,
+    marginTop: 64,
   },
 });

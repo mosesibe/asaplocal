@@ -1,10 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { Screen, Card, Text, Badge, Button, TextField, useAppTheme } from '@asaplocal/ui-native';
 
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Spacing } from '@/constants/theme';
 import { api } from '@/lib/api';
 
 interface LeadDetail {
@@ -34,6 +32,7 @@ function formatPence(pence: number): string {
 export default function LeadDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const { colors, spacing } = useAppTheme();
   const [data, setData] = useState<LeadDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -100,157 +99,125 @@ export default function LeadDetailScreen() {
 
   if (loading) {
     return (
-      <ThemedView style={styles.centered}>
-        <ActivityIndicator />
-      </ThemedView>
+      <Screen style={styles.centered}>
+        <ActivityIndicator color={colors.brand[600]} />
+      </Screen>
     );
   }
 
   if (!data) {
     return (
-      <ThemedView style={styles.centered}>
-        <ThemedText>{error ?? 'Lead not found.'}</ThemedText>
-      </ThemedView>
+      <Screen style={styles.centered}>
+        <Text>{error ?? 'Lead not found.'}</Text>
+      </Screen>
     );
   }
 
   const { lead, access, customer, dispatchNote, existingQuote, ownBooking } = data;
 
   return (
-    <ThemedView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scroll}>
-        <ThemedText type="small" themeColor="textSecondary">
-          {lead.categoryName} · {access.status}
-        </ThemedText>
-        <ThemedText type="subtitle">{lead.title}</ThemedText>
-        <ThemedText type="small" themeColor="textSecondary">
+    <Screen>
+      <ScrollView contentContainerStyle={[styles.scroll, { padding: spacing.four }]}>
+        <View style={styles.metaRow}>
+          <Badge variant="outline">{lead.categoryName}</Badge>
+          <Badge>{access.status}</Badge>
+        </View>
+        <Text variant="title" style={{ fontSize: 22, lineHeight: 28 }}>
+          {lead.title}
+        </Text>
+        <Text variant="small" color="muted">
           {lead.city} · Budget {lead.budgetMinPence ? formatPence(lead.budgetMinPence) : '?'}–{lead.budgetMaxPence ? formatPence(lead.budgetMaxPence) : '?'}
-        </ThemedText>
+        </Text>
 
         {dispatchNote && (
-          <ThemedView type="backgroundElement" style={styles.card}>
-            <ThemedText type="small" themeColor="textSecondary">
+          <Card style={styles.card}>
+            <Text variant="small" color="muted">
               Note from dispatch
-            </ThemedText>
-            <ThemedText type="small">{dispatchNote}</ThemedText>
-          </ThemedView>
+            </Text>
+            <Text variant="small">{dispatchNote}</Text>
+          </Card>
         )}
 
-        <View style={[styles.row, styles.customerRow]}>
-          <ThemedText type="small">Customer: {customer.name}</ThemedText>
+        <View style={styles.customerRow}>
+          <Text variant="small">Customer: {customer.name}</Text>
           <Pressable onPress={handleMessageCustomer} disabled={messaging}>
-            <ThemedText type="linkPrimary">{messaging ? 'Opening…' : 'Message'}</ThemedText>
+            <Text variant="link" color="brand">
+              {messaging ? 'Opening…' : 'Message'}
+            </Text>
           </Pressable>
         </View>
 
         {access.status === 'WON' && (
-          <ThemedView type="backgroundElement" style={styles.card}>
-            <ThemedText type="small" themeColor="textSecondary">
+          <Card style={styles.card}>
+            <Text variant="small" color="muted">
               Contact details
-            </ThemedText>
-            <ThemedText type="small">
+            </Text>
+            <Text variant="small">
               {lead.addressLine ? `${lead.addressLine}, ` : ''}
               {lead.city}
               {lead.postcode ? `, ${lead.postcode}` : ''}
-            </ThemedText>
-            <ThemedText type="small">{customer.phone ?? 'No phone number on file'}</ThemedText>
-          </ThemedView>
+            </Text>
+            <Text variant="small">{customer.phone ?? 'No phone number on file'}</Text>
+          </Card>
         )}
 
-        <ThemedView type="backgroundElement" style={styles.card}>
-          <ThemedText style={styles.description}>{lead.description}</ThemedText>
-        </ThemedView>
+        <Card style={styles.card}>
+          <Text style={styles.description}>{lead.description}</Text>
+        </Card>
 
         {ownBooking && (
           <Pressable onPress={() => router.push(`/bookings/${ownBooking.id}`)}>
-            <ThemedView type="backgroundElement" style={styles.card}>
-              <ThemedText type="smallBold">You won this job</ThemedText>
-              <ThemedText type="small" themeColor="textSecondary">
+            <Card style={styles.card}>
+              <Text variant="bodyMedium">You won this job</Text>
+              <Text variant="small" color="muted">
                 Booking status: {ownBooking.status.replace(/_/g, ' ')}
-              </ThemedText>
-              <ThemedText type="linkPrimary">
+              </Text>
+              <Text variant="link" color="brand">
                 {ownBooking.status === 'IN_PROGRESS' ? 'Open job sheet →' : 'Open booking →'}
-              </ThemedText>
-            </ThemedView>
+              </Text>
+            </Card>
           </Pressable>
         )}
 
-        <ThemedText type="smallBold" style={styles.sectionHeading}>
+        <Text variant="bodyMedium" style={styles.sectionHeading}>
           {existingQuote ? 'Your quote' : 'Send a quote'}
-        </ThemedText>
+        </Text>
         {sent && (
-          <ThemedText type="small" style={styles.success}>
+          <Text variant="small" style={styles.success}>
             Quote sent!
-          </ThemedText>
+          </Text>
         )}
         {error && (
-          <ThemedText type="small" style={styles.error}>
+          <Text variant="small" style={styles.error}>
             {error}
-          </ThemedText>
+          </Text>
         )}
-        <TextInput
-          style={styles.input}
-          placeholder="Amount (£)"
-          keyboardType="decimal-pad"
-          value={amount}
-          onChangeText={setAmount}
-        />
-        <TextInput
-          style={[styles.input, styles.textArea]}
-          placeholder="Message to the customer (optional)"
-          multiline
-          numberOfLines={4}
-          value={message}
-          onChangeText={setMessage}
-        />
-        <Pressable style={styles.button} onPress={handleSendQuote} disabled={submitting}>
-          {submitting ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <ThemedText style={styles.buttonText}>{existingQuote ? 'Update quote' : 'Send quote'}</ThemedText>
-          )}
-        </Pressable>
+        <TextField placeholder="Amount (£)" keyboardType="decimal-pad" value={amount} onChangeText={setAmount} />
+        <TextField placeholder="Message to the customer (optional)" multiline value={message} onChangeText={setMessage} style={styles.spacedInput} />
+        <Button onPress={handleSendQuote} loading={submitting} style={styles.submitButton}>
+          {existingQuote ? 'Update quote' : 'Send quote'}
+        </Button>
 
         {existingQuote && (
-          <ThemedText type="small" themeColor="textSecondary" style={styles.quoteStatus}>
+          <Text variant="small" color="muted" style={styles.quoteStatus}>
             Status: {existingQuote.status}
-          </ThemedText>
+          </Text>
         )}
       </ScrollView>
-    </ThemedView>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  centered: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  scroll: { padding: Spacing.four, gap: Spacing.two },
-  row: { marginVertical: Spacing.one },
-  customerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  card: {
-    borderRadius: Spacing.three,
-    padding: Spacing.three,
-    gap: Spacing.one,
-    marginVertical: Spacing.one,
-  },
+  centered: { alignItems: 'center', justifyContent: 'center' },
+  scroll: { gap: 8 },
+  metaRow: { flexDirection: 'row', gap: 8 },
+  customerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginVertical: 4 },
+  card: { gap: 4, marginVertical: 4 },
   description: { lineHeight: 22 },
-  sectionHeading: { marginTop: Spacing.four },
-  input: {
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: '#8888',
-    borderRadius: Spacing.two,
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.two,
-  },
-  textArea: { minHeight: 90, textAlignVertical: 'top' },
-  button: {
-    backgroundColor: '#002059',
-    borderRadius: Spacing.two,
-    paddingVertical: Spacing.three,
-    alignItems: 'center',
-    marginTop: Spacing.one,
-  },
-  buttonText: { color: '#ffffff', fontWeight: '600' },
+  sectionHeading: { marginTop: 24 },
+  spacedInput: { marginTop: 8 },
+  submitButton: { marginTop: 4 },
   error: { color: '#dc2626' },
   success: { color: '#16a34a' },
   quoteStatus: { textAlign: 'center' },

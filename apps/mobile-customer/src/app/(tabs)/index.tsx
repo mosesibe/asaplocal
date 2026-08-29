@@ -1,12 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
-import { FlatList, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
+import { FlatList, Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, useRouter } from 'expo-router';
+import { Screen, Card, Text, Badge, Button, useAppTheme } from '@asaplocal/ui-native';
 
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { BottomTabInset, Spacing } from '@/constants/theme';
 import { api } from '@/lib/api';
+import { BottomTabInset } from '@/constants/theme';
 
 interface JobSummary {
   id: string;
@@ -25,6 +24,7 @@ function formatPence(pence: number): string {
 
 export default function JobsScreen() {
   const router = useRouter();
+  const { colors, spacing } = useAppTheme();
   const [jobs, setJobs] = useState<JobSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -55,79 +55,66 @@ export default function JobsScreen() {
   }, [load]);
 
   return (
-    <ThemedView style={styles.container}>
+    <Screen>
       <SafeAreaView style={styles.safeArea} edges={['top']}>
-        <View style={styles.header}>
-          <ThemedText type="subtitle">My jobs</ThemedText>
-          <Pressable style={styles.postButton} onPress={() => router.push('/jobs/new')}>
-            <ThemedText style={styles.postButtonText}>+ Post a job</ThemedText>
-          </Pressable>
+        <View style={[styles.header, { paddingHorizontal: spacing.four }]}>
+          <Text variant="title" style={{ fontSize: 28, lineHeight: 34 }}>
+            My jobs
+          </Text>
+          <Button size="sm" onPress={() => router.push('/jobs/new')}>
+            + Post a job
+          </Button>
         </View>
 
         <FlatList
           data={jobs}
           keyExtractor={(j) => j.id}
-          contentContainerStyle={[styles.list, { paddingBottom: BottomTabInset + Spacing.four }]}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
+          contentContainerStyle={[styles.list, { paddingHorizontal: spacing.four, paddingBottom: BottomTabInset + spacing.four }]}
+          refreshing={refreshing}
+          onRefresh={handleRefresh}
           ListEmptyComponent={
             !loading ? (
-              <ThemedText type="small" themeColor="textSecondary" style={styles.empty}>
+              <Text variant="small" color="muted" style={styles.empty}>
                 No jobs yet — post one to get quotes from local pros.
-              </ThemedText>
+              </Text>
             ) : null
           }
           renderItem={({ item }) => (
             <Pressable onPress={() => router.push(`/jobs/${item.id}`)}>
-              <ThemedView type="backgroundElement" style={styles.card}>
+              <Card style={styles.card}>
                 <View style={styles.cardHeader}>
-                  <ThemedText type="smallBold" style={styles.cardTitle}>
+                  <Text variant="bodyMedium" style={styles.cardTitle}>
                     {item.title}
-                  </ThemedText>
-                  <ThemedText type="small" themeColor="textSecondary">
-                    {item.status.replace(/_/g, ' ')}
-                  </ThemedText>
+                  </Text>
+                  <Badge variant="outline">{item.status.replace(/_/g, ' ')}</Badge>
                 </View>
-                <ThemedText type="small" themeColor="textSecondary">
+                <Text variant="small" color="muted">
                   {item.categoryName} · {item.city}
-                </ThemedText>
-                <ThemedText type="small" themeColor="textSecondary">
+                </Text>
+                <Text variant="small" color="muted">
                   {item.budgetMinPence ? formatPence(item.budgetMinPence) : '?'}–{item.budgetMaxPence ? formatPence(item.budgetMaxPence) : '?'} · {item.quoteCount} quote{item.quoteCount === 1 ? '' : 's'}
-                </ThemedText>
-              </ThemedView>
+                </Text>
+              </Card>
             </Pressable>
           )}
         />
       </SafeAreaView>
-    </ThemedView>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
   safeArea: { flex: 1 },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: Spacing.four,
-    paddingTop: Spacing.three,
-    paddingBottom: Spacing.two,
+    paddingTop: 12,
+    paddingBottom: 8,
   },
-  postButton: {
-    backgroundColor: '#002059',
-    borderRadius: Spacing.three,
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.two,
-  },
-  postButtonText: { color: '#ffffff', fontWeight: '600', fontSize: 13 },
-  list: { paddingHorizontal: Spacing.four, gap: Spacing.two },
-  card: {
-    borderRadius: Spacing.three,
-    padding: Spacing.three,
-    gap: Spacing.half,
-    marginBottom: Spacing.two,
-  },
-  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  list: { gap: 12 },
+  card: { gap: 4, marginBottom: 12 },
+  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8 },
   cardTitle: { flexShrink: 1 },
-  empty: { textAlign: 'center', marginTop: Spacing.six },
+  empty: { textAlign: 'center', marginTop: 64 },
 });

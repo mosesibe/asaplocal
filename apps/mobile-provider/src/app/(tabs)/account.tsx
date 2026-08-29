@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, TextInput } from 'react-native';
+import { Pressable, ScrollView, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Screen, Card, Text, Button, TextField, useAppTheme } from '@asaplocal/ui-native';
 
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { BottomTabInset, Spacing } from '@/constants/theme';
+import { BottomTabInset } from '@/constants/theme';
 import { useSession } from '@/lib/session';
 import { api } from '@/lib/api';
 
@@ -17,6 +16,7 @@ const PRESETS = [
 
 export default function AccountScreen() {
   const { user, logout } = useSession();
+  const { spacing } = useAppTheme();
   const [currentUrl, setCurrentUrl] = useState('');
   const [draftUrl, setDraftUrl] = useState('');
   const [saving, setSaving] = useState(false);
@@ -44,75 +44,50 @@ export default function AccountScreen() {
   }
 
   return (
-    <ThemedView style={styles.container}>
+    <Screen>
       <SafeAreaView style={styles.safeArea} edges={['top']}>
-        <ScrollView contentContainerStyle={[styles.scroll, { paddingBottom: BottomTabInset + Spacing.four }]}>
-          <ThemedText type="subtitle" style={styles.heading}>
+        <ScrollView contentContainerStyle={[styles.scroll, { paddingHorizontal: spacing.four, paddingBottom: BottomTabInset + spacing.four }]}>
+          <Text variant="title" style={[styles.heading, { fontSize: 28, lineHeight: 34 }]}>
             Account
-          </ThemedText>
-          <ThemedView type="backgroundElement" style={styles.card}>
-            <ThemedText type="smallBold">{user?.email}</ThemedText>
-            <ThemedText type="small" themeColor="textSecondary">
+          </Text>
+          <Card style={styles.card}>
+            <Text variant="bodyMedium">{user?.email}</Text>
+            <Text variant="small" color="muted">
               {user?.status}
-            </ThemedText>
-          </ThemedView>
-          <Pressable style={styles.button} onPress={logout}>
-            <ThemedText style={styles.buttonText}>Log out</ThemedText>
-          </Pressable>
+            </Text>
+          </Card>
+          <Button variant="destructive" onPress={logout}>
+            Log out
+          </Button>
 
           {__DEV__ && (
-            <ThemedView type="backgroundElement" style={styles.card}>
-              <ThemedText type="smallBold">API environment (dev only)</ThemedText>
-              <ThemedText type="small" themeColor="textSecondary">
+            <Card style={styles.card}>
+              <Text variant="bodyMedium">API environment (dev only)</Text>
+              <Text variant="small" color="muted">
                 Currently: {currentUrl}
-              </ThemedText>
-              <TextInput style={styles.input} value={draftUrl} onChangeText={setDraftUrl} autoCapitalize="none" />
-              <Pressable style={styles.envButton} onPress={() => applyUrl(draftUrl)} disabled={saving}>
-                {saving ? <ActivityIndicator /> : <ThemedText style={styles.envButtonText}>Switch & log out</ThemedText>}
-              </Pressable>
+              </Text>
+              <TextField value={draftUrl} onChangeText={setDraftUrl} autoCapitalize="none" />
+              <Button onPress={() => applyUrl(draftUrl)} loading={saving}>
+                Switch & log out
+              </Button>
               {PRESETS.map((p) => (
                 <Pressable key={p.url} onPress={() => applyUrl(p.url)} disabled={saving}>
-                  <ThemedText type="linkPrimary">{p.label}: {p.url}</ThemedText>
+                  <Text variant="link" color="brand">
+                    {p.label}: {p.url}
+                  </Text>
                 </Pressable>
               ))}
-            </ThemedView>
+            </Card>
           )}
         </ScrollView>
       </SafeAreaView>
-    </ThemedView>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
   safeArea: { flex: 1 },
-  scroll: { paddingHorizontal: Spacing.four, gap: Spacing.four },
-  heading: { marginTop: Spacing.three },
-  card: {
-    borderRadius: Spacing.three,
-    padding: Spacing.three,
-    gap: Spacing.half,
-  },
-  button: {
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: '#dc2626',
-    borderRadius: Spacing.two,
-    paddingVertical: Spacing.three,
-    alignItems: 'center',
-  },
-  buttonText: { color: '#dc2626', fontWeight: '600' },
-  input: {
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: '#8888',
-    borderRadius: Spacing.two,
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.two,
-  },
-  envButton: {
-    backgroundColor: '#002059',
-    borderRadius: Spacing.two,
-    paddingVertical: Spacing.two,
-    alignItems: 'center',
-  },
-  envButtonText: { color: '#ffffff', fontWeight: '600' },
+  scroll: { gap: 24 },
+  heading: { marginTop: 12 },
+  card: { gap: 8 },
 });

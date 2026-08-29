@@ -1,11 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
-import { FlatList, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
+import { FlatList, Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, useRouter } from 'expo-router';
+import { Screen, Card, Text, useAppTheme } from '@asaplocal/ui-native';
 
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { BottomTabInset, Spacing } from '@/constants/theme';
+import { BottomTabInset } from '@/constants/theme';
 import { api } from '@/lib/api';
 
 interface ConversationSummary {
@@ -19,6 +18,7 @@ interface ConversationSummary {
 
 export default function MessagesScreen() {
   const router = useRouter();
+  const { colors, spacing } = useAppTheme();
   const [conversations, setConversations] = useState<ConversationSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -51,58 +51,53 @@ export default function MessagesScreen() {
   }, [load]);
 
   return (
-    <ThemedView style={styles.container}>
+    <Screen>
       <SafeAreaView style={styles.safeArea} edges={['top']}>
-        <ThemedText type="subtitle" style={styles.heading}>
+        <Text variant="title" style={[styles.heading, { paddingHorizontal: spacing.four, fontSize: 28, lineHeight: 34 }]}>
           Messages
-        </ThemedText>
+        </Text>
         <FlatList
           data={conversations}
           keyExtractor={(c) => c.id}
-          contentContainerStyle={[styles.list, { paddingBottom: BottomTabInset + Spacing.four }]}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
+          contentContainerStyle={[styles.list, { paddingHorizontal: spacing.four, paddingBottom: BottomTabInset + spacing.four }]}
+          refreshing={refreshing}
+          onRefresh={handleRefresh}
           ListEmptyComponent={
             !loading ? (
-              <ThemedText type="small" themeColor="textSecondary" style={styles.empty}>
+              <Text variant="small" color="muted" style={styles.empty}>
                 No conversations yet.
-              </ThemedText>
+              </Text>
             ) : null
           }
           renderItem={({ item }) => (
             <Pressable onPress={() => router.push(`/conversations/${item.id}`)}>
-              <ThemedView type="backgroundElement" style={styles.card}>
+              <Card style={styles.card}>
                 <View style={styles.cardHeader}>
-                  <ThemedText type={item.unread ? 'smallBold' : 'small'}>{item.customerName}</ThemedText>
-                  {item.unread && <View style={styles.unreadDot} />}
+                  <Text variant={item.unread ? 'bodyMedium' : 'body'}>{item.customerName}</Text>
+                  {item.unread && <View style={[styles.unreadDot, { backgroundColor: colors.brand[600] }]} />}
                 </View>
                 {item.jobTitle && (
-                  <ThemedText type="small" themeColor="textSecondary">
+                  <Text variant="small" color="muted">
                     {item.jobTitle}
-                  </ThemedText>
+                  </Text>
                 )}
-                <ThemedText type="small" themeColor="textSecondary" numberOfLines={1}>
+                <Text variant="small" color="muted" numberOfLines={1}>
                   {item.lastMessageBody ?? 'No messages yet'}
-                </ThemedText>
-              </ThemedView>
+                </Text>
+              </Card>
             </Pressable>
           )}
         />
       </SafeAreaView>
-    </ThemedView>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
   safeArea: { flex: 1 },
-  heading: { paddingHorizontal: Spacing.four, paddingTop: Spacing.three, paddingBottom: Spacing.two },
-  list: { paddingHorizontal: Spacing.four, gap: Spacing.two },
-  card: {
-    borderRadius: Spacing.three,
-    padding: Spacing.three,
-    gap: Spacing.half,
-    marginBottom: Spacing.two,
-  },
+  heading: { paddingTop: 12, paddingBottom: 8 },
+  list: { gap: 8 },
+  card: { gap: 2, marginBottom: 8 },
   cardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -112,7 +107,6 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#002059',
   },
-  empty: { textAlign: 'center', marginTop: Spacing.six },
+  empty: { textAlign: 'center', marginTop: 64 },
 });
