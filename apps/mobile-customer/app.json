@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "AsapLocal",
-    "slug": "asaplocal-customer",
+    "slug": "asaplocal",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -9,7 +9,10 @@
     "userInterfaceStyle": "automatic",
     "ios": {
       "icon": "./assets/expo.icon",
-      "bundleIdentifier": "pro.asaplocal.customer"
+      "bundleIdentifier": "pro.asaplocal.customer",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "package": "pro.asaplocal.customer",
@@ -40,6 +43,19 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "89931eff-8f41-4b2a-a036-c5297d9758b3"
+      }
+    },
+    "owner": "asaplocal",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/89931eff-8f41-4b2a-a036-c5297d9758b3"
     }
   }
 }

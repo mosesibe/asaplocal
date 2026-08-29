@@ -7,17 +7,19 @@
     "development": {
       "developmentClient": true,
       "distribution": "internal",
+      "android": { "buildType": "apk" },
       "env": { "EXPO_PUBLIC_API_URL": "http://localhost:3001" }
     },
     "preview": {
       "distribution": "internal",
       "channel": "preview",
-      "env": { "EXPO_PUBLIC_API_URL": "https://business.asaplocal.pro" }
+      "android": { "buildType": "apk" },
+      "env": { "EXPO_PUBLIC_API_URL": "https://provider.asaplocal.pro" }
     },
     "production": {
       "channel": "production",
       "autoIncrement": true,
-      "env": { "EXPO_PUBLIC_API_URL": "https://business.asaplocal.pro" }
+      "env": { "EXPO_PUBLIC_API_URL": "https://provider.asaplocal.pro" }
     }
   },
   "submit": {

@@ -1,4 +1,5 @@
 import { getStoredTokens, setStoredTokens, clearStoredTokens } from "./token-storage";
+import { getApiBaseUrlOverride, setApiBaseUrlOverride } from "./base-url";
 
 export class ApiError extends Error {
   constructor(
@@ -56,8 +57,18 @@ async function refreshAccessToken(baseUrl: string): Promise<string> {
   }
 }
 
-export function createApiClient(baseUrl: string) {
+export function createApiClient(defaultBaseUrl: string) {
+  // A per-environment default (baked in at build time via EXPO_PUBLIC_API_URL)
+  // is rarely what you want once a build is actually installed on a device —
+  // pointing the same dev-client build at local/ngrok/staging/production
+  // without a rebuild is worth far more during testing. The stored override,
+  // when present, always wins; see base-url.ts / the Account screen's env switcher.
+  async function resolveBaseUrl(): Promise<string> {
+    return (await getApiBaseUrlOverride()) ?? defaultBaseUrl;
+  }
+
   async function request<T>(path: string, init: RequestInit = {}, isRetry = false): Promise<T> {
+    const baseUrl = await resolveBaseUrl();
     const tokens = await getStoredTokens();
     const headers = new Headers(init.headers);
     headers.set("Content-Type", "application/json");
@@ -83,6 +94,7 @@ export function createApiClient(baseUrl: string) {
     request,
 
     async login(email: string, password: string, deviceInfo?: string): Promise<MobileUser> {
+      const baseUrl = await resolveBaseUrl();
       const res = await fetch(`${baseUrl}/api/mobile/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -96,6 +108,7 @@ export function createApiClient(baseUrl: string) {
     },
 
     async logout(): Promise<void> {
+      const baseUrl = await resolveBaseUrl();
       const tokens = await getStoredTokens();
       await clearStoredTokens();
       if (!tokens) return;
@@ -123,6 +136,11 @@ export function createApiClient(baseUrl: string) {
         return null;
       }
     },
+
+    /** The default this client was created with — the "Reset" option in the env switcher UI. */
+    defaultBaseUrl,
+    getBaseUrl: resolveBaseUrl,
+    setBaseUrlOverride: setApiBaseUrlOverride,
   };
 }
 

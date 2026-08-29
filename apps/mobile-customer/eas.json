@@ -7,17 +7,19 @@
     "development": {
       "developmentClient": true,
       "distribution": "internal",
-      "env": { "EXPO_PUBLIC_API_URL": "http://localhost:3000" }
+      "android": { "buildType": "apk" },
+      "env": { "EXPO_PUBLIC_API_URL": "https://c1be-88-97-174-182.ngrok-free.app" }
     },
     "preview": {
       "distribution": "internal",
       "channel": "preview",
-      "env": { "EXPO_PUBLIC_API_URL": "https://asaplocal.pro" }
+      "android": { "buildType": "apk" },
+      "env": { "EXPO_PUBLIC_API_URL": "https://app.asaplocal.pro" }
     },
     "production": {
       "channel": "production",
       "autoIncrement": true,
-      "env": { "EXPO_PUBLIC_API_URL": "https://asaplocal.pro" }
+      "env": { "EXPO_PUBLIC_API_URL": "https://app.asaplocal.pro" }
     }
   },
   "submit": {
