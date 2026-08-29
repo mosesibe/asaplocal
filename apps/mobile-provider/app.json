@@ -8,15 +8,13 @@
     "scheme": "asaplocalbusiness",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/expo.icon",
       "bundleIdentifier": "pro.asaplocal.provider"
     },
     "android": {
       "package": "pro.asaplocal.provider",
       "adaptiveIcon": {
-        "backgroundColor": "#090e1a",
+        "backgroundColor": "#ffffff",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
-        "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false
@@ -32,7 +30,7 @@
         {
           "backgroundColor": "#090e1a",
           "image": "./assets/images/splash-icon.png",
-          "imageWidth": 76
+          "imageWidth": 140
         }
       ],
       "expo-secure-store",
