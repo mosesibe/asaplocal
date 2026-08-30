@@ -1,6 +1,6 @@
 import { api } from './api';
 
-export type UploadPurpose = 'job-photo';
+export type UploadPurpose = 'job-photo' | 'user-avatar';
 
 interface PresignResponse {
   uploadUrl: string;

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { FlatList, Image, Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { BadgeCheck, Star } from 'lucide-react-native';
 import { Screen, Card, Text, Badge, useAppTheme, useBottomNavInset } from '@asaplocal/ui-native';
 
@@ -37,6 +37,7 @@ function formatPence(pence: number): string {
 // category tap on the Home screen (?category=<slug>).
 export default function SearchScreen() {
   const { colors, spacing, radius } = useAppTheme();
+  const router = useRouter();
   const bottomInset = useBottomNavInset();
   const params = useLocalSearchParams<{ category?: string }>();
   const [categories, setCategories] = useState<Category[]>([]);
@@ -125,6 +126,7 @@ export default function SearchScreen() {
             ) : null
           }
           renderItem={({ item }) => (
+            <Pressable onPress={() => router.push(`/providers/${item.slug}`)}>
             <Card style={styles.card}>
               <View style={styles.cardTop}>
                 <View style={[styles.logo, { backgroundColor: colors.muted }]}>
@@ -157,6 +159,7 @@ export default function SearchScreen() {
                 {item.fromPricePence != null && <Text variant="smallMedium">from {formatPence(item.fromPricePence)}</Text>}
               </View>
             </Card>
+            </Pressable>
           )}
         />
       </SafeAreaView>

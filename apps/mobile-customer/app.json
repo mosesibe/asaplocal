@@ -37,7 +37,19 @@
         }
       ],
       "expo-secure-store",
-      "expo-font"
+      "expo-font",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "AsapLocal uses your photos to attach pictures of the space or job to your requests."
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "AsapLocal uses your location to find local pros and fill in your address."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

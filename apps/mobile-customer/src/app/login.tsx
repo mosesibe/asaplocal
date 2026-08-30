@@ -1,11 +1,13 @@
 import { useCallback, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 import { Screen, Card, Text, Button, TextField, useAppTheme } from '@asaplocal/ui-native';
 
 import { useSession } from '@/lib/session';
 
 export default function LoginScreen() {
+  const router = useRouter();
   const { login } = useSession();
   const { spacing } = useAppTheme();
   const [email, setEmail] = useState('');
@@ -42,7 +44,17 @@ export default function LoginScreen() {
           <Button onPress={handleLogin} loading={submitting}>
             Log in
           </Button>
+          <Pressable onPress={() => router.push('/forgot-password')}>
+            <Text variant="small" color="muted" style={styles.center}>
+              Forgot your password?
+            </Text>
+          </Pressable>
         </Card>
+        <Pressable style={styles.signUpLink} onPress={() => router.push('/register')}>
+          <Text variant="small" color="muted">
+            New to AsapLocal? <Text variant="smallMedium" color="brand">Sign up</Text>
+          </Text>
+        </Pressable>
       </SafeAreaView>
     </Screen>
   );
@@ -52,4 +64,6 @@ const styles = StyleSheet.create({
   container: { justifyContent: 'center', alignItems: 'center' },
   safeArea: { width: '100%', alignItems: 'center', paddingHorizontal: 24 },
   error: { color: '#dc2626' },
+  center: { textAlign: 'center' },
+  signUpLink: { marginTop: 20 },
 });

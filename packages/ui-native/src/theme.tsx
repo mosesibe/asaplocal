@@ -12,9 +12,23 @@ export interface Theme {
 
 const ThemeContext = createContext<Theme | null>(null);
 
-export function UiNativeThemeProvider({ app, children }: { app: AppName; children: ReactNode }) {
+export interface UiNativeThemeProviderProps {
+  app: AppName;
+  children: ReactNode;
+  /**
+   * Overrides the system color scheme — e.g. a user-chosen "Light"/"Dark"
+   * preference persisted outside this package (AsyncStorage, per-app).
+   * Omit or pass "system" to keep following the OS setting; this keeps the
+   * override storage app-specific instead of adding a hard dependency
+   * (AsyncStorage) to this shared package.
+   */
+  schemeOverride?: ColorScheme | "system";
+}
+
+export function UiNativeThemeProvider({ app, children, schemeOverride }: UiNativeThemeProviderProps) {
   const systemScheme = useColorScheme();
-  const scheme: ColorScheme = systemScheme === "dark" ? "dark" : "light";
+  const scheme: ColorScheme =
+    schemeOverride && schemeOverride !== "system" ? schemeOverride : systemScheme === "dark" ? "dark" : "light";
 
   const value = useMemo<Theme>(
     () => ({ colors: getPalette(app, scheme), scheme, radius: Radius, spacing: Spacing, font: FontFamily }),

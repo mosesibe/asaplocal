@@ -6,12 +6,19 @@ import { UiNativeThemeProvider, useAppTheme } from '@asaplocal/ui-native';
 
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
 import { SessionProvider, useSession } from '@/lib/session';
+import { ThemePreferenceProvider, useThemePreference } from '@/lib/theme-preference';
+import { useNotificationRouting } from '@/lib/push';
 
 SplashScreen.preventAutoHideAsync();
 
 function RootNavigator() {
   const { user, isLoading } = useSession();
   const { colors, font } = useAppTheme();
+
+  // A tap that lands here pre-login (unlikely — a push token is only ever
+  // registered once signed in) would just bounce back out via
+  // Stack.Protected below, same as any other protected-route navigation.
+  useNotificationRouting();
 
   // Nothing renders until both the stored-token check and the brand fonts
   // resolve — flashing the login screen for a session that turns out to be
@@ -32,6 +39,8 @@ function RootNavigator() {
     >
       <Stack.Protected guard={!user}>
         <Stack.Screen name="login" />
+        <Stack.Screen name="register" options={{ headerShown: true, title: 'Sign up' }} />
+        <Stack.Screen name="forgot-password" options={{ headerShown: true, title: '' }} />
       </Stack.Protected>
       <Stack.Protected guard={!!user}>
         <Stack.Screen name="(tabs)" />
@@ -42,23 +51,23 @@ function RootNavigator() {
         <Stack.Screen name="notifications" options={{ headerShown: true, title: 'Notifications' }} />
         <Stack.Screen name="ai-buddy" options={{ headerShown: true, title: 'AI Buddy' }} />
         <Stack.Screen name="studio" options={{ headerShown: true, title: 'Redesign Studio' }} />
+        <Stack.Screen name="providers/[slug]" options={{ headerShown: true, title: '' }} />
+        <Stack.Screen name="favourites" options={{ headerShown: true, title: 'Saved providers' }} />
+        <Stack.Screen name="jobs/[id]/edit" options={{ headerShown: true, title: 'Edit job' }} />
+        <Stack.Screen name="bookings/[id]" options={{ headerShown: true, title: 'Booking' }} />
       </Stack.Protected>
     </Stack>
   );
 }
 
-export default function RootLayout() {
-  const colorScheme = useColorScheme();
-  const [fontsLoaded] = useFonts({
-    Inter_400Regular,
-    Inter_500Medium,
-    Inter_600SemiBold,
-    Inter_700Bold,
-  });
+function ThemedApp({ fontsLoaded }: { fontsLoaded: boolean }) {
+  const systemScheme = useColorScheme();
+  const { preference } = useThemePreference();
+  const effectiveDark = preference === 'system' ? systemScheme === 'dark' : preference === 'dark';
 
   return (
-    <UiNativeThemeProvider app="customer">
-      <NavThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+    <UiNativeThemeProvider app="customer" schemeOverride={preference}>
+      <NavThemeProvider value={effectiveDark ? DarkTheme : DefaultTheme}>
         <AnimatedSplashOverlay />
         {fontsLoaded && (
           <SessionProvider>
@@ -67,5 +76,20 @@ export default function RootLayout() {
         )}
       </NavThemeProvider>
     </UiNativeThemeProvider>
+  );
+}
+
+export default function RootLayout() {
+  const [fontsLoaded] = useFonts({
+    Inter_400Regular,
+    Inter_500Medium,
+    Inter_600SemiBold,
+    Inter_700Bold,
+  });
+
+  return (
+    <ThemePreferenceProvider>
+      <ThemedApp fontsLoaded={fontsLoaded} />
+    </ThemePreferenceProvider>
   );
 }
