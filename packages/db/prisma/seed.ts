@@ -10,8 +10,15 @@
  */
 import { PrismaClient, Role, VerificationStatus, SubscriptionPlan, SubscriptionStatus, LeadStatus, LeadAcquisitionType, ProviderLeadStatus, BookingStatus, ReviewStatus, JobRequestStatus, PriceType, InsuranceType, TrustTier, type BusinessType } from "@prisma/client";
 import { randomUUID } from "crypto";
+import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
+
+// Shared password for every seeded account (web + mobile), so local/dev
+// login works out of the box instead of requiring a manual Prisma Studio
+// edit. Never used for real accounts — only upserted onto the fixed seed
+// emails below.
+const DEV_PASSWORD = "password123";
 
 interface CategoryDef {
   name: string;
@@ -281,6 +288,8 @@ const CITIES = [
 async function main() {
   console.log("Seeding AsapLocal…");
 
+  const passwordHash = await bcrypt.hash(DEV_PASSWORD, 10);
+
   // ── Categories ──────────────────────────────────────────────────────
   for (const [oldSlug, newSlug] of Object.entries(LEGACY_SLUG_RENAMES)) {
     const existing = await prisma.category.findUnique({ where: { slug: oldSlug } });
@@ -339,12 +348,13 @@ async function main() {
   // ── Admin ───────────────────────────────────────────────────────────
   const admin = await prisma.user.upsert({
     where: { email: "admin@asaplocal.pro" },
-    update: {},
+    update: { passwordHash },
     create: {
       email: "admin@asaplocal.pro",
       role: Role.ADMIN,
       status: "ACTIVE",
       emailVerified: new Date(),
+      passwordHash,
       profile: { create: { firstName: "Ava", lastName: "Admin", city: "Manchester", country: "GB" } },
     },
   });
@@ -352,12 +362,13 @@ async function main() {
   // ── Dispatcher ──────────────────────────────────────────────────────
   const dispatcher = await prisma.user.upsert({
     where: { email: "dispatcher@asaplocal.pro" },
-    update: {},
+    update: { passwordHash },
     create: {
       email: "dispatcher@asaplocal.pro",
       role: Role.DISPATCHER,
       status: "ACTIVE",
       emailVerified: new Date(),
+      passwordHash,
       profile: { create: { firstName: "Dan", lastName: "Dispatch", city: "Manchester", country: "GB" } },
     },
   });
@@ -365,24 +376,26 @@ async function main() {
   // ── Customers ───────────────────────────────────────────────────────
   const customer1 = await prisma.user.upsert({
     where: { email: "customer1@example.com" },
-    update: {},
+    update: { passwordHash },
     create: {
       email: "customer1@example.com",
       role: Role.CUSTOMER,
       status: "ACTIVE",
       emailVerified: new Date(),
+      passwordHash,
       profile: { create: { firstName: "Priya", lastName: "Shah", city: "Manchester", country: "GB", lat: 53.4808, lng: -2.2426 } },
     },
   });
 
   const customer2 = await prisma.user.upsert({
     where: { email: "customer2@example.com" },
-    update: {},
+    update: { passwordHash },
     create: {
       email: "customer2@example.com",
       role: Role.CUSTOMER,
       status: "ACTIVE",
       emailVerified: new Date(),
+      passwordHash,
       profile: { create: { firstName: "Tom", lastName: "Baker", city: "London", country: "GB", lat: 51.5072, lng: -0.1276 } },
     },
   });
@@ -401,12 +414,13 @@ async function main() {
   for (const b of seedBusinesses) {
     const owner = await prisma.user.upsert({
       where: { email: b.email },
-      update: {},
+      update: { passwordHash },
       create: {
         email: b.email,
         role: Role.PROVIDER,
         status: "ACTIVE",
         emailVerified: new Date(),
+        passwordHash,
         profile: { create: { firstName: b.name.split(" ")[0], lastName: "Owner", city: b.city, country: "GB", lat: b.lat, lng: b.lng } },
       },
     });
@@ -595,6 +609,7 @@ async function main() {
   console.log(`  admin login:      admin@asaplocal.pro`);
   console.log(`  dispatcher login: dispatcher@asaplocal.pro`);
   console.log(`  customer logins:  customer1@example.com, customer2@example.com`);
+  console.log(`  password (all seeded accounts): ${DEV_PASSWORD}`);
 }
 
 main()

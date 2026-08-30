@@ -114,10 +114,9 @@ pnpm db:seed            # demo categories, businesses, jobs, a completed booking
 pnpm dev                 # runs all three apps via Turborepo (web:3000, provider:3001, admin:3002)
 ```
 
-Seeded logins (password not set — use `prisma studio` to set a bcrypt hash,
-or sign up fresh and re-seed): `admin@asaplocal.pro`,
-`dispatcher@asaplocal.pro`, `customer1@example.com`,
-`sparkle.cleaning@example.com` (provider).
+Seeded logins, all sharing the password `password123`:
+`admin@asaplocal.pro`, `dispatcher@asaplocal.pro`,
+`customer1@example.com`, `sparkle.cleaning@example.com` (provider).
 
 Docker: `docker compose up` brings up Postgres + Redis + all three apps.
 See `DEPLOYMENT.md` for the Vercel + Supabase production path and
