@@ -37,7 +37,11 @@ function RootNavigator() {
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="jobs/new" options={{ headerShown: true, title: 'Post a job' }} />
         <Stack.Screen name="jobs/[id]" options={{ headerShown: true, title: 'Job request' }} />
+        <Stack.Screen name="messages" options={{ headerShown: true, title: 'Messages' }} />
         <Stack.Screen name="conversations/[id]" options={{ headerShown: true, title: 'Messages' }} />
+        <Stack.Screen name="notifications" options={{ headerShown: true, title: 'Notifications' }} />
+        <Stack.Screen name="ai-buddy" options={{ headerShown: true, title: 'AI Buddy' }} />
+        <Stack.Screen name="studio" options={{ headerShown: true, title: 'Redesign Studio' }} />
       </Stack.Protected>
     </Stack>
   );

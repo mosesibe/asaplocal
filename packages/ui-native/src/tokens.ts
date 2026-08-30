@@ -1,18 +1,37 @@
-// Mirrors the actual rendered values from packages/ui (web) — not the
-// aspirational ones. Two real divergences from the web source worth calling
-// out so nobody "fixes" them into sync by accident:
-//
-// 1. apps/web's globals.css defines a --primary/#FF5A00 "Action Orange" from
-//    a trial rebrand, but its actual <Button> (packages/ui/src/button.tsx)
-//    still renders the older brand-600 terracotta — the rebrand only reached
-//    background/surface/muted, not the shared Button component. Buttons on
-//    both apps render identically today, so BRAND below (terracotta) is what
-//    native should match for buttons/links, not the CSS variable.
-// 2. apps/provider was never rebranded — its light-mode surface tokens stay
-//    plain neutral gray, while apps/web's got a warm orange-tinted neutral.
-//    Dark mode is identical between both apps (provider's original dark
-//    palette is what the customer rebrand's dark mode was matched to).
-export const BRAND = {
+// Mirrors the actual rendered values from each app's own Tailwind config —
+// not packages/ui's shared preset. apps/web/tailwind.config.ts fully
+// *overrides* the preset's `brand`/`espresso` color scales (Tailwind deep-
+// merges theme.extend, so identical numeric keys replace, not blend) with a
+// vivid-orange/navy "rebrand" scale. apps/provider/tailwind.config.ts has no
+// such override, so it still renders the preset's terracotta/brown scale.
+// A previous pass here missed the override and shipped provider's terracotta
+// on both apps — this is the fix. Non-brand tokens (background/surface/
+// muted/border) were already correct: apps/web only overrides brand/espresso,
+// nothing else, and provider was never touched at all.
+export const BRAND_CUSTOMER = {
+  50: "#fff0e6",
+  100: "#ffe0cc",
+  200: "#ffc199",
+  300: "#ff9c5c",
+  400: "#ff8033",
+  500: "#ff5a00", // Action Orange — apps/web/tailwind.config.ts brand-500
+  600: "#d0500b", // hsl(21 90% 43%)
+  700: "#a83f10", // hsl(21 85% 36%)
+  800: "#803011", // hsl(21 80% 29%)
+  900: "#5c2510", // hsl(21 75% 22%)
+} as const;
+
+// apps/web's "espresso" (navy) scale — used for the services carousel's
+// alternating gradient cards and dark-mode hero background; not a button/
+// accent color, so kept separate from BRAND.
+export const ESPRESSO_CUSTOMER = {
+  700: "#0c3d94", // hsl(218 95% 22%)
+  800: "#00297a", // hsl(218 100% 19%)
+  900: "#002670", // hsl(218 100% 17%) — Primary Navy
+  950: "#001a52", // hsl(220 100% 12%) — Navy Dark
+} as const;
+
+export const BRAND_PROVIDER = {
   50: "#fcf1e7",
   100: "#f8dec5",
   200: "#f0bd91",
@@ -27,6 +46,7 @@ export const BRAND = {
 
 export type AppName = "customer" | "provider";
 export type ColorScheme = "light" | "dark";
+export type BrandScale = Record<50 | 100 | 200 | 300 | 400 | 500 | 600 | 700 | 800 | 900, string>;
 
 export interface Palette {
   background: string;
@@ -35,7 +55,7 @@ export interface Palette {
   muted: string;
   mutedForeground: string;
   border: string;
-  brand: typeof BRAND;
+  brand: BrandScale;
 }
 
 const DARK_SHARED = {
@@ -73,7 +93,8 @@ const PALETTES: Record<AppName, Record<ColorScheme, Omit<Palette, "brand">>> = {
 };
 
 export function getPalette(app: AppName, scheme: ColorScheme): Palette {
-  return { ...PALETTES[app][scheme], brand: BRAND };
+  const brand = app === "customer" ? BRAND_CUSTOMER : BRAND_PROVIDER;
+  return { ...PALETTES[app][scheme], brand };
 }
 
 // packages/ui: borderRadius.xl = 0.875rem, "2xl" = 1.25rem (root font-size 16px)

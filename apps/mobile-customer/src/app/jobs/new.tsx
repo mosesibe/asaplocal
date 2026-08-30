@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Screen, Text, Button, TextField, useAppTheme } from '@asaplocal/ui-native';
 
 import { api } from '@/lib/api';
@@ -13,17 +13,33 @@ interface Category {
   parentId: string | null;
 }
 
+// Prefill comes from three sources, all landing on this same confirm-step
+// form (matching apps/web/components/ai-job-request.tsx's shared "confirm"
+// step for its job-suggest/AI-Buddy-handoff/studio-prefill paths):
+// AiJobAssistantCard (categoryId/title/description from /api/jobs/suggest),
+// ai-buddy.tsx's "needs a pro" handoff, and studio.tsx's chosen concept
+// (adds photos/designRenderUrl/designSessionId/budget).
 export default function NewJobScreen() {
   const router = useRouter();
   const { colors, radius, spacing } = useAppTheme();
+  const prefill = useLocalSearchParams<{
+    categoryId?: string;
+    title?: string;
+    description?: string;
+    budgetMinPence?: string;
+    budgetMaxPence?: string;
+    photos?: string;
+    designRenderUrl?: string;
+    designSessionId?: string;
+  }>();
   const [categories, setCategories] = useState<Category[]>([]);
-  const [categoryId, setCategoryId] = useState<string | null>(null);
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
+  const [categoryId, setCategoryId] = useState<string | null>(prefill.categoryId ?? null);
+  const [title, setTitle] = useState(prefill.title ?? '');
+  const [description, setDescription] = useState(prefill.description ?? '');
   const [city, setCity] = useState('');
   const [postcode, setPostcode] = useState('');
-  const [budgetMin, setBudgetMin] = useState('');
-  const [budgetMax, setBudgetMax] = useState('');
+  const [budgetMin, setBudgetMin] = useState(prefill.budgetMinPence ? String(Number(prefill.budgetMinPence) / 100) : '');
+  const [budgetMax, setBudgetMax] = useState(prefill.budgetMaxPence ? String(Number(prefill.budgetMaxPence) / 100) : '');
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -55,6 +71,9 @@ export default function NewJobScreen() {
       if (postcode.trim()) body.postcode = postcode.trim();
       if (budgetMin.trim()) body.budgetMinPence = Math.round(Number(budgetMin) * 100);
       if (budgetMax.trim()) body.budgetMaxPence = Math.round(Number(budgetMax) * 100);
+      if (prefill.photos) body.photos = JSON.parse(prefill.photos);
+      if (prefill.designRenderUrl) body.designRenderUrl = prefill.designRenderUrl;
+      if (prefill.designSessionId) body.designSessionId = prefill.designSessionId;
 
       const res = await api.request<{ id: string }>('/api/jobs', { method: 'POST', body: JSON.stringify(body) });
       router.replace(`/jobs/${res.id}`);
@@ -63,7 +82,7 @@ export default function NewJobScreen() {
     } finally {
       setSubmitting(false);
     }
-  }, [categoryId, title, description, city, postcode, budgetMin, budgetMax, router]);
+  }, [categoryId, title, description, city, postcode, budgetMin, budgetMax, prefill, router]);
 
   if (loading) {
     return (

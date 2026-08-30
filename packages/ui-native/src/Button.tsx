@@ -50,7 +50,7 @@ export function Button({ variant = "default", size = "default", loading, disable
         styles.base,
         { height: sizeStyle.height, paddingHorizontal: sizeStyle.paddingHorizontal, borderRadius: radius.lg },
         variantStyle,
-        variant === "default" && styles.accentShadow,
+        variant === "default" && { ...styles.accentShadow, shadowColor: colors.brand[600] },
         isDisabled && styles.disabled,
         pressed && !isDisabled && styles.pressed,
         typeof style === "function" ? undefined : style,
@@ -76,7 +76,6 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   accentShadow: {
-    shadowColor: "#c15f2a",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.18,
     shadowRadius: 8,

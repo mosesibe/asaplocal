@@ -1,120 +1,122 @@
-import { useCallback, useEffect, useState } from 'react';
-import { FlatList, Pressable, StyleSheet, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useFocusEffect, useRouter } from 'expo-router';
-import { Screen, Card, Text, Badge, Button, useAppTheme, useBottomNavInset } from '@asaplocal/ui-native';
+import { useRouter } from 'expo-router';
+import { Screen, Text, useAppTheme, useBottomNavInset } from '@asaplocal/ui-native';
 
 import { api } from '@/lib/api';
+import { HomeHeader } from '@/components/HomeHeader';
+import { AiJobAssistantCard } from '@/components/AiJobAssistantCard';
+import { PopularCategories, type CategorySummary } from '@/components/PopularCategories';
+import { ServicesCarousel } from '@/components/ServicesCarousel';
 
-interface JobSummary {
-  id: string;
-  title: string;
-  categoryName: string;
-  city: string;
-  status: string;
-  quoteCount: number;
-  budgetMinPence: number | null;
-  budgetMaxPence: number | null;
-}
+type Mode = 'job' | 'buddy' | 'studio';
 
-function formatPence(pence: number): string {
-  return `£${(pence / 100).toFixed(0)}`;
-}
+// Matches apps/web/components/homepage-ai-section.tsx's COPY map.
+const COPY: Record<Mode, { title: string; subtitle: string }> = {
+  job: { title: 'What do you need done?', subtitle: "Describe the job in your own words — we'll match you with vetted local pros ASAP." },
+  buddy: { title: 'Not sure where to start?', subtitle: "Ask AI Buddy first — it's free, and it'll tell you if this is a DIY job or one for a pro." },
+  studio: { title: 'See what your space could be', subtitle: 'Photograph a room, loft or garden and get redesign ideas — with realistic costs and timescales.' },
+};
 
-export default function JobsScreen() {
+const MODES: { key: Mode; label: string }[] = [
+  { key: 'job', label: 'Post a job' },
+  { key: 'buddy', label: 'Ask AI Buddy' },
+  { key: 'studio', label: 'Redesign a space' },
+];
+
+export default function HomeScreen() {
   const router = useRouter();
-  const { colors, spacing } = useAppTheme();
+  const { colors, radius, spacing } = useAppTheme();
   const bottomInset = useBottomNavInset();
-  const [jobs, setJobs] = useState<JobSummary[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-
-  const load = useCallback(async () => {
-    try {
-      const res = await api.request<{ jobRequests: JobSummary[] }>('/api/jobs');
-      setJobs(res.jobRequests);
-    } catch {
-      // best-effort — leaves the last known list in place
-    }
-  }, []);
+  const [mode, setMode] = useState<Mode>('job');
+  const [categories, setCategories] = useState<CategorySummary[]>([]);
 
   useEffect(() => {
-    load().finally(() => setLoading(false));
-  }, [load]);
+    api
+      .request<{ categories: CategorySummary[] }>('/api/categories')
+      .then((res) => setCategories(res.categories.filter((c) => c.icon)))
+      .catch(() => {});
+  }, []);
 
-  useFocusEffect(
-    useCallback(() => {
-      load();
-    }, [load])
-  );
-
-  const handleRefresh = useCallback(async () => {
-    setRefreshing(true);
-    await load();
-    setRefreshing(false);
-  }, [load]);
+  function handleModePress(key: Mode) {
+    if (key === 'buddy') return router.push('/ai-buddy');
+    if (key === 'studio') return router.push('/studio');
+    setMode('job');
+  }
 
   return (
     <Screen>
-      <SafeAreaView style={styles.safeArea} edges={['top']}>
-        <View style={[styles.header, { paddingHorizontal: spacing.four }]}>
-          <Text variant="title" style={{ fontSize: 28, lineHeight: 34 }}>
-            My jobs
+    <SafeAreaView style={styles.safeArea} edges={['top']}>
+      <HomeHeader />
+      <ScrollView contentContainerStyle={{ paddingBottom: bottomInset }} showsVerticalScrollIndicator={false}>
+        <View style={[styles.hero, { paddingHorizontal: spacing.four }]}>
+          <Text variant="title" style={styles.heroTitle}>
+            {COPY[mode].title}
           </Text>
-          <Button size="sm" onPress={() => router.push('/jobs/new')}>
-            + Post a job
-          </Button>
+          <Text variant="body" color="muted" style={styles.heroSubtitle}>
+            {COPY[mode].subtitle}
+          </Text>
+
+          <View style={[styles.pillRow, { borderColor: colors.border, backgroundColor: colors.surface, borderRadius: radius.full }]}>
+            {MODES.map((m) => {
+              const active = mode === m.key;
+              return (
+                <Pressable
+                  key={m.key}
+                  onPress={() => handleModePress(m.key)}
+                  style={[styles.pill, { borderRadius: radius.full, backgroundColor: active ? colors.brand[600] : 'transparent' }]}
+                >
+                  <Text variant="smallMedium" color={active ? 'inverse' : 'muted'}>
+                    {m.label}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+
+          <View style={styles.assistant}>
+            <AiJobAssistantCard />
+          </View>
+
+          <Pressable onPress={() => router.push('/search')} style={styles.browseLink}>
+            <Text variant="small" color="muted">
+              Prefer to look yourself?{' '}
+              <Text variant="smallMedium" color="brand">
+                Browse providers directly
+              </Text>
+            </Text>
+          </Pressable>
         </View>
 
-        <FlatList
-          data={jobs}
-          keyExtractor={(j) => j.id}
-          contentContainerStyle={[styles.list, { paddingHorizontal: spacing.four, paddingBottom: bottomInset }]}
-          refreshing={refreshing}
-          onRefresh={handleRefresh}
-          ListEmptyComponent={
-            !loading ? (
-              <Text variant="small" color="muted" style={styles.empty}>
-                No jobs yet — post one to get quotes from local pros.
-              </Text>
-            ) : null
-          }
-          renderItem={({ item }) => (
-            <Pressable onPress={() => router.push(`/jobs/${item.id}`)}>
-              <Card style={styles.card}>
-                <View style={styles.cardHeader}>
-                  <Text variant="bodyMedium" style={styles.cardTitle}>
-                    {item.title}
-                  </Text>
-                  <Badge variant="outline">{item.status.replace(/_/g, ' ')}</Badge>
-                </View>
-                <Text variant="small" color="muted">
-                  {item.categoryName} · {item.city}
-                </Text>
-                <Text variant="small" color="muted">
-                  {item.budgetMinPence ? formatPence(item.budgetMinPence) : '?'}–{item.budgetMaxPence ? formatPence(item.budgetMaxPence) : '?'} · {item.quoteCount} quote{item.quoteCount === 1 ? '' : 's'}
-                </Text>
-              </Card>
-            </Pressable>
-          )}
-        />
-      </SafeAreaView>
+        <View style={[styles.section, { paddingHorizontal: spacing.four }]}>
+          <Text variant="subtitle" style={styles.sectionTitle}>
+            Popular categories
+          </Text>
+          <PopularCategories categories={categories} />
+        </View>
+
+        <View style={styles.section}>
+          <Text variant="subtitle" style={[styles.sectionTitle, { paddingHorizontal: spacing.four }]}>
+            Explore services
+          </Text>
+          <ServicesCarousel categories={categories} />
+        </View>
+      </ScrollView>
+    </SafeAreaView>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1 },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingTop: 12,
-    paddingBottom: 8,
-  },
-  list: { gap: 12 },
-  card: { gap: 4, marginBottom: 12 },
-  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8 },
-  cardTitle: { flexShrink: 1 },
-  empty: { textAlign: 'center', marginTop: 64 },
+  hero: { paddingTop: 24, paddingBottom: 32 },
+  heroTitle: { textAlign: 'center', fontSize: 28, lineHeight: 34 },
+  heroSubtitle: { textAlign: 'center', marginTop: 10 },
+  pillRow: { flexDirection: 'row', alignSelf: 'center', borderWidth: StyleSheet.hairlineWidth, padding: 4, marginTop: 20 },
+  pill: { paddingHorizontal: 14, paddingVertical: 7 },
+  assistant: { marginTop: 20 },
+  browseLink: { marginTop: 14, alignItems: 'center' },
+  section: { paddingTop: 8, paddingBottom: 24 },
+  sectionTitle: { marginBottom: 16 },
 });

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { Screen, Card, Text, useAppTheme, useBottomNavInset } from '@asaplocal/ui-native';
+import { Screen, Card, Text, useAppTheme } from '@asaplocal/ui-native';
 
 import { api } from '@/lib/api';
 
@@ -15,10 +15,11 @@ interface ConversationSummary {
   unread: boolean;
 }
 
+// Moved out of the tab group — matches the web app, where Messages is a
+// header icon (see HomeHeader) rather than a bottom-nav tab.
 export default function MessagesScreen() {
   const router = useRouter();
   const { colors, spacing } = useAppTheme();
-  const bottomInset = useBottomNavInset();
   const [conversations, setConversations] = useState<ConversationSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -57,9 +58,10 @@ export default function MessagesScreen() {
           Messages
         </Text>
         <FlatList
+          style={styles.flatList}
           data={conversations}
           keyExtractor={(c) => c.id}
-          contentContainerStyle={[styles.list, { paddingHorizontal: spacing.four, paddingBottom: bottomInset }]}
+          contentContainerStyle={[styles.list, { paddingHorizontal: spacing.four, paddingBottom: spacing.four }]}
           refreshing={refreshing}
           onRefresh={handleRefresh}
           ListEmptyComponent={
@@ -96,6 +98,7 @@ export default function MessagesScreen() {
 const styles = StyleSheet.create({
   safeArea: { flex: 1 },
   heading: { paddingTop: 12, paddingBottom: 8 },
+  flatList: { flex: 1 },
   list: { gap: 8 },
   card: { gap: 2, marginBottom: 8 },
   cardHeader: {

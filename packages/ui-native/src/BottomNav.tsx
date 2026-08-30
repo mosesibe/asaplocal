@@ -33,13 +33,31 @@ export interface BottomNavItemProps {
   icon: LucideIcon;
   label: string;
   active?: boolean;
+  emphasized?: boolean;
   onPress?: ((e: GestureResponderEvent) => void) | null;
 }
 
-export function BottomNavItem({ icon: Icon, label, active, onPress }: BottomNavItemProps) {
+// `emphasized` matches web's raised center "Post a job" nav item: a rounded-
+// square icon button pulled up out of the pill (packages/ui/src/bottom-nav.tsx
+// `-mt-9 h-16 w-16 rounded-[22px]`), label stays mutedForeground even though
+// the icon pill itself is brand-colored.
+export function BottomNavItem({ icon: Icon, label, active, emphasized, onPress }: BottomNavItemProps) {
   const { colors } = useAppTheme();
-  const color = active ? colors.brand[600] : colors.mutedForeground;
 
+  if (emphasized) {
+    return (
+      <Pressable style={styles.item} onPress={onPress}>
+        <View style={[styles.emphasizedPill, { backgroundColor: active ? colors.brand[700] : colors.brand[600] }]}>
+          <Icon size={28} color="#ffffff" />
+        </View>
+        <Text variant="caption" style={{ color: colors.mutedForeground, marginTop: 2 }}>
+          {label}
+        </Text>
+      </Pressable>
+    );
+  }
+
+  const color = active ? colors.brand[600] : colors.mutedForeground;
   return (
     <Pressable style={styles.item} onPress={onPress}>
       <Icon size={22} color={color} strokeWidth={active ? 2.5 : 2} />
@@ -69,5 +87,18 @@ const styles = StyleSheet.create({
     minWidth: 64,
     alignItems: "center",
     justifyContent: "center",
+  },
+  emphasizedPill: {
+    marginTop: -36,
+    height: 64,
+    width: 64,
+    borderRadius: 22,
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    elevation: 6,
   },
 });
