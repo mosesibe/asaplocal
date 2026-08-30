@@ -1,15 +1,19 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, Pressable, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, FlatList, Image, KeyboardAvoidingView, Platform, Pressable, StyleSheet, View } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
+import * as ImagePicker from 'expo-image-picker';
+import { Paperclip, X } from 'lucide-react-native';
 import { Screen, Text, TextField, useAppTheme } from '@asaplocal/ui-native';
 
 import { api } from '@/lib/api';
 import { useSession } from '@/lib/session';
+import { uploadImage } from '@/lib/upload';
 
 interface Message {
   id: string;
   senderId: string;
   body: string;
+  attachments: string[];
   createdAt: string;
 }
 
@@ -25,6 +29,8 @@ export default function ConversationScreen() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
   const [draft, setDraft] = useState('');
+  const [attachments, setAttachments] = useState<string[]>([]);
+  const [uploading, setUploading] = useState(false);
   const [sending, setSending] = useState(false);
   const listRef = useRef<FlatList>(null);
 
@@ -47,20 +53,42 @@ export default function ConversationScreen() {
     const body = draft.trim();
     if (!body) return;
     setDraft('');
+    const pendingAttachments = attachments;
+    setAttachments([]);
     setSending(true);
     try {
       await api.request(`/api/conversations/${id}/messages`, {
         method: 'POST',
-        body: JSON.stringify({ body }),
+        body: JSON.stringify({ body, attachments: pendingAttachments }),
       });
       await load();
       listRef.current?.scrollToEnd({ animated: true });
     } catch {
       setDraft(body); // restore the draft so the message isn't lost
+      setAttachments(pendingAttachments);
     } finally {
       setSending(false);
     }
-  }, [draft, id, load]);
+  }, [draft, attachments, id, load]);
+
+  async function addAttachment() {
+    if (attachments.length >= 5) return;
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) return;
+    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.7, allowsMultipleSelection: true, selectionLimit: 5 - attachments.length });
+    if (result.canceled) return;
+    setUploading(true);
+    try {
+      const urls = await Promise.all(result.assets.map((a) => uploadImage(a.uri, 'job-photo', a.mimeType ?? 'image/jpeg')));
+      setAttachments((prev) => [...prev, ...urls].slice(0, 5));
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  function removeAttachment(url: string) {
+    setAttachments((prev) => prev.filter((a) => a !== url));
+  }
 
   if (loading) {
     return (
@@ -89,6 +117,13 @@ export default function ConversationScreen() {
                     { borderRadius: radius.lg, backgroundColor: mine ? colors.brand[600] : colors.muted },
                   ]}
                 >
+                  {item.attachments.length > 0 && (
+                    <View style={styles.bubbleAttachments}>
+                      {item.attachments.map((url: string) => (
+                        <Image key={url} source={{ uri: url }} style={styles.bubbleAttachment} />
+                      ))}
+                    </View>
+                  )}
                   <Text variant="small" color={mine ? 'inverse' : 'foreground'}>
                     {item.body}
                   </Text>
@@ -102,7 +137,22 @@ export default function ConversationScreen() {
             </Text>
           }
         />
+        {attachments.length > 0 && (
+          <View style={[styles.pendingRow, { borderTopColor: colors.border }]}>
+            {attachments.map((url) => (
+              <View key={url} style={styles.pendingThumbWrap}>
+                <Image source={{ uri: url }} style={styles.pendingThumb} />
+                <Pressable style={styles.pendingRemove} onPress={() => removeAttachment(url)}>
+                  <X size={10} color="#fff" />
+                </Pressable>
+              </View>
+            ))}
+          </View>
+        )}
         <View style={[styles.inputRow, { borderTopColor: colors.border }]}>
+          <Pressable onPress={addAttachment} disabled={uploading} style={styles.attachButton} hitSlop={8}>
+            {uploading ? <ActivityIndicator size="small" color={colors.mutedForeground} /> : <Paperclip size={20} color={colors.mutedForeground} />}
+          </Pressable>
           <TextField style={styles.input} placeholder="Message" value={draft} onChangeText={setDraft} multiline />
           <Pressable
             style={[styles.sendButton, { borderRadius: radius.lg, backgroundColor: colors.brand[600] }]}
@@ -132,6 +182,22 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   empty: { textAlign: 'center', marginTop: 64 },
+  bubbleAttachments: { flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginBottom: 6 },
+  bubbleAttachment: { width: 96, height: 96, borderRadius: 8 },
+  pendingRow: { flexDirection: 'row', gap: 8, paddingHorizontal: 16, paddingTop: 12, borderTopWidth: StyleSheet.hairlineWidth },
+  pendingThumbWrap: { position: 'relative' },
+  pendingThumb: { width: 48, height: 48, borderRadius: 8 },
+  pendingRemove: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   inputRow: {
     flexDirection: 'row',
     alignItems: 'flex-end',
@@ -139,6 +205,7 @@ const styles = StyleSheet.create({
     padding: 16,
     borderTopWidth: StyleSheet.hairlineWidth,
   },
+  attachButton: { paddingBottom: 10 },
   input: {
     flex: 1,
     maxHeight: 100,

@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
-import { useLocalSearchParams } from 'expo-router';
-import * as WebBrowser from 'expo-web-browser';
+import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
+import { Trash2 } from 'lucide-react-native';
 import { Screen, Card, Text, Badge, Button, useAppTheme } from '@asaplocal/ui-native';
 
 import { api } from '@/lib/api';
+import { ApiError } from '@asaplocal/api-client';
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:3000';
+const EDITABLE_STATUSES = ['OPEN', 'MATCHING', 'QUOTED'];
 
 interface JobDetail {
   job: {
@@ -40,11 +41,14 @@ function formatPence(pence: number): string {
 
 export default function JobDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const router = useRouter();
   const { colors, spacing } = useAppTheme();
   const [data, setData] = useState<JobDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [acceptingId, setAcceptingId] = useState<string | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -61,29 +65,54 @@ export default function JobDetailScreen() {
     load();
   }, [load]);
 
+  useFocusEffect(
+    useCallback(() => {
+      load();
+    }, [load])
+  );
+
   const handleAccept = useCallback(
     async (quoteId: string) => {
       setAcceptingId(quoteId);
       setError(null);
       try {
-        await api.request(`/api/quotes/${quoteId}/accept`, { method: 'POST' });
-        await load();
+        // Matches web's AcceptQuoteButton: jump straight to the new booking
+        // rather than staying on this screen — the customer just committed
+        // to a provider, the next thing they need is the booking/deposit.
+        const { bookingId } = await api.request<{ bookingId: string }>(`/api/quotes/${quoteId}/accept`, { method: 'POST' });
+        router.push(`/bookings/${bookingId}`);
       } catch (e) {
         setError(e instanceof Error ? e.message : 'Could not accept this quote.');
       } finally {
         setAcceptingId(null);
       }
     },
-    [load]
+    [router]
   );
 
-  const handleOpenBooking = useCallback((bookingId: string) => {
-    // Payment (Stripe Checkout) stays web-only for now — opens in an in-app
-    // browser rather than the full react-native-stripe SDK. This browser
-    // context doesn't share the app's session, so it may prompt to log in
-    // again; a magic-link bridge would fix that but is out of scope here.
-    WebBrowser.openBrowserAsync(`${API_URL}/bookings/${bookingId}/checkout`);
-  }, []);
+  const handleDelete = useCallback(async () => {
+    setDeleting(true);
+    setError(null);
+    try {
+      await api.request(`/api/jobs/${id}`, { method: 'DELETE' });
+      router.replace('/activity');
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : 'Something went wrong');
+      setDeleting(false);
+      setShowDeleteConfirm(false);
+    }
+  }, [id, router]);
+
+  const handleOpenBooking = useCallback(
+    (bookingId: string) => {
+      // The booking's own status/actions (accept completion, dispute,
+      // variations, review) are all native now — only the actual Stripe
+      // payment step still hands off to the web checkout page (see
+      // bookings/[id].tsx's openCheckout), since that stays web-only for now.
+      router.push(`/bookings/${bookingId}`);
+    },
+    [router]
+  );
 
   if (loading) {
     return (
@@ -106,7 +135,21 @@ export default function JobDetailScreen() {
   return (
     <Screen>
       <ScrollView contentContainerStyle={[styles.scroll, { padding: spacing.four }]}>
-        <Badge variant="outline">{job.status.replace(/_/g, ' ')}</Badge>
+        <View style={styles.statusRow}>
+          <Badge variant="outline">{job.status.replace(/_/g, ' ')}</Badge>
+          {EDITABLE_STATUSES.includes(job.status) && (
+            <View style={styles.headerActions}>
+              <Pressable onPress={() => router.push(`/jobs/${id}/edit`)}>
+                <Text variant="smallMedium" color="brand">
+                  Edit
+                </Text>
+              </Pressable>
+              <Pressable onPress={() => setShowDeleteConfirm(true)} hitSlop={8}>
+                <Trash2 size={16} color={colors.mutedForeground} />
+              </Pressable>
+            </View>
+          )}
+        </View>
         <Text variant="title" style={{ fontSize: 22, lineHeight: 28 }}>
           {job.title}
         </Text>
@@ -174,6 +217,30 @@ export default function JobDetailScreen() {
           </Card>
         ))}
       </ScrollView>
+
+      <Modal visible={showDeleteConfirm} animationType="fade" transparent onRequestClose={() => setShowDeleteConfirm(false)}>
+        <View style={styles.dialogOverlay}>
+          <Card style={[styles.dialog, { backgroundColor: colors.surface }]}>
+            <Text variant="subtitle">Delete this job?</Text>
+            <Text variant="small" color="muted" style={styles.dialogBody}>
+              This withdraws your job request and declines any quotes you've received. This can't be undone.
+            </Text>
+            {error && (
+              <Text variant="small" style={styles.error}>
+                {error}
+              </Text>
+            )}
+            <View style={styles.dialogActions}>
+              <Button variant="outline" onPress={() => setShowDeleteConfirm(false)} style={styles.flex1}>
+                Cancel
+              </Button>
+              <Button variant="destructive" onPress={handleDelete} loading={deleting} style={styles.flex1}>
+                Delete job
+              </Button>
+            </View>
+          </Card>
+        </View>
+      </Modal>
     </Screen>
   );
 }
@@ -181,6 +248,13 @@ export default function JobDetailScreen() {
 const styles = StyleSheet.create({
   centered: { alignItems: 'center', justifyContent: 'center' },
   scroll: { gap: 8 },
+  statusRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  headerActions: { flexDirection: 'row', alignItems: 'center', gap: 16 },
+  dialogOverlay: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.4)', padding: 24 },
+  dialog: { width: '100%', maxWidth: 400, gap: 0, padding: 20 },
+  dialogBody: { marginTop: 8 },
+  dialogActions: { flexDirection: 'row', gap: 8, marginTop: 16 },
+  flex1: { flex: 1 },
   card: { gap: 4, marginVertical: 4 },
   description: { lineHeight: 22 },
   sectionHeading: { marginTop: 24 },

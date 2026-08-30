@@ -8,7 +8,7 @@ import { api } from '@/lib/api';
 
 interface ConversationSummary {
   id: string;
-  customerName: string;
+  name: string;
   jobTitle: string | null;
   lastMessageBody: string | null;
   lastMessageAt: string;
@@ -75,7 +75,7 @@ export default function MessagesScreen() {
             <Pressable onPress={() => router.push(`/conversations/${item.id}`)}>
               <Card style={styles.card}>
                 <View style={styles.cardHeader}>
-                  <Text variant={item.unread ? 'bodyMedium' : 'body'}>{item.customerName}</Text>
+                  <Text variant={item.unread ? 'bodyMedium' : 'body'}>{item.name}</Text>
                   {item.unread && <View style={[styles.unreadDot, { backgroundColor: colors.brand[600] }]} />}
                 </View>
                 {item.jobTitle && (
