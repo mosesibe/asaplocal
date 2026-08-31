@@ -65,35 +65,41 @@ function RootNavigator() {
           <Stack.Screen name="onboarding" />
         </Stack.Protected>
 
+        {/* No per-screen headerShown/title here: ProviderTopBar (below) is
+            persistent chrome on every in-app screen, same as web's — it
+            shows the page title via its own TITLES lookup and swaps its
+            left icon to a back chevron on these pushed screens. A native
+            Stack header here as well would just duplicate that title in a
+            second bar stacked underneath it. */}
         <Stack.Protected guard={isInApp}>
           <Stack.Screen name="(tabs)" />
-          <Stack.Screen name="leads/[id]" options={{ headerShown: true, title: 'Lead detail' }} />
-          <Stack.Screen name="conversations/[id]" options={{ headerShown: true, title: 'Messages' }} />
-          <Stack.Screen name="bookings/[id]" options={{ headerShown: true, title: 'Booking' }} />
-          <Stack.Screen name="profile/index" options={{ headerShown: true, title: 'Business profile' }} />
-          <Stack.Screen name="profile/preview" options={{ headerShown: true, title: 'Preview' }} />
-          <Stack.Screen name="services" options={{ headerShown: true, title: 'Services' }} />
-          <Stack.Screen name="portfolio" options={{ headerShown: true, title: 'Portfolio' }} />
-          <Stack.Screen name="supplies" options={{ headerShown: true, title: 'Supplies' }} />
-          <Stack.Screen name="staff/index" options={{ headerShown: true, title: 'Staff' }} />
-          <Stack.Screen name="staff/new" options={{ headerShown: true, title: 'Add staff member' }} />
-          <Stack.Screen name="staff/[staffId]" options={{ headerShown: true, title: 'Staff member' }} />
-          <Stack.Screen name="verification/index" options={{ headerShown: true, title: 'Verification centre' }} />
-          <Stack.Screen name="verification/business" options={{ headerShown: true, title: 'Business verification' }} />
-          <Stack.Screen name="verification/insurance" options={{ headerShown: true, title: 'Insurance' }} />
-          <Stack.Screen name="verification/qualifications" options={{ headerShown: true, title: 'Qualifications' }} />
-          <Stack.Screen name="verification/identity" options={{ headerShown: true, title: 'Identity verification' }} />
-          <Stack.Screen name="verification/banking" options={{ headerShown: true, title: 'Bank account' }} />
-          <Stack.Screen name="reviews" options={{ headerShown: true, title: 'Reviews' }} />
-          <Stack.Screen name="references" options={{ headerShown: true, title: 'References' }} />
-          <Stack.Screen name="help" options={{ headerShown: true, title: 'Help center' }} />
-          <Stack.Screen name="preferences" options={{ headerShown: true, title: 'Preferences' }} />
-          <Stack.Screen name="earnings/index" options={{ headerShown: true, title: 'Earnings' }} />
-          <Stack.Screen name="earnings/invoices" options={{ headerShown: true, title: 'Invoices & payouts' }} />
-          <Stack.Screen name="earnings/subscription" options={{ headerShown: true, title: 'Subscription' }} />
-          <Stack.Screen name="earnings/credits" options={{ headerShown: true, title: 'Lead credits' }} />
-          <Stack.Screen name="referrals" options={{ headerShown: true, title: 'Referrals' }} />
-          <Stack.Screen name="analytics" options={{ headerShown: true, title: 'Analytics' }} />
+          <Stack.Screen name="leads/[id]" />
+          <Stack.Screen name="conversations/[id]" />
+          <Stack.Screen name="bookings/[id]" />
+          <Stack.Screen name="profile/index" />
+          <Stack.Screen name="profile/preview" />
+          <Stack.Screen name="services" />
+          <Stack.Screen name="portfolio" />
+          <Stack.Screen name="supplies" />
+          <Stack.Screen name="staff/index" />
+          <Stack.Screen name="staff/new" />
+          <Stack.Screen name="staff/[staffId]" />
+          <Stack.Screen name="verification/index" />
+          <Stack.Screen name="verification/business" />
+          <Stack.Screen name="verification/insurance" />
+          <Stack.Screen name="verification/qualifications" />
+          <Stack.Screen name="verification/identity" />
+          <Stack.Screen name="verification/banking" />
+          <Stack.Screen name="reviews" />
+          <Stack.Screen name="references" />
+          <Stack.Screen name="help" />
+          <Stack.Screen name="preferences" />
+          <Stack.Screen name="earnings/index" />
+          <Stack.Screen name="earnings/invoices" />
+          <Stack.Screen name="earnings/subscription" />
+          <Stack.Screen name="earnings/credits" />
+          <Stack.Screen name="referrals" />
+          <Stack.Screen name="analytics" />
         </Stack.Protected>
       </Stack>
       {isInApp && <FloatingBottomNav />}

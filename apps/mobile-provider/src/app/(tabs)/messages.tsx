@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { Screen, Card, Text, useAppTheme, useBottomNavInset } from '@asaplocal/ui-native';
 
@@ -52,10 +51,7 @@ export default function MessagesScreen() {
 
   return (
     <Screen>
-      <SafeAreaView style={styles.safeArea} edges={['top']}>
-        <Text variant="title" style={[styles.heading, { paddingHorizontal: spacing.four, fontSize: 28, lineHeight: 34 }]}>
-          Messages
-        </Text>
+      <View style={styles.safeArea}>
         <FlatList
           data={conversations}
           keyExtractor={(c) => c.id}
@@ -88,15 +84,14 @@ export default function MessagesScreen() {
             </Pressable>
           )}
         />
-      </SafeAreaView>
+      </View>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1 },
-  heading: { paddingTop: 12, paddingBottom: 8 },
-  list: { gap: 8 },
+  list: { gap: 8, paddingTop: 12 },
   card: { gap: 2, marginBottom: 8 },
   cardHeader: {
     flexDirection: 'row',

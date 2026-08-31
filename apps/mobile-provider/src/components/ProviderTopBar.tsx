@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
-import { usePathname } from 'expo-router';
-import { Menu, Bell } from 'lucide-react-native';
+import { usePathname, useRouter } from 'expo-router';
+import { Menu, Bell, ChevronLeft } from 'lucide-react-native';
 import { Text, useAppTheme } from '@asaplocal/ui-native';
 
 import { AccountMenu } from '@/components/AccountMenu';
@@ -11,8 +11,14 @@ import { NotificationsDropdown } from '@/components/NotificationsDropdown';
 // (opens AccountMenu, standing in for the desktop sidebar's nav tree),
 // a dynamic page title, and a notification bell — global chrome rendered
 // once in the root layout on every authenticated screen (mirrors web's
-// ProviderShell wrapping every route the same way).
+// ProviderShell wrapping every route the same way, which never shows a
+// second native header on top of this one). On pushed screens the left
+// icon becomes a back chevron instead of the hamburger — one title bar,
+// never two.
+const TAB_ROOTS = ['/', '/leads', '/calendar', '/messages'];
+
 const TITLES: { prefix: string; title: string }[] = [
+  { prefix: '/', title: 'Home' },
   { prefix: '/leads', title: 'Lead marketplace' },
   { prefix: '/calendar', title: 'Calendar' },
   { prefix: '/messages', title: 'Messages' },
@@ -39,14 +45,16 @@ function titleFor(pathname: string): string {
 
 export function ProviderTopBar() {
   const pathname = usePathname();
+  const router = useRouter();
   const { colors } = useAppTheme();
   const [menuOpen, setMenuOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const isTabRoot = TAB_ROOTS.includes(pathname);
 
   return (
     <View style={styles.row}>
-      <Pressable style={styles.iconButton} onPress={() => setMenuOpen(true)}>
-        <Menu size={22} color={colors.foreground} />
+      <Pressable style={styles.iconButton} onPress={() => (isTabRoot ? setMenuOpen(true) : router.back())}>
+        {isTabRoot ? <Menu size={22} color={colors.foreground} /> : <ChevronLeft size={24} color={colors.foreground} />}
       </Pressable>
       <Text variant="bodyMedium" numberOfLines={1} style={styles.title}>
         {titleFor(pathname)}

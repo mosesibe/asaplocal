@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, Pressable, StyleSheet, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Badge, Card, Screen, Text, TextField, useAppTheme } from '@asaplocal/ui-native';
+import { Badge, Card, Screen, Text, TextField, useAppTheme, useBottomNavInset } from '@asaplocal/ui-native';
 
 import { api } from '@/lib/api';
 import { useSession } from '@/lib/session';
@@ -44,6 +44,7 @@ export default function ConversationScreen() {
   const { user } = useSession();
   const router = useRouter();
   const { colors, radius, spacing } = useAppTheme();
+  const bottomInset = useBottomNavInset();
   const [messages, setMessages] = useState<Message[]>([]);
   const [meta, setMeta] = useState<ConversationMeta | null>(null);
   const [loading, setLoading] = useState(true);
@@ -186,7 +187,7 @@ export default function ConversationScreen() {
             </Text>
           }
         />
-        <View style={[styles.inputRow, { borderTopColor: colors.border }]}>
+        <View style={[styles.inputRow, { borderTopColor: colors.border, paddingBottom: bottomInset }]}>
           <Pressable
             style={[styles.suggestButton, { borderRadius: radius.lg, borderColor: colors.border }]}
             onPress={handleSuggestReply}
