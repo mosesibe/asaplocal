@@ -101,7 +101,7 @@ export default function AccountScreen() {
 
   return (
     <Screen>
-      <SafeAreaView style={styles.safeArea} edges={['top']}>
+      <SafeAreaView style={styles.safeArea} edges={[]}>
         <ScrollView contentContainerStyle={[styles.scroll, { paddingHorizontal: spacing.four, paddingBottom: bottomInset }]}>
           <Text variant="title" style={[styles.heading, { fontSize: 28, lineHeight: 34 }]}>
             My account

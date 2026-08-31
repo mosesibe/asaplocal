@@ -1,13 +1,14 @@
 import { useCallback, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter, type Href } from 'expo-router';
 import { Screen, Card, Text, Button, TextField, useAppTheme } from '@asaplocal/ui-native';
 
 import { useSession } from '@/lib/session';
 
 export default function LoginScreen() {
   const router = useRouter();
+  const { callbackUrl } = useLocalSearchParams<{ callbackUrl?: string }>();
   const { login } = useSession();
   const { spacing } = useAppTheme();
   const [email, setEmail] = useState('');
@@ -20,14 +21,17 @@ export default function LoginScreen() {
     setSubmitting(true);
     try {
       await login(email.trim(), password);
-      // Stack.Protected in the root layout swaps to (tabs) automatically
-      // once useSession()'s user becomes non-null — no navigation call here.
+      // Home/Search/provider profiles are public, so unlike a hard
+      // logged-out/logged-in Stack.Protected swap, there's a specific page
+      // to return to — whatever gated action sent the customer here (see
+      // lib/auth-guard.ts) — rather than always landing back on Home.
+      router.replace((callbackUrl as Href) ?? '/');
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Something went wrong.');
     } finally {
       setSubmitting(false);
     }
-  }, [email, password, login]);
+  }, [email, password, login, callbackUrl, router]);
 
   return (
     <Screen style={styles.container}>
@@ -50,7 +54,10 @@ export default function LoginScreen() {
             </Text>
           </Pressable>
         </Card>
-        <Pressable style={styles.signUpLink} onPress={() => router.push('/register')}>
+        <Pressable
+          style={styles.signUpLink}
+          onPress={() => router.push({ pathname: '/register', params: callbackUrl ? { callbackUrl } : undefined })}
+        >
           <Text variant="small" color="muted">
             New to AsapLocal? <Text variant="smallMedium" color="brand">Sign up</Text>
           </Text>

@@ -3,6 +3,8 @@ import { useRouter } from 'expo-router';
 import { Sparkles } from 'lucide-react-native';
 import { Card, Text, Button, useAppTheme } from '@asaplocal/ui-native';
 
+import { useRequireAuth } from '@/lib/auth-guard';
+
 const CHIPS = ['Kitchens', 'Lofts', 'Bathrooms', 'Gardens', 'Home offices'];
 
 // Ports StudioTeaser from apps/web/components/homepage-ai-section.tsx —
@@ -11,6 +13,7 @@ const CHIPS = ['Kitchens', 'Lofts', 'Bathrooms', 'Gardens', 'Home offices'];
 // teaser just links to /studio), so tapping through here matches exactly.
 export function StudioTeaser() {
   const router = useRouter();
+  const requireAuth = useRequireAuth();
   const { colors } = useAppTheme();
 
   return (
@@ -28,7 +31,7 @@ export function StudioTeaser() {
           </Text>
         ))}
       </View>
-      <Button size="lg" onPress={() => router.push('/studio')} style={styles.button}>
+      <Button size="lg" onPress={() => requireAuth('/studio', () => router.push('/studio'))} style={styles.button}>
         Redesign a space — free
       </Button>
       <Text variant="caption" color="muted" style={styles.finePrint}>

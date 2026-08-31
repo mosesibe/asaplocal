@@ -109,7 +109,7 @@ export default function SearchScreen() {
 
   return (
     <Screen>
-      <SafeAreaView style={styles.safeArea} edges={['top']}>
+      <SafeAreaView style={styles.safeArea} edges={[]}>
         <Text variant="title" style={[styles.heading, { paddingHorizontal: spacing.four, fontSize: 22, lineHeight: 28 }]}>
           {title}
         </Text>

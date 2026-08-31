@@ -3,7 +3,7 @@ import { ActivityIndicator, FlatList, Image, KeyboardAvoidingView, Platform, Pre
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { Paperclip, X } from 'lucide-react-native';
-import { Card, Screen, Text, TextField, useAppTheme } from '@asaplocal/ui-native';
+import { Card, Screen, Text, TextField, useAppTheme, useBottomNavInset } from '@asaplocal/ui-native';
 
 import { api } from '@/lib/api';
 import { useSession } from '@/lib/session';
@@ -34,6 +34,7 @@ export default function ConversationScreen() {
   const router = useRouter();
   const { user } = useSession();
   const { colors, radius, spacing } = useAppTheme();
+  const bottomInset = useBottomNavInset();
   const [messages, setMessages] = useState<Message[]>([]);
   const [header, setHeader] = useState<{ recipientName: string; jobRequestId: string | null; jobTitle: string | null; jobCity: string | null } | null>(null);
   const [loading, setLoading] = useState(true);
@@ -182,7 +183,7 @@ export default function ConversationScreen() {
             ))}
           </View>
         )}
-        <View style={[styles.inputRow, { borderTopColor: colors.border }]}>
+        <View style={[styles.inputRow, { borderTopColor: colors.border, paddingBottom: 16 + bottomInset }]}>
           <Pressable onPress={addAttachment} disabled={uploading} style={styles.attachButton} hitSlop={8}>
             {uploading ? <ActivityIndicator size="small" color={colors.mutedForeground} /> : <Paperclip size={20} color={colors.mutedForeground} />}
           </Pressable>

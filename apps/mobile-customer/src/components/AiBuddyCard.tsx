@@ -7,6 +7,7 @@ import { Card, Text, Button, useAppTheme } from '@asaplocal/ui-native';
 
 import { api } from '@/lib/api';
 import { useSession } from '@/lib/session';
+import { useRequireAuth } from '@/lib/auth-guard';
 import { ApiError } from '@asaplocal/api-client';
 
 interface DisplayMessage {
@@ -34,6 +35,7 @@ const INTRO: DisplayMessage = {
 // vs localStorage on web) rather than server-side.
 export function AiBuddyCard() {
   const router = useRouter();
+  const requireAuth = useRequireAuth();
   const { colors, radius, spacing } = useAppTheme();
   const scrollRef = useRef<ScrollView>(null);
   const [messages, setMessages] = useState<DisplayMessage[]>([]);
@@ -98,9 +100,11 @@ export function AiBuddyCard() {
         method: 'POST',
         body: JSON.stringify({ description: summary }),
       });
-      router.push({ pathname: '/jobs/new', params: { categoryId: suggestion.categoryId, title: suggestion.title, description: suggestion.description } });
+      requireAuth('/jobs/new', () =>
+        router.push({ pathname: '/jobs/new', params: { categoryId: suggestion.categoryId, title: suggestion.title, description: suggestion.description } })
+      );
     } catch {
-      router.push({ pathname: '/jobs/new', params: { description: summary } });
+      requireAuth('/jobs/new', () => router.push({ pathname: '/jobs/new', params: { description: summary } }));
     } finally {
       setHandoffLoading(false);
     }

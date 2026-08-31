@@ -4,16 +4,34 @@ import { Heart } from 'lucide-react-native';
 import { useAppTheme } from '@asaplocal/ui-native';
 
 import { api } from '@/lib/api';
+import { useRequireAuth } from '@/lib/auth-guard';
 
 // Ports apps/web/components/save-button.tsx: optimistic toggle, reverts on
 // failure. POST/DELETE /api/favourites/{businessId} take no body — the
-// business id is a path param, both bearer-compatible.
-export function SaveButton({ businessId, initialFavourited, size = 20 }: { businessId: string; initialFavourited: boolean; size?: number }) {
+// business id is a path param, both bearer-compatible. Favouriting requires
+// a session (provider profiles themselves are public), so an anonymous tap
+// goes to login instead of silently 401ing.
+export function SaveButton({
+  businessId,
+  initialFavourited,
+  size = 20,
+  loginCallbackPath,
+}: {
+  businessId: string;
+  initialFavourited: boolean;
+  size?: number;
+  loginCallbackPath: string;
+}) {
   const { colors } = useAppTheme();
+  const requireAuth = useRequireAuth();
   const [favourited, setFavourited] = useState(initialFavourited);
   const [pending, setPending] = useState(false);
 
-  async function toggle() {
+  function toggle() {
+    requireAuth(loginCallbackPath, () => doToggle());
+  }
+
+  async function doToggle() {
     const next = !favourited;
     setFavourited(next);
     setPending(true);

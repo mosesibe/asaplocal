@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { Trash2 } from 'lucide-react-native';
-import { Screen, Card, Text, Badge, Button, useAppTheme } from '@asaplocal/ui-native';
+import { Screen, Card, Text, Badge, Button, useAppTheme, useBottomNavInset } from '@asaplocal/ui-native';
 
 import { api } from '@/lib/api';
 import { ApiError } from '@asaplocal/api-client';
@@ -43,6 +43,7 @@ export default function JobDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { colors, spacing } = useAppTheme();
+  const bottomInset = useBottomNavInset();
   const [data, setData] = useState<JobDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -134,7 +135,7 @@ export default function JobDetailScreen() {
 
   return (
     <Screen>
-      <ScrollView contentContainerStyle={[styles.scroll, { padding: spacing.four }]}>
+      <ScrollView contentContainerStyle={[styles.scroll, { padding: spacing.four, paddingBottom: bottomInset }]}>
         <View style={styles.statusRow}>
           <Badge variant="outline">{job.status.replace(/_/g, ' ')}</Badge>
           {EDITABLE_STATUSES.includes(job.status) && (

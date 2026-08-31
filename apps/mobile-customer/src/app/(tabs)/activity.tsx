@@ -85,7 +85,7 @@ export default function ActivityScreen() {
 
   return (
     <Screen>
-      <SafeAreaView style={styles.safeArea} edges={['top']}>
+      <SafeAreaView style={styles.safeArea} edges={[]}>
         <Text variant="title" style={[styles.heading, { paddingHorizontal: spacing.four, fontSize: 28, lineHeight: 34 }]}>
           Activity
         </Text>

@@ -5,6 +5,7 @@ import { Sparkles, ArrowUp } from 'lucide-react-native';
 import { Card, Text, useAppTheme } from '@asaplocal/ui-native';
 
 import { api } from '@/lib/api';
+import { useRequireAuth } from '@/lib/auth-guard';
 import { ApiError } from '@asaplocal/api-client';
 
 interface SuggestResponse {
@@ -23,6 +24,7 @@ interface SuggestResponse {
 // the AI's category/title/description guess — same two-step shape as web.
 export function AiJobAssistantCard({ prefillText }: { prefillText?: string }) {
   const router = useRouter();
+  const requireAuth = useRequireAuth();
   const { colors, radius, spacing } = useAppTheme();
   const [description, setDescription] = useState(prefillText ?? '');
   const [suggesting, setSuggesting] = useState(false);
@@ -40,14 +42,16 @@ export function AiJobAssistantCard({ prefillText }: { prefillText?: string }) {
         method: 'POST',
         body: JSON.stringify({ description: description.trim() }),
       });
-      router.push({
-        pathname: '/jobs/new',
-        params: {
-          categoryId: suggestion.categoryId,
-          title: suggestion.title,
-          description: suggestion.description,
-        },
-      });
+      requireAuth('/jobs/new', () =>
+        router.push({
+          pathname: '/jobs/new',
+          params: {
+            categoryId: suggestion.categoryId,
+            title: suggestion.title,
+            description: suggestion.description,
+          },
+        })
+      );
     } catch (e) {
       setError(e instanceof ApiError ? e.message : 'Could not process that — please try again.');
     } finally {

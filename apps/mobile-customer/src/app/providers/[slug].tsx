@@ -2,9 +2,10 @@ import { useEffect, useState } from 'react';
 import { ActivityIndicator, Image, Pressable, ScrollView, Share, StyleSheet, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Share2 } from 'lucide-react-native';
-import { Screen, Card, Text, Badge, Button, useAppTheme } from '@asaplocal/ui-native';
+import { Screen, Card, Text, Badge, Button, useAppTheme, useBottomNavInset } from '@asaplocal/ui-native';
 
 import { api } from '@/lib/api';
+import { useRequireAuth } from '@/lib/auth-guard';
 import { SaveButton } from '@/components/SaveButton';
 
 interface Service {
@@ -86,7 +87,9 @@ function priceLine(s: Service): string {
 export default function ProviderProfileScreen() {
   const { slug } = useLocalSearchParams<{ slug: string }>();
   const router = useRouter();
+  const requireAuth = useRequireAuth();
   const { colors, radius, spacing } = useAppTheme();
+  const bottomInset = useBottomNavInset();
   const [biz, setBiz] = useState<ProviderDetail | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -115,7 +118,7 @@ export default function ProviderProfileScreen() {
 
   return (
     <Screen>
-      <ScrollView contentContainerStyle={[styles.scroll, { padding: spacing.four }]}>
+      <ScrollView contentContainerStyle={[styles.scroll, { padding: spacing.four, paddingBottom: bottomInset }]}>
         <View style={styles.headerRow}>
           <View style={[styles.logo, { backgroundColor: colors.muted }]}>{biz.logoUrl && <Image source={{ uri: biz.logoUrl }} style={styles.logoImg} />}</View>
           <View style={styles.headerInfo}>
@@ -133,7 +136,7 @@ export default function ProviderProfileScreen() {
             </Text>
           </View>
           <View style={styles.headerActions}>
-            <SaveButton businessId={biz.id} initialFavourited={biz.isFavourited} />
+            <SaveButton businessId={biz.id} initialFavourited={biz.isFavourited} loginCallbackPath={`/providers/${biz.slug}`} />
             <Pressable onPress={() => Share.share({ title: biz.name, message: `Check out ${biz.name} on AsapLocal` })} hitSlop={8}>
               <Share2 size={20} color={colors.mutedForeground} />
             </Pressable>
@@ -157,7 +160,11 @@ export default function ProviderProfileScreen() {
           <StatCard label="Years trading" value={biz.stats.yearsInBusiness != null ? String(biz.stats.yearsInBusiness) : '—'} />
         </View>
 
-        <Button onPress={() => router.push({ pathname: '/jobs/new', params: { businessId: biz.id, businessName: biz.name } })}>
+        <Button
+          onPress={() =>
+            requireAuth('/jobs/new', () => router.push({ pathname: '/jobs/new', params: { businessId: biz.id, businessName: biz.name } }))
+          }
+        >
           Request a quote
         </Button>
 

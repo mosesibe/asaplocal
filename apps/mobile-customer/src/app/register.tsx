@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter, type Href } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import { Screen, Card, Text, Button, TextField, useAppTheme } from '@asaplocal/ui-native';
 
@@ -17,6 +17,7 @@ const WEB_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:3000';
 // it to drift out of sync when it's rewritten for real.
 export default function RegisterScreen() {
   const router = useRouter();
+  const { callbackUrl } = useLocalSearchParams<{ callbackUrl?: string }>();
   const { login } = useSession();
   const { colors, spacing } = useAppTheme();
   const [firstName, setFirstName] = useState('');
@@ -66,7 +67,7 @@ export default function RegisterScreen() {
             We've sent a verification link to {email}. You can confirm it anytime — no need to wait, let's get you
             started.
           </Text>
-          <Button style={styles.continueButton} onPress={() => router.replace('/')}>
+          <Button style={styles.continueButton} onPress={() => router.replace((callbackUrl as Href) ?? '/')}>
             Continue
           </Button>
         </View>
@@ -123,7 +124,10 @@ export default function RegisterScreen() {
           </Button>
         </Card>
 
-        <Pressable style={styles.footerLink} onPress={() => router.replace('/login')}>
+        <Pressable
+          style={styles.footerLink}
+          onPress={() => router.replace({ pathname: '/login', params: callbackUrl ? { callbackUrl } : undefined })}
+        >
           <Text variant="small" color="muted">
             Already have an account? <Text variant="smallMedium" color="brand">Log in</Text>
           </Text>

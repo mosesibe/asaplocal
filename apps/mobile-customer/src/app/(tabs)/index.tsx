@@ -1,11 +1,9 @@
 import { useEffect, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Screen, Text, useAppTheme, useBottomNavInset } from '@asaplocal/ui-native';
 
 import { api } from '@/lib/api';
-import { HomeHeader } from '@/components/HomeHeader';
 import { AiJobAssistantCard } from '@/components/AiJobAssistantCard';
 import { AiBuddyCard } from '@/components/AiBuddyCard';
 import { StudioTeaser } from '@/components/StudioTeaser';
@@ -47,8 +45,7 @@ export default function HomeScreen() {
 
   return (
     <Screen>
-      <SafeAreaView style={styles.safeArea} edges={['top']}>
-        <HomeHeader />
+      <View style={styles.safeArea}>
         <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={90}>
           <ScrollView contentContainerStyle={{ paddingBottom: bottomInset }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
             <View style={[styles.hero, { paddingHorizontal: spacing.four }]}>
@@ -109,7 +106,7 @@ export default function HomeScreen() {
             </View>
           </ScrollView>
         </KeyboardAvoidingView>
-      </SafeAreaView>
+      </View>
     </Screen>
   );
 }

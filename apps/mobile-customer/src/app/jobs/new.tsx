@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Screen, Text, Button, TextField, useAppTheme } from '@asaplocal/ui-native';
+import { Screen, Text, Button, TextField, useAppTheme, useBottomNavInset } from '@asaplocal/ui-native';
 
 import { api } from '@/lib/api';
 import { ApiError } from '@asaplocal/api-client';
@@ -24,6 +24,7 @@ interface Category {
 export default function NewJobScreen() {
   const router = useRouter();
   const { colors, radius, spacing } = useAppTheme();
+  const bottomInset = useBottomNavInset();
   const prefill = useLocalSearchParams<{
     categoryId?: string;
     title?: string;
@@ -104,7 +105,7 @@ export default function NewJobScreen() {
 
   return (
     <Screen>
-      <ScrollView contentContainerStyle={[styles.scroll, { padding: spacing.four }]}>
+      <ScrollView contentContainerStyle={[styles.scroll, { padding: spacing.four, paddingBottom: bottomInset }]}>
         {prefill.businessName ? (
           <>
             <Text variant="title" style={styles.heading}>

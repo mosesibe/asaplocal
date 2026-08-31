@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Screen, Text, Button, TextField, useAppTheme } from '@asaplocal/ui-native';
+import { Screen, Text, Button, TextField, useAppTheme, useBottomNavInset } from '@asaplocal/ui-native';
 
 import { api } from '@/lib/api';
 import { ApiError } from '@asaplocal/api-client';
@@ -38,6 +38,7 @@ export default function EditJobScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { colors, radius, spacing } = useAppTheme();
+  const bottomInset = useBottomNavInset();
   const [categories, setCategories] = useState<Category[]>([]);
   const [categoryId, setCategoryId] = useState<string | null>(null);
   const [title, setTitle] = useState('');
@@ -118,7 +119,7 @@ export default function EditJobScreen() {
 
   return (
     <Screen>
-      <ScrollView contentContainerStyle={[styles.scroll, { padding: spacing.four }]}>
+      <ScrollView contentContainerStyle={[styles.scroll, { padding: spacing.four, paddingBottom: bottomInset }]}>
         <Text variant="small" color="muted">
           You can edit this job until a provider is booked.
         </Text>

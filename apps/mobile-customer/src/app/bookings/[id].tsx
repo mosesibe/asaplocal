@@ -4,7 +4,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import * as ImagePicker from 'expo-image-picker';
 import { Star, X } from 'lucide-react-native';
-import { Screen, Card, Text, Badge, Button, useAppTheme } from '@asaplocal/ui-native';
+import { Screen, Card, Text, Badge, Button, useAppTheme, useBottomNavInset } from '@asaplocal/ui-native';
 
 import { api } from '@/lib/api';
 import { uploadImage } from '@/lib/upload';
@@ -63,6 +63,7 @@ export default function BookingDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { colors, radius, spacing } = useAppTheme();
+  const bottomInset = useBottomNavInset();
   const [data, setData] = useState<BookingDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -135,7 +136,7 @@ export default function BookingDetailScreen() {
 
   return (
     <Screen>
-      <ScrollView contentContainerStyle={[styles.scroll, { padding: spacing.four }]}>
+      <ScrollView contentContainerStyle={[styles.scroll, { padding: spacing.four, paddingBottom: bottomInset }]}>
         <Badge variant="outline">{data.status.replace(/_/g, ' ')}</Badge>
         <Text variant="title" style={styles.h1}>
           {data.business.name}

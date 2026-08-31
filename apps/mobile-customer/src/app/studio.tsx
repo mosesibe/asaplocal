@@ -3,7 +3,7 @@ import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, TextInput,
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import { Camera, Sparkles, Info, X, Check } from 'lucide-react-native';
-import { Screen, Card, Text, Button, useAppTheme } from '@asaplocal/ui-native';
+import { Screen, Card, Text, Button, useAppTheme, useBottomNavInset } from '@asaplocal/ui-native';
 
 import { api } from '@/lib/api';
 import { uploadImage } from '@/lib/upload';
@@ -53,6 +53,7 @@ type Busy = 'idle' | 'analysing' | 'rendering';
 export default function StudioScreen() {
   const router = useRouter();
   const { colors, radius, spacing } = useAppTheme();
+  const bottomInset = useBottomNavInset();
   const [step, setStep] = useState<Step>('upload');
   const [photos, setPhotos] = useState<string[]>([]);
   const [heroUrl, setHeroUrl] = useState<string | null>(null);
@@ -162,7 +163,7 @@ export default function StudioScreen() {
 
   return (
     <Screen>
-      <ScrollView contentContainerStyle={{ padding: spacing.four, gap: 16 }}>
+      <ScrollView contentContainerStyle={{ padding: spacing.four, paddingBottom: bottomInset, gap: 16 }}>
         {step === 'upload' ? (
           <>
             <Text variant="title" style={styles.h1}>

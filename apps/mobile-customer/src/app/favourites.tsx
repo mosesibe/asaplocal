@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { FlatList, Image, Pressable, StyleSheet, View } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { BadgeCheck, Star } from 'lucide-react-native';
-import { Screen, Card, Text, Badge, useAppTheme } from '@asaplocal/ui-native';
+import { Screen, Card, Text, Badge, useAppTheme, useBottomNavInset } from '@asaplocal/ui-native';
 
 import { api } from '@/lib/api';
 
@@ -28,6 +28,7 @@ function formatPence(pence: number): string {
 export default function FavouritesScreen() {
   const router = useRouter();
   const { colors, spacing } = useAppTheme();
+  const bottomInset = useBottomNavInset();
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -56,7 +57,7 @@ export default function FavouritesScreen() {
         style={styles.flatList}
         data={businesses}
         keyExtractor={(b) => b.slug}
-        contentContainerStyle={{ padding: spacing.four, gap: 12 }}
+        contentContainerStyle={{ padding: spacing.four, paddingBottom: bottomInset, gap: 12 }}
         ListEmptyComponent={
           !loading ? (
             <Text variant="small" color="muted" style={styles.empty}>
