@@ -1,9 +1,17 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ComponentType } from "react";
 import { useRouter } from "next/navigation";
-import { APIProvider, Map, useMap } from "@vis.gl/react-google-maps";
+import { APIProvider, Map, useMap, type APIProviderProps, type MapProps } from "@vis.gl/react-google-maps";
 import { Card, useTheme, formatPence } from "@asaplocal/ui";
 import type { NearbyLead } from "@asaplocal/core";
+
+// @vis.gl/react-google-maps ships types built against a different React
+// major version than this app's own @types/react, which structurally breaks
+// JSX component-type inference (TS2786) even though the runtime versions
+// actually resolved by pnpm match. Re-typing through ComponentType sidesteps
+// the mismatch without touching either package's dependency resolution.
+const TypedAPIProvider = APIProvider as unknown as ComponentType<APIProviderProps>;
+const TypedMap = Map as unknown as ComponentType<MapProps>;
 
 const MONOCHROME_DARK_STYLE: google.maps.MapTypeStyle[] = [
   { elementType: "geometry", stylers: [{ color: "#212121" }] },
@@ -264,8 +272,8 @@ export function RadarMap({
     <Card className="relative overflow-hidden p-0">
       <div className="relative h-80 w-full sm:h-96">
         {apiKey ? (
-          <APIProvider apiKey={apiKey}>
-            <Map
+          <TypedAPIProvider apiKey={apiKey}>
+            <TypedMap
               defaultCenter={center}
               defaultZoom={11}
               gestureHandling="greedy"
@@ -280,8 +288,8 @@ export function RadarMap({
                 leads={leads}
                 onView={(lead) => router.push(lead.alreadyAcquired ? `/leads/${lead.id}` : `/leads?highlight=${lead.id}#lead-${lead.id}`)}
               />
-            </Map>
-          </APIProvider>
+            </TypedMap>
+          </TypedAPIProvider>
         ) : (
           <div className="flex h-full items-center justify-center bg-muted text-sm text-muted-foreground">Map unavailable</div>
         )}

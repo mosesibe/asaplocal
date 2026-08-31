@@ -1,9 +1,17 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { APIProvider, Map, useMap } from "@vis.gl/react-google-maps";
+import { useEffect, useRef, useState, type ComponentType } from "react";
+import { APIProvider, Map, useMap, type APIProviderProps, type MapProps } from "@vis.gl/react-google-maps";
 import Pusher from "pusher-js";
 import { Card } from "@asaplocal/ui";
+
+// @vis.gl/react-google-maps ships types built against a different React
+// major version than this app's own @types/react, which structurally breaks
+// JSX component-type inference (TS2786) even though the runtime versions
+// actually resolved by pnpm match. Re-typing through ComponentType sidesteps
+// the mismatch without touching either package's dependency resolution.
+const TypedAPIProvider = APIProvider as unknown as ComponentType<APIProviderProps>;
+const TypedMap = Map as unknown as ComponentType<MapProps>;
 
 interface LatLng {
   lat: number;
@@ -96,11 +104,11 @@ export function TrackingMap({
       </div>
       <div className="h-64 w-full">
         {apiKey ? (
-          <APIProvider apiKey={apiKey}>
-            <Map defaultCenter={center} defaultZoom={13} gestureHandling="greedy" disableDefaultUI>
+          <TypedAPIProvider apiKey={apiKey}>
+            <TypedMap defaultCenter={center} defaultZoom={13} gestureHandling="greedy" disableDefaultUI>
               <LiveMarkers providerPosition={providerPosition} destination={destination} />
-            </Map>
-          </APIProvider>
+            </TypedMap>
+          </TypedAPIProvider>
         ) : (
           <div className="flex h-full items-center justify-center bg-muted text-sm text-muted-foreground">Map unavailable</div>
         )}
