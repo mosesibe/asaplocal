@@ -14,17 +14,17 @@ function startOfWeek(date: Date): Date {
 
 // JSON counterpart to /dashboard (a server component that queries Prisma
 // directly) — no such route existed for mobile before. Mirrors the same
-// reads/derived stats as plain JSON. The RadarMap (business location +
-// service-area circles) is intentionally omitted — a real map view needs a
-// native maps dependency, out of scope for this pass; the stat grid and
-// recent-leads list carry the functional value.
+// reads/derived stats as plain JSON, including the RadarMap's center/
+// baseRadiusMiles/serviceAreas — the mobile app renders its own native
+// equivalent via react-native-maps rather than reusing radar-map.tsx (which
+// is a DOM/@vis.gl component tree, not portable to RN).
 export async function GET() {
   const session = await auth();
   if (!session?.user) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
 
   const business = await prisma.business.findUnique({
     where: { ownerId: session.user.id },
-    include: { subscription: true, leadCreditWallet: true },
+    include: { subscription: true, leadCreditWallet: true, serviceAreas: true },
   });
   if (!business) return NextResponse.json({ message: "No business profile found" }, { status: 404 });
 
@@ -55,6 +55,9 @@ export async function GET() {
     profileViews: business.profileViews,
     plan: business.subscription?.plan ?? "FREE",
     leadCreditBalance: business.leadCreditWallet?.balance ?? 0,
+    center: { lat: Number(business.lat), lng: Number(business.lng) },
+    baseRadiusMiles: business.baseRadiusMiles,
+    serviceAreas: business.serviceAreas.map((a) => ({ lat: Number(a.lat), lng: Number(a.lng), radiusMiles: a.radiusMiles })),
     analytics: { total: analytics.total, conversionRate: analytics.conversionRate },
     earnings: { weekTotalPence: earnings.weekTotalPence, allTimePence: earnings.allTimePence },
     weekBookingDates: weekBookings.map((b) => b.scheduledDate.toISOString().slice(0, 10)),

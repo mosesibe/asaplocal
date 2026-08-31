@@ -25,6 +25,8 @@ const TITLES: { prefix: string; title: string }[] = [
   { prefix: '/verification', title: 'Verification centre' },
   { prefix: '/reviews', title: 'Reviews' },
   { prefix: '/references', title: 'References' },
+  { prefix: '/help', title: 'Help center' },
+  { prefix: '/preferences', title: 'Preferences' },
   { prefix: '/earnings', title: 'Earnings' },
   { prefix: '/referrals', title: 'Referrals' },
   { prefix: '/analytics', title: 'Analytics' },

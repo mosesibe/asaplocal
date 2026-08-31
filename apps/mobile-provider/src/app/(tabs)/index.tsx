@@ -4,6 +4,7 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { Screen, Card, Text, Badge, useAppTheme, useBottomNavInset } from '@asaplocal/ui-native';
 
 import { api } from '@/lib/api';
+import { RadarMap } from '@/components/RadarMap';
 
 interface DashboardData {
   bookingsCount: number;
@@ -15,6 +16,9 @@ interface DashboardData {
   analytics: { total: number; conversionRate: number };
   earnings: { weekTotalPence: number; allTimePence: number };
   weekBookingDates: string[];
+  center: { lat: number; lng: number };
+  baseRadiusMiles: number;
+  serviceAreas: { lat: number; lng: number; radiusMiles: number }[];
   recentLeads: { id: string; leadId: string; title: string; city: string; acquisitionType: string; status: string }[];
 }
 
@@ -31,10 +35,9 @@ function startOfWeek(date: Date): Date {
   return d;
 }
 
-// Ports apps/provider/app/dashboard/page.tsx. RadarMap (business location +
-// service-area circles) is intentionally left out — see the API route
-// comment; the stat grid and recent-leads list carry the functional value
-// without a new native maps dependency.
+// Ports apps/provider/app/dashboard/page.tsx, including the RadarMap
+// (business location, service-area circles, nearby-lead pins) via a native
+// react-native-maps port — see src/components/RadarMap.tsx.
 export default function DashboardScreen() {
   const router = useRouter();
   const { colors, radius, spacing } = useAppTheme();
@@ -119,6 +122,10 @@ export default function DashboardScreen() {
           })}
         </View>
 
+        <View style={styles.mapSection}>
+          <RadarMap center={data.center} baseRadiusMiles={data.baseRadiusMiles} serviceAreas={data.serviceAreas} />
+        </View>
+
         <View style={styles.statGrid}>
           <StatCard label="Leads received" value={String(data.analytics.total)} />
           <StatCard label="Bookings" value={String(data.bookingsCount)} />
@@ -186,6 +193,7 @@ const styles = StyleSheet.create({
   earningsCard: { gap: 2 },
   earningsValue: { fontSize: 28, lineHeight: 34 },
   weekStrip: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 16 },
+  mapSection: { marginTop: 20 },
   weekDay: { alignItems: 'center', gap: 6 },
   weekDot: { width: 8, height: 8, borderRadius: 4, borderWidth: 2 },
   statGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 20 },

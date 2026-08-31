@@ -15,6 +15,8 @@ import {
   BarChart3,
   Images,
   ClipboardCheck,
+  HelpCircle,
+  SlidersHorizontal,
   LogOut,
 } from 'lucide-react-native';
 import { Card, Text, useAppTheme } from '@asaplocal/ui-native';
@@ -24,6 +26,7 @@ import { useSession } from '@/lib/session';
 interface MenuItem {
   icon: typeof User;
   label: string;
+  subtitle?: string;
   href: Href;
 }
 interface MenuSection {
@@ -35,8 +38,17 @@ interface MenuSection {
 // grouping as a modal menu (opened from the hamburger button in
 // ProviderTopBar) rather than a true swipe-open drawer navigator — same
 // destinations, without pulling in a separate drawer-navigation dependency.
+// Web's "help-center"/"preferences" items open in-drawer panels; here they
+// push real screens instead, matching how "Account settings" already works.
 const SECTIONS: MenuSection[] = [
-  { title: 'Account', items: [{ icon: User, label: 'Account settings', href: '/account' }] },
+  {
+    title: 'Account',
+    items: [
+      { icon: User, label: 'Account settings', href: '/account' },
+      { icon: HelpCircle, label: 'Help center', subtitle: 'FAQ', href: '/help' },
+      { icon: SlidersHorizontal, label: 'Preferences', subtitle: 'Contents', href: '/preferences' },
+    ],
+  },
   {
     title: 'Business',
     items: [
@@ -87,7 +99,14 @@ export function AccountMenu({ visible, onClose }: { visible: boolean; onClose: (
                 {section.items.map((item) => (
                   <Pressable key={item.href.toString()} style={[styles.row, { borderColor: colors.border }]} onPress={() => go(item.href)}>
                     <item.icon size={18} color={colors.mutedForeground} />
-                    <Text variant="small">{item.label}</Text>
+                    <View style={styles.itemTextWrap}>
+                      <Text variant="small">{item.label}</Text>
+                      {item.subtitle && (
+                        <Text variant="caption" color="muted">
+                          {item.subtitle}
+                        </Text>
+                      )}
+                    </View>
                   </Pressable>
                 ))}
               </View>
@@ -119,6 +138,7 @@ const styles = StyleSheet.create({
   section: { paddingTop: 16 },
   sectionTitle: { paddingHorizontal: 16, marginBottom: 4 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 12, borderTopWidth: StyleSheet.hairlineWidth },
+  itemTextWrap: { gap: 1 },
   signOutRow: { marginTop: 8, marginBottom: 8 },
   signOutText: { color: '#dc2626' },
 });

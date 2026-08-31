@@ -86,6 +86,8 @@ function RootNavigator() {
           <Stack.Screen name="verification/banking" options={{ headerShown: true, title: 'Bank account' }} />
           <Stack.Screen name="reviews" options={{ headerShown: true, title: 'Reviews' }} />
           <Stack.Screen name="references" options={{ headerShown: true, title: 'References' }} />
+          <Stack.Screen name="help" options={{ headerShown: true, title: 'Help center' }} />
+          <Stack.Screen name="preferences" options={{ headerShown: true, title: 'Preferences' }} />
           <Stack.Screen name="earnings/index" options={{ headerShown: true, title: 'Earnings' }} />
           <Stack.Screen name="earnings/invoices" options={{ headerShown: true, title: 'Invoices & payouts' }} />
           <Stack.Screen name="earnings/subscription" options={{ headerShown: true, title: 'Subscription' }} />
