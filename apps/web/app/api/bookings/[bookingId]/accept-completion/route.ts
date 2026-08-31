@@ -20,6 +20,7 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ bo
   await prisma.$transaction([
     prisma.booking.update({ where: { id: bookingId }, data: { status: "COMPLETED" } }),
     ...(booking.jobRequestId ? [prisma.jobRequest.update({ where: { id: booking.jobRequestId }, data: { status: "COMPLETED" } })] : []),
+    prisma.business.update({ where: { id: booking.businessId }, data: { completedJobsCount: { increment: 1 } } }),
   ]);
 
   await writeAuditLog({

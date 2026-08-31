@@ -36,6 +36,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ booking
     id: booking.id,
     status: booking.status,
     scheduledDate: booking.scheduledDate,
+    durationMinutes: booking.durationMinutes,
     addressLine: booking.addressLine,
     city: booking.city,
     postcode: booking.postcode,

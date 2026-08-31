@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { ActivityIndicator, Image, Pressable, ScrollView, Share, StyleSheet, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, findNodeHandle, Image, Pressable, ScrollView, Share, StyleSheet, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Share2 } from 'lucide-react-native';
 import { Screen, Card, Text, Badge, Button, useAppTheme, useBottomNavInset } from '@asaplocal/ui-native';
@@ -31,6 +31,7 @@ interface ProviderDetail {
   slug: string;
   name: string;
   logoUrl: string | null;
+  coverImageUrl: string | null;
   city: string;
   baseRadiusMiles: number;
   avgRating: number;
@@ -68,6 +69,18 @@ const DAY_LABELS: { key: string; label: string }[] = [
   { key: 'sun', label: 'Sunday' },
 ];
 
+// Mirrors apps/web/app/providers/[slug]/page.tsx's NAV_ITEMS (Accreditations
+// has no entry of its own there either — it lives inside the "company-info"
+// section and scrolling to that section reveals it right below).
+const NAV_ITEMS: { id: string; label: string }[] = [
+  { id: 'details', label: 'Details' },
+  { id: 'services', label: 'Categories & services' },
+  { id: 'skills', label: 'Skills' },
+  { id: 'reviews', label: 'Reviews' },
+  { id: 'company-info', label: 'Company info' },
+  { id: 'photos', label: 'Photos' },
+];
+
 function formatPence(pence: number): string {
   return `£${Math.round(pence / 100).toLocaleString('en-GB')}`;
 }
@@ -92,6 +105,23 @@ export default function ProviderProfileScreen() {
   const bottomInset = useBottomNavInset();
   const [biz, setBiz] = useState<ProviderDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const scrollRef = useRef<ScrollView>(null);
+  const sectionRefs = useRef<Record<string, View | null>>({});
+
+  function registerSection(id: string, node: View | null) {
+    sectionRefs.current[id] = node;
+  }
+
+  function scrollToSection(id: string) {
+    const node = sectionRefs.current[id];
+    const scrollHandle = findNodeHandle(scrollRef.current);
+    if (!node || !scrollHandle) return;
+    node.measureLayout(
+      scrollHandle,
+      (_x, y) => scrollRef.current?.scrollTo({ y: Math.max(y - 12, 0), animated: true }),
+      () => {}
+    );
+  }
 
   useEffect(() => {
     api
@@ -116,11 +146,20 @@ export default function ProviderProfileScreen() {
     );
   }
 
+  const navItems = NAV_ITEMS.filter((item) => item.id !== 'details' || biz.description);
+
   return (
     <Screen>
-      <ScrollView contentContainerStyle={[styles.scroll, { padding: spacing.four, paddingBottom: bottomInset }]}>
+      <ScrollView ref={scrollRef} contentContainerStyle={[styles.scroll, { paddingBottom: bottomInset }]}>
+        <View style={[styles.cover, { backgroundColor: colors.muted }]}>
+          {biz.coverImageUrl && <Image source={{ uri: biz.coverImageUrl }} style={styles.coverImg} />}
+        </View>
+
+        <View style={[styles.content, { padding: spacing.four }]}>
         <View style={styles.headerRow}>
-          <View style={[styles.logo, { backgroundColor: colors.muted }]}>{biz.logoUrl && <Image source={{ uri: biz.logoUrl }} style={styles.logoImg} />}</View>
+          <View style={[styles.logo, { backgroundColor: colors.muted, borderColor: colors.background }]}>
+            {biz.logoUrl && <Image source={{ uri: biz.logoUrl }} style={styles.logoImg} />}
+          </View>
           <View style={styles.headerInfo}>
             <View style={styles.nameRow}>
               <Text variant="title" style={styles.name}>
@@ -168,8 +207,25 @@ export default function ProviderProfileScreen() {
           Request a quote
         </Button>
 
+        {navItems.length > 0 && (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={[styles.navBar, { borderColor: colors.border }]}
+            contentContainerStyle={styles.navBarContent}
+          >
+            {navItems.map((item) => (
+              <Pressable key={item.id} onPress={() => scrollToSection(item.id)} style={styles.navItem} hitSlop={4}>
+                <Text variant="smallMedium" color="muted">
+                  {item.label}
+                </Text>
+              </Pressable>
+            ))}
+          </ScrollView>
+        )}
+
         {biz.description && (
-          <Section title="Details">
+          <Section id="details" onRef={registerSection} title="Details">
             <Text variant="small" style={styles.paragraph}>
               {biz.description}
             </Text>
@@ -200,7 +256,7 @@ export default function ProviderProfileScreen() {
           </Section>
         )}
 
-        <Section title="Categories & services">
+        <Section id="services" onRef={registerSection} title="Categories & services">
           {biz.services.length === 0 ? (
             <Text variant="small" color="muted">
               No services listed yet.
@@ -223,7 +279,7 @@ export default function ProviderProfileScreen() {
           )}
         </Section>
 
-        <Section title="Skills">
+        <Section id="skills" onRef={registerSection} title="Skills">
           {biz.qualifications.length === 0 ? (
             <Text variant="small" color="muted">
               No skills or certifications listed yet.
@@ -239,7 +295,7 @@ export default function ProviderProfileScreen() {
           )}
         </Section>
 
-        <Section title={`Reviews (${biz.reviewCount})`}>
+        <Section id="reviews" onRef={registerSection} title={`Reviews (${biz.reviewCount})`}>
           {biz.reviews.length === 0 ? (
             <Text variant="small" color="muted">
               No reviews yet — be the first to book and review.
@@ -267,7 +323,7 @@ export default function ProviderProfileScreen() {
           )}
         </Section>
 
-        <Section title="Company info">
+        <Section id="company-info" onRef={registerSection} title="Company info">
           {!biz.companyInfo.companyDirectorName && !biz.companyInfo.companyRegistrationNumber ? (
             <Text variant="small" color="muted">
               No company information provided yet.
@@ -304,7 +360,7 @@ export default function ProviderProfileScreen() {
           )}
         </Section>
 
-        <Section title="Photos">
+        <Section id="photos" onRef={registerSection} title="Photos">
           {biz.photoUrls.length === 0 ? (
             <Text variant="small" color="muted">
               No photos added yet.
@@ -317,14 +373,25 @@ export default function ProviderProfileScreen() {
             </View>
           )}
         </Section>
+        </View>
       </ScrollView>
     </Screen>
   );
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({
+  id,
+  onRef,
+  title,
+  children,
+}: {
+  id?: string;
+  onRef?: (id: string, node: View | null) => void;
+  title: string;
+  children: React.ReactNode;
+}) {
   return (
-    <View style={styles.section}>
+    <View style={styles.section} ref={id && onRef ? (node) => onRef(id, node) : undefined}>
       <Text variant="subtitle" style={styles.sectionTitle}>
         {title}
       </Text>
@@ -357,10 +424,16 @@ function InfoRow({ label, value }: { label: string; value: string }) {
 
 const styles = StyleSheet.create({
   centered: { alignItems: 'center', justifyContent: 'center' },
-  scroll: { gap: 8 },
+  scroll: {},
+  cover: { width: '100%', height: 200 },
+  coverImg: { width: '100%', height: '100%' },
+  content: { gap: 8 },
   headerRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
-  logo: { width: 64, height: 64, borderRadius: 18, overflow: 'hidden' },
+  logo: { width: 64, height: 64, borderRadius: 18, overflow: 'hidden', marginTop: -32, borderWidth: 3 },
   logoImg: { width: '100%', height: '100%' },
+  navBar: { marginTop: 4, borderBottomWidth: StyleSheet.hairlineWidth },
+  navBarContent: { gap: 4 },
+  navItem: { paddingVertical: 10, paddingHorizontal: 10 },
   headerInfo: { flex: 1, minWidth: 0, gap: 2 },
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
   name: { fontSize: 20, lineHeight: 26 },

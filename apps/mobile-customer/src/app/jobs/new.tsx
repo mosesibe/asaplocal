@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Screen, Text, Button, TextField, useAppTheme, useBottomNavInset } from '@asaplocal/ui-native';
+import { ChevronDown, X } from 'lucide-react-native';
+import { Screen, Card, Text, Button, TextField, useAppTheme, useBottomNavInset } from '@asaplocal/ui-native';
 
 import { api } from '@/lib/api';
 import { ApiError } from '@asaplocal/api-client';
@@ -21,6 +22,9 @@ interface Category {
 // AiJobAssistantCard (categoryId/title/description from /api/jobs/suggest),
 // ai-buddy.tsx's "needs a pro" handoff, and studio.tsx's chosen concept
 // (adds photos/designRenderUrl/designSessionId/budget).
+//
+// Layout/copy ports apps/web/app/jobs/new/{page,job-request-form}.tsx 1:1
+// (heading, field labels/placeholders, one enclosing card, category select).
 export default function NewJobScreen() {
   const router = useRouter();
   const { colors, radius, spacing } = useAppTheme();
@@ -39,6 +43,7 @@ export default function NewJobScreen() {
   }>();
   const [categories, setCategories] = useState<Category[]>([]);
   const [categoryId, setCategoryId] = useState<string | null>(prefill.categoryId ?? null);
+  const [categoryPickerOpen, setCategoryPickerOpen] = useState(false);
   const [title, setTitle] = useState(prefill.title ?? '');
   const [description, setDescription] = useState(prefill.description ?? '');
   const [location, setLocation] = useState<LocationValue>({ addressLine: '', city: '' });
@@ -52,17 +57,33 @@ export default function NewJobScreen() {
   useEffect(() => {
     api
       .request<{ categories: Category[] }>('/api/categories')
-      .then((res) => setCategories(res.categories.filter((c) => c.parentId !== null)))
+      .then((res) => setCategories(res.categories))
       .catch(() => setError('Could not load categories.'))
       .finally(() => setLoading(false));
   }, []);
+
+  const parentCategories = useMemo(() => categories.filter((c) => !c.parentId), [categories]);
+  const childrenByParent = useMemo(() => {
+    const map = new Map<string, Category[]>();
+    for (const c of categories) {
+      if (!c.parentId) continue;
+      map.set(c.parentId, [...(map.get(c.parentId) ?? []), c]);
+    }
+    return map;
+  }, [categories]);
+  const selectedCategory = categories.find((c) => c.id === categoryId);
+  const selectedCategoryLabel = selectedCategory
+    ? selectedCategory.parentId
+      ? selectedCategory.name
+      : `${selectedCategory.name} (general)`
+    : null;
 
   const handleSubmit = useCallback(async () => {
     setError(null);
     if (!categoryId) return setError('Choose a category.');
     if (title.trim().length < 8) return setError('Title needs to be at least 8 characters.');
     if (description.trim().length < 20) return setError('Description needs to be at least 20 characters.');
-    if (!location.city.trim()) return setError('Enter a location.');
+    if (!location.city.trim()) return setError('Please choose a service location.');
 
     setSubmitting(true);
     try {
@@ -71,7 +92,7 @@ export default function NewJobScreen() {
         title: title.trim(),
         description: description.trim(),
         city: location.city.trim(),
-        locationSource: 'new',
+        locationSource: location.source ?? 'new',
       };
       if (location.addressLine.trim()) body.addressLine = location.addressLine.trim();
       if (location.postcode?.trim()) body.postcode = location.postcode.trim();
@@ -106,104 +127,157 @@ export default function NewJobScreen() {
   return (
     <Screen>
       <ScrollView contentContainerStyle={[styles.scroll, { padding: spacing.four, paddingBottom: bottomInset }]}>
-        {prefill.businessName ? (
-          <>
-            <Text variant="title" style={styles.heading}>
-              Request a quote from {prefill.businessName}
+        <Text variant="title" style={styles.heading}>
+          {prefill.businessName ? `Request a quote from ${prefill.businessName}` : "Post a job — no provider to choose, we'll bring them to you"}
+        </Text>
+        <Text variant="small" color="muted" style={styles.subheading}>
+          {prefill.businessName
+            ? "Tell them what you need and they'll be notified immediately."
+            : "Describe what you need done. Vetted local providers in your area will see your request and send you quotes — you pick who to book."}
+        </Text>
+
+        <Card style={styles.formCard}>
+          <View>
+            <Text variant="bodyMedium" style={styles.label}>
+              Category
             </Text>
-            <Text variant="small" color="muted">
-              Tell them what you need and they'll be notified immediately.
+            <Pressable
+              onPress={() => setCategoryPickerOpen(true)}
+              style={[styles.selectField, { borderColor: colors.border, backgroundColor: colors.surface, borderRadius: radius.lg }]}
+            >
+              <Text variant="body" color={selectedCategoryLabel ? 'foreground' : 'muted'} style={styles.flex1}>
+                {selectedCategoryLabel ?? 'Select a category'}
+              </Text>
+              <ChevronDown size={18} color={colors.mutedForeground} />
+            </Pressable>
+          </View>
+
+          <View>
+            <Text variant="bodyMedium" style={styles.label}>
+              Job title
             </Text>
-          </>
-        ) : null}
+            <TextField placeholder="e.g. Fix leaking kitchen tap" value={title} onChangeText={setTitle} />
+          </View>
 
-        <Text variant="bodyMedium" style={styles.label}>
-          Category
-        </Text>
-        <View style={styles.chipRow}>
-          {categories.map((c) => {
-            const selected = categoryId === c.id;
-            return (
-              <Pressable
-                key={c.id}
-                onPress={() => setCategoryId(c.id)}
-                style={[
-                  styles.chip,
-                  {
-                    borderRadius: radius.full,
-                    borderColor: selected ? colors.brand[600] : colors.border,
-                    backgroundColor: selected ? colors.brand[600] : 'transparent',
-                  },
-                ]}
-              >
-                <Text variant="small" color={selected ? 'inverse' : 'muted'}>
-                  {c.name}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </View>
+          <View>
+            <Text variant="bodyMedium" style={styles.label}>
+              Description
+            </Text>
+            <TextField
+              placeholder="What needs doing? Include any relevant details (access, materials, timing)."
+              multiline
+              value={description}
+              onChangeText={setDescription}
+            />
+          </View>
 
-        <Text variant="bodyMedium" style={styles.label}>
-          Title
-        </Text>
-        <TextField placeholder="e.g. Leaking kitchen tap needs urgent repair" value={title} onChangeText={setTitle} />
+          <View>
+            <Text variant="bodyMedium" style={styles.label}>
+              Budget min (£)
+            </Text>
+            <TextField keyboardType="decimal-pad" value={budgetMin} onChangeText={setBudgetMin} />
+          </View>
 
-        <Text variant="bodyMedium" style={styles.label}>
-          Description
-        </Text>
-        <TextField placeholder="Describe what you need done" multiline value={description} onChangeText={setDescription} />
+          <View>
+            <Text variant="bodyMedium" style={styles.label}>
+              Budget max (£)
+            </Text>
+            <TextField keyboardType="decimal-pad" value={budgetMax} onChangeText={setBudgetMax} />
+          </View>
 
-        <Text variant="bodyMedium" style={styles.label}>
-          Budget (optional)
-        </Text>
-        <View style={styles.row}>
-          <TextField style={styles.halfInput} placeholder="Min £" keyboardType="decimal-pad" value={budgetMin} onChangeText={setBudgetMin} />
-          <TextField style={styles.halfInput} placeholder="Max £" keyboardType="decimal-pad" value={budgetMax} onChangeText={setBudgetMax} />
-        </View>
+          <View>
+            <Text variant="bodyMedium" style={styles.label}>
+              Preferred date & arrival time (optional)
+            </Text>
+            <PreferredDatePicker value={preferredDate} onChange={setPreferredDate} />
+          </View>
 
-        <Text variant="bodyMedium" style={styles.label}>
-          Preferred date & arrival time (optional)
-        </Text>
-        <PreferredDatePicker value={preferredDate} onChange={setPreferredDate} />
+          <View>
+            <Text variant="bodyMedium" style={styles.label}>
+              Service location
+            </Text>
+            <LocationPicker value={location} onChange={setLocation} />
+          </View>
 
-        <Text variant="bodyMedium" style={styles.label}>
-          Service location
-        </Text>
-        <LocationPicker value={location} onChange={setLocation} />
+          {error && (
+            <Text variant="small" style={styles.error}>
+              {error}
+            </Text>
+          )}
 
-        {error && (
-          <Text variant="small" style={styles.error}>
-            {error}
+          <Button onPress={handleSubmit} loading={submitting} style={styles.submitButton}>
+            {prefill.businessId ? 'Send request' : 'Post job & get quotes'}
+          </Button>
+          <Text variant="caption" color="muted" style={styles.footerNote}>
+            Posting is free. Providers pay to access your request — you'll never be charged for quotes.
           </Text>
-        )}
-
-        <Button onPress={handleSubmit} loading={submitting} style={styles.submitButton}>
-          {prefill.businessId ? 'Send request' : 'Post job & get quotes'}
-        </Button>
-        <Text variant="caption" color="muted" style={styles.footerNote}>
-          Posting is free. Providers pay to access your request — you'll never be charged for quotes.
-        </Text>
+        </Card>
       </ScrollView>
+
+      <Modal visible={categoryPickerOpen} transparent animationType="slide" onRequestClose={() => setCategoryPickerOpen(false)}>
+        <Pressable style={styles.modalBackdrop} onPress={() => setCategoryPickerOpen(false)}>
+          <Pressable style={[styles.modalSheet, { backgroundColor: colors.surface, borderTopLeftRadius: radius.xl, borderTopRightRadius: radius.xl }]}>
+            <View style={styles.modalHeader}>
+              <Text variant="subtitle">Select a category</Text>
+              <Pressable onPress={() => setCategoryPickerOpen(false)} hitSlop={8}>
+                <X size={20} color={colors.mutedForeground} />
+              </Pressable>
+            </View>
+            <ScrollView style={styles.modalList} contentContainerStyle={styles.modalListContent}>
+              {parentCategories.map((p) => (
+                <View key={p.id} style={styles.categoryGroup}>
+                  <Text variant="caption" color="muted" style={styles.categoryGroupLabel}>
+                    {p.name.toUpperCase()}
+                  </Text>
+                  <Pressable
+                    onPress={() => {
+                      setCategoryId(p.id);
+                      setCategoryPickerOpen(false);
+                    }}
+                    style={[styles.categoryRow, { borderColor: colors.border }]}
+                  >
+                    <Text variant="small">{p.name} (general)</Text>
+                  </Pressable>
+                  {(childrenByParent.get(p.id) ?? []).map((c) => (
+                    <Pressable
+                      key={c.id}
+                      onPress={() => {
+                        setCategoryId(c.id);
+                        setCategoryPickerOpen(false);
+                      }}
+                      style={[styles.categoryRow, { borderColor: colors.border }]}
+                    >
+                      <Text variant="small">{c.name}</Text>
+                    </Pressable>
+                  ))}
+                </View>
+              ))}
+            </ScrollView>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
   centered: { alignItems: 'center', justifyContent: 'center' },
-  scroll: { gap: 8 },
-  heading: { fontSize: 20, lineHeight: 26, marginBottom: 4 },
-  label: { marginTop: 16 },
-  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 4 },
-  chip: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderWidth: StyleSheet.hairlineWidth,
-  },
-  spacedInput: { marginTop: 8 },
-  row: { flexDirection: 'row', gap: 8 },
-  halfInput: { flex: 1 },
-  submitButton: { marginTop: 24 },
-  footerNote: { textAlign: 'center', marginTop: 10 },
-  error: { color: '#dc2626', marginTop: 8 },
+  scroll: { gap: 4 },
+  heading: { fontSize: 22, lineHeight: 28 },
+  subheading: { marginTop: 6 },
+  formCard: { marginTop: 20, gap: 16 },
+  label: { marginBottom: 6 },
+  selectField: { flexDirection: 'row', alignItems: 'center', minHeight: 44, borderWidth: StyleSheet.hairlineWidth, paddingHorizontal: 14, paddingVertical: 10 },
+  flex1: { flex: 1 },
+  submitButton: { marginTop: 8 },
+  footerNote: { textAlign: 'center' },
+  error: { color: '#dc2626' },
+  modalBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
+  modalSheet: { maxHeight: '75%', paddingTop: 16 },
+  modalHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingBottom: 12 },
+  modalList: { paddingHorizontal: 20 },
+  modalListContent: { paddingBottom: 24 },
+  categoryGroup: { marginTop: 12 },
+  categoryGroupLabel: { marginBottom: 4, letterSpacing: 0.5 },
+  categoryRow: { paddingVertical: 12, borderBottomWidth: StyleSheet.hairlineWidth },
 });
