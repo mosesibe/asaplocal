@@ -34,7 +34,19 @@
         }
       ],
       "expo-secure-store",
-      "expo-font"
+      "expo-font",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "AsapLocal Business uses your photos for job-sheet entries, staff verification, portfolio, and profile images."
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "AsapLocal Business uses your location to fill in your business address and service area."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

@@ -50,3 +50,26 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({ id: policy.id }, { status: 201 });
 }
+
+// JSON counterpart to /verification/insurance (a server component that
+// queries Prisma directly) — mobile has no server component to fetch this
+// in, so it needs the policy list as plain JSON.
+export async function GET() {
+  const session = await auth();
+  if (!session?.user || !session.user.isProvider) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+
+  const business = await prisma.business.findUnique({ where: { ownerId: session.user.id }, include: { insurancePolicies: true } });
+  if (!business) return NextResponse.json({ policies: [] });
+
+  return NextResponse.json({
+    policies: business.insurancePolicies.map((p) => ({
+      type: p.type,
+      provider: p.provider,
+      policyNumber: p.policyNumber,
+      expiryDate: p.expiryDate.toISOString().slice(0, 10),
+      coverageAmountPence: p.coverageAmountPence,
+      documentUrl: p.documentUrl,
+      status: p.status,
+    })),
+  });
+}

@@ -37,3 +37,30 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({ id: qualification.id }, { status: 201 });
 }
+
+// JSON counterpart to /verification/qualifications (a server component that
+// queries Prisma directly). regulatedCategories mirrors the page's own
+// derivation: categories this business actually offers services in that are
+// flagged isRegulatedTrade, used for the category picker and the suggested-
+// qualifications hint (Category.suggestedQualifications) — not all regulated
+// categories platform-wide.
+export async function GET() {
+  const session = await auth();
+  if (!session?.user || !session.user.isProvider) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+
+  const business = await prisma.business.findUnique({
+    where: { ownerId: session.user.id },
+    include: { qualifications: true, services: { include: { category: true } } },
+  });
+  if (!business) return NextResponse.json({ message: "No business profile found" }, { status: 404 });
+
+  const regulatedCategoriesMap = new Map(
+    business.services.map((s) => s.category).filter((c) => c.isRegulatedTrade).map((c) => [c.id, c]),
+  );
+  const regulatedCategories = Array.from(regulatedCategoriesMap.values());
+
+  return NextResponse.json({
+    qualifications: business.qualifications.map((q) => ({ id: q.id, name: q.name, status: q.status, issuingBody: q.issuingBody, documentUrl: q.documentUrl })),
+    regulatedCategories: regulatedCategories.map((c) => ({ id: c.id, name: c.name, suggestedQualifications: c.suggestedQualifications })),
+  });
+}

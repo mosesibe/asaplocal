@@ -8,6 +8,39 @@ const schema = z.object({
   categorySlugs: z.array(z.string().min(1)).min(1, "Choose at least one service"),
 });
 
+// JSON counterpart to /services (a server component that queries Prisma
+// directly) — needed for the mobile app's services manager, which has no
+// server component to fetch this in. Categories are fetched separately via
+// the existing GET /api/categories, so they're not duplicated here.
+export async function GET() {
+  const session = await auth();
+  if (!session?.user || !session.user.isProvider) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+
+  const business = await prisma.business.findUnique({ where: { ownerId: session.user.id } });
+  if (!business) return NextResponse.json({ message: "No business profile found" }, { status: 404 });
+
+  const services = await prisma.service.findMany({
+    where: { businessId: business.id },
+    include: { category: true },
+    orderBy: { createdAt: "asc" },
+  });
+
+  return NextResponse.json({
+    services: services.map((s) => ({
+      id: s.id,
+      title: s.title,
+      categoryId: s.categoryId,
+      categoryName: s.category.name,
+      isActive: s.isActive,
+      durationMins: s.durationMins,
+      aiSuggestedDurationMins: s.aiSuggestedDurationMins,
+      priceType: s.priceType,
+      priceMinPence: s.priceMinPence,
+      priceMaxPence: s.priceMaxPence,
+    })),
+  });
+}
+
 /** Adds categories to the business's listing. Re-activates any it previously paused. */
 export async function POST(req: NextRequest) {
   const session = await auth();

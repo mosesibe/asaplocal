@@ -7,15 +7,19 @@
     "@asaplocal/ui-native": "workspace:^",
     "@expo-google-fonts/inter": "^0.4.2",
     "@expo/ui": "~57.0.13",
+    "@react-native-community/slider": "5.2.0",
     "expo": "~57.0.16",
+    "expo-clipboard": "~57.0.1",
     "expo-constants": "~57.0.14",
     "expo-dev-client": "~57.0.16",
     "expo-device": "~57.0.1",
+    "expo-document-picker": "~57.0.1",
     "expo-font": "~57.0.2",
     "expo-glass-effect": "~57.0.1",
     "expo-image": "~57.0.3",
     "expo-image-picker": "~57.0.13",
     "expo-linking": "~57.0.7",
+    "expo-location": "~57.0.14",
     "expo-notifications": "~57.0.14",
     "expo-router": "~57.0.16",
     "expo-secure-store": "~57.0.1",
@@ -39,6 +43,8 @@
   "devDependencies": {
     "@expo/ngrok": "^4.1.3",
     "@types/react": "~19.2.2",
+    "eslint": "^9.0.0",
+    "eslint-config-expo": "~57.0.2",
     "typescript": "~6.0.3"
   },
   "scripts": {

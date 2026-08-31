@@ -31,6 +31,49 @@ const schema = z.object({
   targetResponseMins: z.coerce.number().int().min(1).max(1440).optional(),
 });
 
+// JSON counterpart to /profile (a server component that queries Prisma
+// directly) — needed for the mobile app's profile screen, which has no
+// server component to fetch this in.
+export async function GET() {
+  const session = await auth();
+  if (!session?.user) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+
+  const business = await prisma.business.findUnique({
+    where: { ownerId: session.user.id },
+    include: { addresses: { orderBy: { createdAt: "asc" } } },
+  });
+  if (!business) return NextResponse.json({ message: "No business profile found" }, { status: 404 });
+
+  return NextResponse.json({
+    name: business.name,
+    tradingName: business.tradingName ?? "",
+    description: business.description ?? "",
+    logoUrl: business.logoUrl ?? "",
+    coverImageUrl: business.coverImageUrl ?? "",
+    phone: business.phone ?? "",
+    website: business.website ?? "",
+    baseRadiusMiles: business.baseRadiusMiles,
+    photoUrls: business.photoUrls,
+    languagesSpoken: business.languagesSpoken,
+    emergencyCalloutsAvailable: business.emergencyCalloutsAvailable,
+    workingHours: (business.workingHours as any) ?? null,
+    targetResponseMins: business.targetResponseMins ?? undefined,
+    businessType: business.businessType,
+    primaryAddress: {
+      addressLine: business.addressLine,
+      city: business.city,
+      postcode: business.postcode,
+    },
+    addresses: business.addresses.map((a) => ({
+      id: a.id,
+      label: a.label,
+      addressLine: a.addressLine,
+      city: a.city,
+      postcode: a.postcode,
+    })),
+  });
+}
+
 export async function PATCH(req: NextRequest) {
   const session = await auth();
   if (!session?.user || !session.user.isProvider) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });

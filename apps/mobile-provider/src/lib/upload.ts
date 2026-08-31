@@ -1,6 +1,20 @@
 import { api } from './api';
 
-export type UploadPurpose = 'job-photo';
+// Mirrors packages/core/src/s3.ts's UploadPurpose union.
+export type UploadPurpose =
+  | 'job-photo'
+  | 'business-logo'
+  | 'business-cover'
+  | 'business-photo'
+  | 'portfolio-media'
+  | 'business-verification-doc'
+  | 'insurance-doc'
+  | 'qualification-doc'
+  | 'staff-profile-photo'
+  | 'staff-id-front'
+  | 'staff-id-back'
+  | 'supply-image'
+  | 'dispute-photo';
 
 interface PresignResponse {
   uploadUrl: string;

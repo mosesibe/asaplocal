@@ -14,6 +14,35 @@ const schema = z.object({
   idBackImageUrl: z.string().url(),
 });
 
+// JSON counterpart to /staff (a server component that queries Prisma
+// directly) — needed for the mobile app's staff list, which has no server
+// component to fetch this in.
+export async function GET() {
+  const session = await auth();
+  if (!session?.user) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+
+  const business = await prisma.business.findUnique({ where: { ownerId: session.user.id } });
+  if (!business) return NextResponse.json({ message: "Complete onboarding first" }, { status: 400 });
+
+  if (!canHaveStaff(business.businessType)) {
+    return NextResponse.json({ canHaveStaff: false, staff: [] });
+  }
+
+  const staff = await prisma.staffMember.findMany({ where: { businessId: business.id }, orderBy: { createdAt: "desc" } });
+
+  return NextResponse.json({
+    canHaveStaff: true,
+    staff: staff.map((s) => ({
+      id: s.id,
+      fullName: s.fullName,
+      jobTitle: s.jobTitle,
+      approvalStatus: s.approvalStatus,
+      isActive: s.isActive,
+      profilePhotoUrl: s.profilePhotoUrl,
+    })),
+  });
+}
+
 export async function POST(req: NextRequest) {
   const session = await auth();
   if (!session?.user || !session.user.isProvider) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });

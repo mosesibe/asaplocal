@@ -13,6 +13,24 @@ const schema = z.object({
   inStock: z.boolean().optional(),
 });
 
+// JSON counterpart to /supplies (a server component that queries Prisma
+// directly) — needed for the mobile app's supplies screen, which has no
+// server component to fetch this in.
+export async function GET() {
+  const session = await auth();
+  if (!session?.user) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+
+  const business = await prisma.business.findUnique({ where: { ownerId: session.user.id } });
+  if (!business) return NextResponse.json({ message: "No business profile found" }, { status: 404 });
+
+  const supplies = await prisma.supply.findMany({
+    where: { businessId: business.id },
+    orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+  });
+
+  return NextResponse.json({ supplies });
+}
+
 export async function POST(req: NextRequest) {
   const session = await auth();
   if (!session?.user || !session.user.isProvider) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });

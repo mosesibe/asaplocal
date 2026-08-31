@@ -1,40 +1,10 @@
-import { Tabs, TabList, TabTrigger, TabSlot, type TabTriggerSlotProps } from 'expo-router/ui';
-import { StyleSheet } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Target, MessageSquare, User } from 'lucide-react-native';
-import { BottomNav, BottomNavItem } from '@asaplocal/ui-native';
+import { Slot } from 'expo-router';
 
-// expo-router/ui's cross-platform Tabs (rather than unstable-native-tabs) —
-// chosen so this renders identically under `expo start --web` for
-// verification without a device/simulator, at the cost of not being a true
-// native tab bar. Revisit once there's a device to test the native chrome.
-export default function TabLayout() {
-  const insets = useSafeAreaInsets();
-
-  return (
-    <Tabs>
-      <TabSlot style={styles.slot} />
-      <TabList asChild>
-        <BottomNav style={{ position: 'absolute', left: 0, right: 0, bottom: 16 + insets.bottom }}>
-          <TabTrigger name="leads" href="/" asChild>
-            <TabButton icon={Target} label="Leads" />
-          </TabTrigger>
-          <TabTrigger name="messages" href="/messages" asChild>
-            <TabButton icon={MessageSquare} label="Messages" />
-          </TabTrigger>
-          <TabTrigger name="account" href="/account" asChild>
-            <TabButton icon={User} label="Account" />
-          </TabTrigger>
-        </BottomNav>
-      </TabList>
-    </Tabs>
-  );
+// Navigation chrome (ProviderTopBar + FloatingBottomNav) moved to the root
+// layout as global, always-present elements (matching apps/provider's
+// ProviderShell, which wraps every authenticated route the same way) — this
+// group is now just a folder for route organisation, not a real tab
+// navigator.
+export default function TabsGroupLayout() {
+  return <Slot />;
 }
-
-function TabButton({ icon, label, isFocused, ...props }: TabTriggerSlotProps & { icon: typeof Target; label: string }) {
-  return <BottomNavItem icon={icon} label={label} active={isFocused} {...props} />;
-}
-
-const styles = StyleSheet.create({
-  slot: { flex: 1 },
-});

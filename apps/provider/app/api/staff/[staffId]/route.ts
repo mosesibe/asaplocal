@@ -13,6 +13,35 @@ const schema = z.object({
   idBackImageUrl: z.string().url(),
 });
 
+// JSON counterpart to /staff/[staffId] (a server component that queries
+// Prisma directly) — needed for the mobile app's staff detail/edit screen,
+// which has no server component to fetch this in.
+export async function GET(req: NextRequest, { params }: { params: Promise<{ staffId: string }> }) {
+  const { staffId } = await params;
+  const session = await auth();
+  if (!session?.user || !session.user.isProvider) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+
+  const business = await prisma.business.findUnique({ where: { ownerId: session.user.id } });
+  if (!business) return NextResponse.json({ message: "Complete onboarding first" }, { status: 400 });
+
+  const staffMember = await prisma.staffMember.findUnique({ where: { id: staffId } });
+  if (!staffMember || staffMember.businessId !== business.id) return NextResponse.json({ message: "Not found" }, { status: 404 });
+
+  return NextResponse.json({
+    id: staffMember.id,
+    fullName: staffMember.fullName,
+    jobTitle: staffMember.jobTitle,
+    phone: staffMember.phone,
+    email: staffMember.email,
+    profilePhotoUrl: staffMember.profilePhotoUrl,
+    idFrontImageUrl: staffMember.idFrontImageUrl,
+    idBackImageUrl: staffMember.idBackImageUrl,
+    approvalStatus: staffMember.approvalStatus,
+    isActive: staffMember.isActive,
+    reviewNote: staffMember.reviewNote,
+  });
+}
+
 /** Editing an identity-critical field (name/photo/ID images) sends the record back for re-review, same as the rest of verification. */
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ staffId: string }> }) {
   const { staffId } = await params;

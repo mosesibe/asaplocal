@@ -11,6 +11,32 @@ const schema = z.object({
   relationshipNote: z.string().optional(),
 });
 
+// JSON counterpart to /references (a server component that queries Prisma
+// directly) — needed for the mobile app's references screen, which has no
+// server component to fetch this in.
+export async function GET() {
+  const session = await auth();
+  if (!session?.user) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+
+  const business = await prisma.business.findUnique({ where: { ownerId: session.user.id } });
+  if (!business) return NextResponse.json({ message: "Complete onboarding first" }, { status: 400 });
+
+  const references = await prisma.businessReference.findMany({
+    where: { businessId: business.id },
+    orderBy: { requestedAt: "desc" },
+  });
+
+  return NextResponse.json({
+    references: references.map((r) => ({
+      id: r.id,
+      refereeName: r.refereeName,
+      refereeEmail: r.refereeEmail,
+      status: r.status,
+      testimonial: r.testimonial,
+    })),
+  });
+}
+
 export async function POST(req: NextRequest) {
   const session = await auth();
   if (!session?.user || !session.user.isProvider) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });

@@ -9,6 +9,9 @@ interface SessionContextValue {
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
+  /** Re-fetches the current user — e.g. after onboarding creates a Business,
+   * so `user.hasBusiness` flips without requiring a fresh login. */
+  refresh: () => Promise<void>;
 }
 
 const SessionContext = createContext<SessionContextValue | null>(null);
@@ -17,12 +20,14 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<MobileUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    api
-      .me()
-      .then(setUser)
-      .finally(() => setIsLoading(false));
+  const refresh = useCallback(async () => {
+    const current = await api.me();
+    setUser(current);
   }, []);
+
+  useEffect(() => {
+    refresh().finally(() => setIsLoading(false));
+  }, [refresh]);
 
   // Best-effort: a push token failing to register shouldn't block sign-in —
   // the provider just won't get native lead notifications on that device.
@@ -49,7 +54,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     setUser(null);
   }, []);
 
-  const value = useMemo(() => ({ user, isLoading, login, logout }), [user, isLoading, login, logout]);
+  const value = useMemo(() => ({ user, isLoading, login, logout, refresh }), [user, isLoading, login, logout, refresh]);
 
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;
 }

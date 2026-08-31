@@ -14,6 +14,37 @@ const schema = z.object({
   photoUrls: z.array(z.string().url()).default([]),
 });
 
+// JSON counterpart to /portfolio (a server component that queries Prisma
+// directly) — needed for the mobile app's portfolio screen, which has no
+// server component to fetch this in.
+export async function GET() {
+  const session = await auth();
+  if (!session?.user) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+
+  const business = await prisma.business.findUnique({ where: { ownerId: session.user.id } });
+  if (!business) return NextResponse.json({ message: "Complete onboarding first" }, { status: 400 });
+
+  const items = await prisma.portfolioItem.findMany({
+    where: { businessId: business.id },
+    orderBy: { createdAt: "desc" },
+    include: { category: true },
+  });
+
+  return NextResponse.json({
+    items: items.map((i) => ({
+      id: i.id,
+      title: i.title,
+      description: i.description,
+      categoryId: i.categoryId,
+      categoryName: i.category?.name ?? null,
+      beforeUrl: i.beforeUrl,
+      afterUrl: i.afterUrl,
+      videoUrl: i.videoUrl,
+      photoUrls: i.photoUrls,
+    })),
+  });
+}
+
 export async function POST(req: NextRequest) {
   const session = await auth();
   if (!session?.user || !session.user.isProvider) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
