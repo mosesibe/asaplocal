@@ -6,6 +6,7 @@ import { Screen, Text, Button, TextField, useAppTheme } from '@asaplocal/ui-nati
 import { api } from '@/lib/api';
 import { ApiError } from '@asaplocal/api-client';
 import { LocationPicker, type LocationValue } from '@/components/LocationPicker';
+import { PreferredDatePicker, toPreferredDateTime, type PreferredDateValue } from '@/components/PreferredDatePicker';
 
 interface Category {
   id: string;
@@ -40,6 +41,7 @@ export default function NewJobScreen() {
   const [title, setTitle] = useState(prefill.title ?? '');
   const [description, setDescription] = useState(prefill.description ?? '');
   const [location, setLocation] = useState<LocationValue>({ addressLine: '', city: '' });
+  const [preferredDate, setPreferredDate] = useState<PreferredDateValue | null>(null);
   const [budgetMin, setBudgetMin] = useState(prefill.budgetMinPence ? String(Number(prefill.budgetMinPence) / 100) : '');
   const [budgetMax, setBudgetMax] = useState(prefill.budgetMaxPence ? String(Number(prefill.budgetMaxPence) / 100) : '');
   const [loading, setLoading] = useState(true);
@@ -74,6 +76,8 @@ export default function NewJobScreen() {
       if (location.postcode?.trim()) body.postcode = location.postcode.trim();
       if (location.lat != null) body.lat = location.lat;
       if (location.lng != null) body.lng = location.lng;
+      body.preferredDate = preferredDate ? toPreferredDateTime(preferredDate) : undefined;
+      body.flexibleDate = preferredDate ? preferredDate.time === null : true;
       if (budgetMin.trim()) body.budgetMinPence = Math.round(Number(budgetMin) * 100);
       if (budgetMax.trim()) body.budgetMaxPence = Math.round(Number(budgetMax) * 100);
       if (prefill.photos) body.photos = JSON.parse(prefill.photos);
@@ -88,7 +92,7 @@ export default function NewJobScreen() {
     } finally {
       setSubmitting(false);
     }
-  }, [categoryId, title, description, location, budgetMin, budgetMax, prefill, router]);
+  }, [categoryId, title, description, location, preferredDate, budgetMin, budgetMax, prefill, router]);
 
   if (loading) {
     return (
@@ -150,17 +154,22 @@ export default function NewJobScreen() {
         <TextField placeholder="Describe what you need done" multiline value={description} onChangeText={setDescription} />
 
         <Text variant="bodyMedium" style={styles.label}>
-          Location
-        </Text>
-        <LocationPicker value={location} onChange={setLocation} />
-
-        <Text variant="bodyMedium" style={styles.label}>
           Budget (optional)
         </Text>
         <View style={styles.row}>
           <TextField style={styles.halfInput} placeholder="Min £" keyboardType="decimal-pad" value={budgetMin} onChangeText={setBudgetMin} />
           <TextField style={styles.halfInput} placeholder="Max £" keyboardType="decimal-pad" value={budgetMax} onChangeText={setBudgetMax} />
         </View>
+
+        <Text variant="bodyMedium" style={styles.label}>
+          Preferred date & arrival time (optional)
+        </Text>
+        <PreferredDatePicker value={preferredDate} onChange={setPreferredDate} />
+
+        <Text variant="bodyMedium" style={styles.label}>
+          Service location
+        </Text>
+        <LocationPicker value={location} onChange={setLocation} />
 
         {error && (
           <Text variant="small" style={styles.error}>
@@ -169,8 +178,11 @@ export default function NewJobScreen() {
         )}
 
         <Button onPress={handleSubmit} loading={submitting} style={styles.submitButton}>
-          Post job
+          {prefill.businessId ? 'Send request' : 'Post job & get quotes'}
         </Button>
+        <Text variant="caption" color="muted" style={styles.footerNote}>
+          Posting is free. Providers pay to access your request — you'll never be charged for quotes.
+        </Text>
       </ScrollView>
     </Screen>
   );
@@ -191,5 +203,6 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', gap: 8 },
   halfInput: { flex: 1 },
   submitButton: { marginTop: 24 },
+  footerNote: { textAlign: 'center', marginTop: 10 },
   error: { color: '#dc2626', marginTop: 8 },
 });

@@ -6,6 +6,7 @@ import { Screen, Text, Button, TextField, useAppTheme } from '@asaplocal/ui-nati
 import { api } from '@/lib/api';
 import { ApiError } from '@asaplocal/api-client';
 import { LocationPicker, type LocationValue } from '@/components/LocationPicker';
+import { PreferredDatePicker, toPreferredDateTime, type PreferredDateValue } from '@/components/PreferredDatePicker';
 
 interface Category {
   id: string;
@@ -26,6 +27,8 @@ interface JobDetail {
     status: string;
     budgetMinPence: number | null;
     budgetMaxPence: number | null;
+    preferredDate: string | null;
+    flexibleDate: boolean;
   };
 }
 
@@ -40,6 +43,7 @@ export default function EditJobScreen() {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [location, setLocation] = useState<LocationValue>({ addressLine: '', city: '' });
+  const [preferredDate, setPreferredDate] = useState<PreferredDateValue | null>(null);
   const [budgetMin, setBudgetMin] = useState('');
   const [budgetMax, setBudgetMax] = useState('');
   const [loading, setLoading] = useState(true);
@@ -58,6 +62,12 @@ export default function EditJobScreen() {
         setTitle(job.title);
         setDescription(job.description);
         setLocation({ addressLine: job.addressLine ?? '', city: job.city, postcode: job.postcode ?? undefined });
+        if (job.preferredDate) {
+          const d = new Date(job.preferredDate);
+          const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+          const time = job.flexibleDate ? null : `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+          setPreferredDate({ date: iso, time });
+        }
         if (job.budgetMinPence) setBudgetMin(String(job.budgetMinPence / 100));
         if (job.budgetMaxPence) setBudgetMax(String(job.budgetMaxPence / 100));
       })
@@ -84,6 +94,8 @@ export default function EditJobScreen() {
       if (location.postcode?.trim()) body.postcode = location.postcode.trim();
       if (location.lat != null) body.lat = location.lat;
       if (location.lng != null) body.lng = location.lng;
+      body.preferredDate = preferredDate ? toPreferredDateTime(preferredDate) : undefined;
+      body.flexibleDate = preferredDate ? preferredDate.time === null : true;
       body.budgetMinPence = budgetMin.trim() ? Math.round(Number(budgetMin) * 100) : undefined;
       body.budgetMaxPence = budgetMax.trim() ? Math.round(Number(budgetMax) * 100) : undefined;
 
@@ -94,7 +106,7 @@ export default function EditJobScreen() {
     } finally {
       setSubmitting(false);
     }
-  }, [categoryId, title, description, location, budgetMin, budgetMax, id, router]);
+  }, [categoryId, title, description, location, preferredDate, budgetMin, budgetMax, id, router]);
 
   if (loading) {
     return (
@@ -149,17 +161,22 @@ export default function EditJobScreen() {
         <TextField multiline value={description} onChangeText={setDescription} />
 
         <Text variant="bodyMedium" style={styles.label}>
-          Location
-        </Text>
-        <LocationPicker value={location} onChange={setLocation} />
-
-        <Text variant="bodyMedium" style={styles.label}>
           Budget (optional)
         </Text>
         <View style={styles.row}>
           <TextField style={styles.halfInput} placeholder="Min £" keyboardType="decimal-pad" value={budgetMin} onChangeText={setBudgetMin} />
           <TextField style={styles.halfInput} placeholder="Max £" keyboardType="decimal-pad" value={budgetMax} onChangeText={setBudgetMax} />
         </View>
+
+        <Text variant="bodyMedium" style={styles.label}>
+          Preferred date & arrival time (optional)
+        </Text>
+        <PreferredDatePicker value={preferredDate} onChange={setPreferredDate} />
+
+        <Text variant="bodyMedium" style={styles.label}>
+          Service location
+        </Text>
+        <LocationPicker value={location} onChange={setLocation} />
 
         {error && (
           <Text variant="small" style={styles.error}>

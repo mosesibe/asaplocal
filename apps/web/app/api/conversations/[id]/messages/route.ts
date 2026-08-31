@@ -11,9 +11,25 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
   const participant = await prisma.conversationParticipant.findUnique({ where: { conversationId_userId: { conversationId: id, userId: session.user.id } } });
   if (!participant) return NextResponse.json({ message: "Forbidden" }, { status: 403 });
 
+  // Extended to also carry the header info /messages/[id]/page.tsx shows
+  // (recipient name — business, not personal — plus the "View job" link) so
+  // the mobile client doesn't need a second round trip for it.
+  const conversation = await prisma.conversation.findUnique({
+    where: { id },
+    include: { participants: { include: { user: { include: { profile: true, business: true } } } }, jobRequest: true },
+  });
+  const other = conversation?.participants.find((p) => p.userId !== session.user.id);
+  const recipientName = other?.user.business?.name ?? other?.user.profile?.firstName ?? "User";
+
   const messages = await prisma.message.findMany({ where: { conversationId: id }, orderBy: { createdAt: "asc" }, take: 200 });
   await prisma.conversationParticipant.update({ where: { conversationId_userId: { conversationId: id, userId: session.user.id } }, data: { lastReadAt: new Date() } });
-  return NextResponse.json({ messages });
+  return NextResponse.json({
+    recipientName,
+    jobRequestId: conversation?.jobRequestId ?? null,
+    jobTitle: conversation?.jobRequest?.title ?? null,
+    jobCity: conversation?.jobRequest?.city ?? null,
+    messages,
+  });
 }
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {

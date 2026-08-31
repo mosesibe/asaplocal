@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, FlatList, Image, KeyboardAvoidingView, Platform, Pressable, StyleSheet, View } from 'react-native';
-import { useLocalSearchParams } from 'expo-router';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { Paperclip, X } from 'lucide-react-native';
-import { Screen, Text, TextField, useAppTheme } from '@asaplocal/ui-native';
+import { Card, Screen, Text, TextField, useAppTheme } from '@asaplocal/ui-native';
 
 import { api } from '@/lib/api';
 import { useSession } from '@/lib/session';
@@ -16,6 +16,13 @@ interface Message {
   attachments: string[];
   createdAt: string;
 }
+interface MessagesResponse {
+  recipientName: string;
+  jobRequestId: string | null;
+  jobTitle: string | null;
+  jobCity: string | null;
+  messages: Message[];
+}
 
 // Polls rather than subscribing to Pusher (which the web app uses) — keeps
 // the mobile client simpler for now at the cost of a few seconds' latency.
@@ -24,9 +31,11 @@ const POLL_INTERVAL_MS = 5000;
 
 export default function ConversationScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const router = useRouter();
   const { user } = useSession();
   const { colors, radius, spacing } = useAppTheme();
   const [messages, setMessages] = useState<Message[]>([]);
+  const [header, setHeader] = useState<{ recipientName: string; jobRequestId: string | null; jobTitle: string | null; jobCity: string | null } | null>(null);
   const [loading, setLoading] = useState(true);
   const [draft, setDraft] = useState('');
   const [attachments, setAttachments] = useState<string[]>([]);
@@ -36,8 +45,9 @@ export default function ConversationScreen() {
 
   const load = useCallback(async () => {
     try {
-      const res = await api.request<{ messages: Message[] }>(`/api/conversations/${id}/messages`);
+      const res = await api.request<MessagesResponse>(`/api/conversations/${id}/messages`);
       setMessages(res.messages);
+      setHeader({ recipientName: res.recipientName, jobRequestId: res.jobRequestId, jobTitle: res.jobTitle, jobCity: res.jobCity });
     } catch {
       // best-effort poll — leaves the last known messages in place
     }
@@ -101,6 +111,29 @@ export default function ConversationScreen() {
   return (
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={90}>
       <Screen>
+        {header && <Stack.Screen options={{ title: header.recipientName }} />}
+        {header && (header.jobRequestId || header.jobTitle) && (
+          <Card style={[styles.headerCard, { margin: spacing.four, marginBottom: 0 }]}>
+            <View style={styles.headerRow}>
+              <Text variant="bodyMedium" style={styles.flexShrink}>
+                {header.recipientName}
+              </Text>
+              {header.jobRequestId && (
+                <Pressable onPress={() => router.push(`/jobs/${header.jobRequestId}`)}>
+                  <Text variant="smallMedium" color="brand">
+                    View job
+                  </Text>
+                </Pressable>
+              )}
+            </View>
+            {header.jobTitle && (
+              <Text variant="small" color="muted" numberOfLines={1}>
+                {header.jobTitle}
+                {header.jobCity ? ` · ${header.jobCity}` : ''}
+              </Text>
+            )}
+          </Card>
+        )}
         <FlatList
           ref={listRef}
           data={messages}
@@ -172,6 +205,9 @@ export default function ConversationScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   centered: { alignItems: 'center', justifyContent: 'center' },
+  headerCard: { gap: 2 },
+  headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8 },
+  flexShrink: { flexShrink: 1 },
   list: { gap: 8 },
   bubbleRow: { flexDirection: 'row' },
   bubbleRowMine: { justifyContent: 'flex-end' },
