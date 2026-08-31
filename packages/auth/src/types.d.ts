@@ -18,6 +18,13 @@ declare module "next-auth" {
       // or an existing customer confirmed their password to add a business
       // (role stays "CUSTOMER" in that case; see User.providerSince).
       isProvider: boolean;
+      // Whether a Business row exists yet — distinct from isProvider (role
+      // can flip to PROVIDER at registration before onboarding ever runs).
+      // Optional: only populated on the bearer.ts (mobile) path today; web
+      // pages check `!!business` directly via Prisma in their own server
+      // components instead of reading this off the session, and the
+      // NextAuth JWT/session callbacks never set it.
+      hasBusiness?: boolean;
     } & DefaultSession["user"];
   }
   interface User {
@@ -26,6 +33,7 @@ declare module "next-auth" {
     isEmailVerified: boolean;
     isPhoneVerified: boolean;
     isProvider: boolean;
+    hasBusiness?: boolean;
   }
 }
 

@@ -25,5 +25,6 @@ export async function verifyCredentials(email: string, password: string): Promis
     isEmailVerified: !!user.emailVerified,
     isPhoneVerified: !!user.phoneVerifiedAt,
     isProvider: user.role === "PROVIDER" || !!user.business || !!user.providerSince,
+    hasBusiness: !!user.business,
   };
 }

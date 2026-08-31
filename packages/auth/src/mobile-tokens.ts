@@ -34,6 +34,11 @@ export interface MobileTokenUser {
   isEmailVerified: boolean;
   isPhoneVerified: boolean;
   isProvider: boolean;
+  // Whether a Business row exists yet — distinct from isProvider (role can
+  // flip to PROVIDER at registration before onboarding ever runs). The
+  // mobile-provider app uses this to gate into /onboarding, mirroring
+  // apps/provider's own server-component redirect (`!business → /onboarding`).
+  hasBusiness: boolean;
 }
 
 export interface MobileAccessTokenPayload {
@@ -86,6 +91,7 @@ async function userToTokenUser(userId: string): Promise<MobileTokenUser | null> 
     isEmailVerified: !!user.emailVerified,
     isPhoneVerified: !!user.phoneVerifiedAt,
     isProvider: user.role === "PROVIDER" || !!user.business || !!user.providerSince,
+    hasBusiness: !!user.business,
   };
 }
 

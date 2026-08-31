@@ -39,6 +39,7 @@ export async function auth(): Promise<Session | null> {
       isEmailVerified: !!user.emailVerified,
       isPhoneVerified: !!user.phoneVerifiedAt,
       isProvider: user.role === "PROVIDER" || !!user.business || !!user.providerSince,
+      hasBusiness: !!user.business,
     },
     expires: new Date(payload.exp * 1000).toISOString(),
   };
