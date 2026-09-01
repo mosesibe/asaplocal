@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, FlatList, Keyboard, KeyboardAvoidingView, Platform, Pressable, StyleSheet, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { ArrowUp, Sparkles } from 'lucide-react-native';
 import { Badge, Card, Screen, Text, TextField, useAppTheme, useBottomNavInset } from '@asaplocal/ui-native';
 
 import { api } from '@/lib/api';
@@ -206,27 +207,25 @@ export default function ConversationScreen() {
             </Text>
           }
         />
-        <View style={[styles.inputRow, { borderTopColor: colors.border, paddingBottom: keyboardVisible ? safeAreaInsets.bottom : bottomInset }]}>
+        <View style={[styles.inputRow, { paddingBottom: keyboardVisible ? safeAreaInsets.bottom : bottomInset }]}>
+          <View style={[styles.pill, { backgroundColor: colors.muted, borderRadius: radius.full }]}>
+            <Pressable onPress={handleSuggestReply} disabled={suggesting} style={styles.pillIcon} hitSlop={4}>
+              {suggesting ? <ActivityIndicator size="small" color={colors.brand[600]} /> : <Sparkles size={20} color={colors.mutedForeground} />}
+            </Pressable>
+            <TextField
+              style={[styles.pillInput, { backgroundColor: 'transparent', borderWidth: 0 }]}
+              placeholder="Message"
+              value={draft}
+              onChangeText={setDraft}
+              multiline
+            />
+          </View>
           <Pressable
-            style={[styles.suggestButton, { borderRadius: radius.lg, borderColor: colors.border }]}
-            onPress={handleSuggestReply}
-            disabled={suggesting}
-          >
-            {suggesting ? (
-              <ActivityIndicator size="small" color={colors.brand[600]} />
-            ) : (
-              <Text variant="smallMedium">✨</Text>
-            )}
-          </Pressable>
-          <TextField style={styles.input} placeholder="Message" value={draft} onChangeText={setDraft} multiline />
-          <Pressable
-            style={[styles.sendButton, { borderRadius: radius.lg, backgroundColor: colors.brand[600] }]}
             onPress={handleSend}
             disabled={sending || !draft.trim()}
+            style={[styles.sendCircle, { backgroundColor: colors.brand[600], opacity: draft.trim() ? 1 : 0.4 }]}
           >
-            <Text variant="smallMedium" color="inverse">
-              Send
-            </Text>
+            {sending ? <ActivityIndicator size="small" color="#fff" /> : <ArrowUp size={20} color="#fff" />}
           </Pressable>
         </View>
       </Screen>
@@ -251,21 +250,31 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-end',
     gap: 8,
-    padding: 16,
-    borderTopWidth: StyleSheet.hairlineWidth,
+    padding: 12,
   },
-  input: {
+  pill: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    minHeight: 44,
+    paddingLeft: 6,
+    paddingRight: 4,
+  },
+  pillIcon: {
+    width: 32,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  pillInput: {
     flex: 1,
     maxHeight: 100,
+    paddingVertical: 10,
   },
-  sendButton: {
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-  },
-  suggestButton: {
-    borderWidth: StyleSheet.hairlineWidth,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
+  sendCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
   },
