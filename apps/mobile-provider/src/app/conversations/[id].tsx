@@ -122,7 +122,7 @@ export default function ConversationScreen() {
   }
 
   return (
-    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={90}>
+    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : 'height'} keyboardVerticalOffset={90}>
       <Screen>
         {meta && (
           <Card style={[styles.metaCard, { marginHorizontal: spacing.four, marginTop: spacing.four }]}>

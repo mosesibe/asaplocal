@@ -110,7 +110,7 @@ export default function ConversationScreen() {
   }
 
   return (
-    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={90}>
+    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : 'height'} keyboardVerticalOffset={90}>
       <Screen>
         {header && <Stack.Screen options={{ title: header.recipientName }} />}
         {header && (header.jobRequestId || header.jobTitle) && (

@@ -173,7 +173,7 @@ export default function DashboardScreen() {
 function StatCard({ label, value, sub, onPress }: { label: string; value: string; sub?: string; onPress?: () => void }) {
   const { radius } = useAppTheme();
   const content = (
-    <Card style={[styles.statCard, { borderRadius: radius.lg }]}>
+    <Card style={[styles.statCardInner, { borderRadius: radius.lg }]}>
       <Text variant="bodyMedium">{value}</Text>
       <Text variant="caption" color="muted">
         {label}
@@ -185,7 +185,17 @@ function StatCard({ label, value, sub, onPress }: { label: string; value: string
       )}
     </Card>
   );
-  return onPress ? <Pressable onPress={onPress}>{content}</Pressable> : content;
+  // The Pressable (not just the Card) needs the width: a percentage width on
+  // the Card alone resolves against this wrapper, which — left unstyled —
+  // has no definite width of its own, so it collapsed to fit-content and
+  // wrapped every line one character at a time.
+  return onPress ? (
+    <Pressable onPress={onPress} style={styles.statCard}>
+      {content}
+    </Pressable>
+  ) : (
+    <View style={styles.statCard}>{content}</View>
+  );
 }
 
 const styles = StyleSheet.create({
@@ -197,7 +207,8 @@ const styles = StyleSheet.create({
   weekDay: { alignItems: 'center', gap: 6 },
   weekDot: { width: 8, height: 8, borderRadius: 4, borderWidth: 2 },
   statGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 20 },
-  statCard: { width: '48%', gap: 2 },
+  statCard: { width: '48%' },
+  statCardInner: { gap: 2 },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 24, marginBottom: 12 },
   leadCard: { gap: 4, marginBottom: 8 },
   leadRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8 },

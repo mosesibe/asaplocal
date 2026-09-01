@@ -46,7 +46,7 @@ export default function HomeScreen() {
   return (
     <Screen>
       <View style={styles.safeArea}>
-        <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={90}>
+        <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : 'height'} keyboardVerticalOffset={90}>
           <ScrollView contentContainerStyle={{ paddingBottom: bottomInset }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
             <View style={[styles.hero, { paddingHorizontal: spacing.four }]}>
               <Text variant="title" style={styles.heroTitle}>
