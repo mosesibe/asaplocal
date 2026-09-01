@@ -2,12 +2,12 @@ import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
-import * as ImagePicker from 'expo-image-picker';
 import { Star } from 'lucide-react-native';
 import { Screen, Card, Text, Badge, Button, useAppTheme, useBottomNavInset } from '@asaplocal/ui-native';
 
 import { api } from '@/lib/api';
 import { uploadImage } from '@/lib/upload';
+import { usePhotoPicker } from '@/lib/photo-picker';
 import { ApiError } from '@asaplocal/api-client';
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:3000';
@@ -459,15 +459,14 @@ function DisputeForm({ bookingId, onClose, onSubmitted }: { bookingId: string; o
   const [uploading, setUploading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { pick, sheet } = usePhotoPicker();
 
   async function addPhotos() {
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) return;
-    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.7, allowsMultipleSelection: true });
-    if (result.canceled) return;
+    const assets = await pick({ quality: 0.7, allowsMultipleSelection: true });
+    if (assets.length === 0) return;
     setUploading(true);
     try {
-      const urls = await Promise.all(result.assets.map((a) => uploadImage(a.uri, 'job-photo', a.mimeType ?? 'image/jpeg')));
+      const urls = await Promise.all(assets.map((a) => uploadImage(a.uri, 'job-photo', a.mimeType ?? 'image/jpeg')));
       setPhotos((prev) => [...prev, ...urls]);
     } catch {
       setError('Could not upload one or more photos.');
@@ -491,6 +490,7 @@ function DisputeForm({ bookingId, onClose, onSubmitted }: { bookingId: string; o
   }
 
   return (
+    <>
     <Card style={styles.card}>
       <Text variant="bodyMedium">What's wrong?</Text>
       <TextInput
@@ -525,6 +525,8 @@ function DisputeForm({ bookingId, onClose, onSubmitted }: { bookingId: string; o
         </Button>
       </View>
     </Card>
+    {sheet}
+    </>
   );
 }
 

@@ -6,6 +6,7 @@ import { ApiError } from '@asaplocal/api-client';
 
 import { api } from '@/lib/api';
 import { uploadImage } from '@/lib/upload';
+import { usePhotoPicker } from '@/lib/photo-picker';
 
 interface Category {
   id: string;
@@ -48,6 +49,7 @@ export default function PortfolioScreen() {
   const [submitting, setSubmitting] = useState(false);
   const [removingId, setRemovingId] = useState<string | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
+  const { pick: pickPhotoAsset, sheet } = usePhotoPicker();
 
   const load = useCallback(async () => {
     try {
@@ -68,40 +70,55 @@ export default function PortfolioScreen() {
     load();
   }, [load]);
 
-  const pick = useCallback(async (kind: 'before' | 'after' | 'video' | 'photo') => {
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) {
-      setError('Photo library permission is needed to attach media.');
-      return;
-    }
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: kind === 'video' ? ['videos'] : ['images'],
-      quality: 0.7,
-      allowsMultipleSelection: kind === 'photo',
-    });
-    if (result.canceled) return;
-
-    setUploading(kind);
-    setError(null);
-    try {
-      if (kind === 'photo') {
-        const urls = await Promise.all(
-          result.assets.map((a) => uploadImage(a.uri, 'portfolio-media', a.mimeType ?? 'image/jpeg'))
-        );
-        setPhotoUrls((p) => [...p, ...urls]);
-      } else {
-        const asset = result.assets[0];
-        const url = await uploadImage(asset.uri, 'portfolio-media', asset.mimeType ?? (kind === 'video' ? 'video/mp4' : 'image/jpeg'));
-        if (kind === 'before') setBeforeUrl(url);
-        else if (kind === 'after') setAfterUrl(url);
-        else setVideoUrl(url);
+  const pick = useCallback(
+    async (kind: 'before' | 'after' | 'video' | 'photo') => {
+      // Video capture isn't part of the shared camera/library picker (that
+      // sheet is photo-only) — keep it on the direct library flow.
+      if (kind === 'video') {
+        const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (!permission.granted) {
+          setError('Photo library permission is needed to attach media.');
+          return;
+        }
+        const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['videos'], quality: 0.7 });
+        if (result.canceled) return;
+        setUploading('video');
+        setError(null);
+        try {
+          const asset = result.assets[0];
+          const url = await uploadImage(asset.uri, 'portfolio-media', asset.mimeType ?? 'video/mp4');
+          setVideoUrl(url);
+        } catch (e) {
+          setError(e instanceof ApiError ? e.message : 'Upload failed.');
+        } finally {
+          setUploading(null);
+        }
+        return;
       }
-    } catch (e) {
-      setError(e instanceof ApiError ? e.message : 'Upload failed.');
-    } finally {
-      setUploading(null);
-    }
-  }, []);
+
+      const assets = await pickPhotoAsset({ quality: 0.7, allowsMultipleSelection: kind === 'photo' });
+      if (assets.length === 0) return;
+
+      setUploading(kind);
+      setError(null);
+      try {
+        if (kind === 'photo') {
+          const urls = await Promise.all(assets.map((a) => uploadImage(a.uri, 'portfolio-media', a.mimeType ?? 'image/jpeg')));
+          setPhotoUrls((p) => [...p, ...urls]);
+        } else {
+          const asset = assets[0];
+          const url = await uploadImage(asset.uri, 'portfolio-media', asset.mimeType ?? 'image/jpeg');
+          if (kind === 'before') setBeforeUrl(url);
+          else setAfterUrl(url);
+        }
+      } catch (e) {
+        setError(e instanceof ApiError ? e.message : 'Upload failed.');
+      } finally {
+        setUploading(null);
+      }
+    },
+    [pickPhotoAsset]
+  );
 
   const resetForm = useCallback(() => {
     setTitle('');
@@ -299,6 +316,7 @@ export default function PortfolioScreen() {
           </View>
         </Pressable>
       </Modal>
+      {sheet}
     </Screen>
   );
 }

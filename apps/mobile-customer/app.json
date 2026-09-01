@@ -41,7 +41,8 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "AsapLocal uses your photos to attach pictures of the space or job to your requests."
+          "photosPermission": "AsapLocal uses your photos to attach pictures of the space or job to your requests.",
+          "cameraPermission": "AsapLocal uses your camera so you can take a photo directly to attach to your request."
         }
       ],
       [

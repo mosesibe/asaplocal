@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { ActivityIndicator, Image, Pressable, StyleSheet, View } from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
 import { Camera } from 'lucide-react-native';
 import { Card, Text, useAppTheme } from '@asaplocal/ui-native';
 
 import { api } from '@/lib/api';
 import { uploadImage } from '@/lib/upload';
+import { usePhotoPicker } from '@/lib/photo-picker';
 
 const STATUS_LABEL: Record<string, { label: string; variant: 'success' | 'warning' | 'destructive' | 'outline' }> = {
   ACTIVE: { label: 'Active', variant: 'success' },
@@ -34,18 +34,17 @@ export function ProfileCard({ name, avatarUrl, contact, status, memberSince, tot
   const { colors, radius } = useAppTheme();
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { pick, sheet } = usePhotoPicker();
   const statusInfo = STATUS_LABEL[status] ?? { label: status, variant: 'outline' as const };
   const memberSinceLabel = new Date(memberSince).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' });
 
   async function pickAvatar() {
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) return;
-    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.8, allowsEditing: true, aspect: [1, 1] });
-    if (result.canceled) return;
+    const assets = await pick({ quality: 0.8, allowsEditing: true, aspect: [1, 1] });
+    if (assets.length === 0) return;
     setUploading(true);
     setError(null);
     try {
-      const asset = result.assets[0];
+      const asset = assets[0];
       const publicUrl = await uploadImage(asset.uri, 'user-avatar', asset.mimeType ?? 'image/jpeg');
       const res = await api.request<{ profile: { avatarUrl: string | null } }>('/api/account/profile', {
         method: 'PATCH',
@@ -60,7 +59,8 @@ export function ProfileCard({ name, avatarUrl, contact, status, memberSince, tot
   }
 
   return (
-    <Card style={[styles.card, { borderRadius: radius.xl }]}>
+    <>
+      <Card style={[styles.card, { borderRadius: radius.xl }]}>
       <View style={styles.row}>
         <Pressable onPress={pickAvatar} disabled={uploading} style={styles.avatarWrap}>
           <View style={[styles.avatar, { backgroundColor: colors.muted }]}>
@@ -99,7 +99,9 @@ export function ProfileCard({ name, avatarUrl, contact, status, memberSince, tot
           </Text>
         </View>
       </View>
-    </Card>
+      </Card>
+      {sheet}
+    </>
   );
 }
 

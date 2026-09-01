@@ -1,11 +1,16 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
+import { Modal, Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
+import { ChevronRight, X } from 'lucide-react-native';
 import { Screen, Card, Text, Badge, useAppTheme, useBottomNavInset } from '@asaplocal/ui-native';
 
 import { api } from '@/lib/api';
 import { RadarMap } from '@/components/RadarMap';
 
+interface DailyEarning {
+  date: string;
+  amountPence: number;
+}
 interface DashboardData {
   bookingsCount: number;
   avgRating: number;
@@ -14,13 +19,15 @@ interface DashboardData {
   plan: string;
   leadCreditBalance: number;
   analytics: { total: number; conversionRate: number };
-  earnings: { weekTotalPence: number; allTimePence: number };
+  earnings: { weekTotalPence: number; allTimePence: number; dailyBreakdown: DailyEarning[] };
   weekBookingDates: string[];
   center: { lat: number; lng: number };
   baseRadiusMiles: number;
   serviceAreas: { lat: number; lng: number; radiusMiles: number }[];
   recentLeads: { id: string; leadId: string; title: string; city: string; acquisitionType: string; status: string }[];
 }
+
+const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
 function formatPence(pence: number): string {
   return `£${(pence / 100).toFixed(2)}`;
@@ -35,9 +42,20 @@ function startOfWeek(date: Date): Date {
   return d;
 }
 
-// Ports apps/provider/app/dashboard/page.tsx, including the RadarMap
-// (business location, service-area circles, nearby-lead pins) via a native
-// react-native-maps port — see src/components/RadarMap.tsx.
+// A plain `.toISOString().slice(0, 10)` (as apps/provider/app/dashboard's
+// own startOfWeek/WeekCalendarStrip use) works fine there because it runs
+// server-side, where the process's local time already is UTC — but here on
+// a device with a real local timezone, converting a local midnight to UTC
+// walks it back a calendar day for any positive offset (e.g. BST, UTC+1),
+// which silently highlighted the *next* day as "today" for every UK user.
+// This keeps the date key in the device's own local calendar instead.
+function localIsoDate(d: Date): string {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 export default function DashboardScreen() {
   const router = useRouter();
   const { colors, radius, spacing } = useAppTheme();
@@ -45,6 +63,7 @@ export default function DashboardScreen() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [earningsModalOpen, setEarningsModalOpen] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -76,11 +95,16 @@ export default function DashboardScreen() {
   }
 
   const weekStart = startOfWeek(new Date());
+  const todayIso = localIsoDate(new Date());
   const weekDays = Array.from({ length: 7 }, (_, i) => {
     const d = new Date(weekStart);
     d.setDate(d.getDate() + i);
     return d;
   });
+  // Defensive fallback: guards a device that hasn't picked up the backend
+  // deploy adding dailyBreakdown yet against a hard crash on this screen.
+  const dailyBreakdown = data.earnings.dailyBreakdown ?? [];
+  const maxDailyEarning = Math.max(1, ...dailyBreakdown.map((d) => d.amountPence));
 
   return (
     <Screen>
@@ -88,39 +112,53 @@ export default function DashboardScreen() {
         contentContainerStyle={{ padding: spacing.four, paddingBottom: bottomInset }}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
       >
-        <Card style={[styles.earningsCard, { borderRadius: radius.xl }]}>
-          <Text variant="small" color="muted">
-            Earned this week
-          </Text>
-          <Text variant="title" style={styles.earningsValue}>
-            {formatPence(data.earnings.weekTotalPence)}
-          </Text>
-          <Text variant="caption" color="muted">
-            {formatPence(data.earnings.allTimePence)} all-time
-          </Text>
-        </Card>
+        <Pressable onPress={() => setEarningsModalOpen(true)}>
+          <Card style={[styles.earningsCard, { borderRadius: radius.xl }]}>
+            <View style={styles.flex1}>
+              <Text variant="small" color="muted">
+                Earnings this week
+              </Text>
+              <Text variant="title" style={styles.earningsValue}>
+                {formatPence(data.earnings.weekTotalPence)}
+              </Text>
+              <Text variant="caption" color="muted">
+                {formatPence(data.earnings.allTimePence)} all time
+              </Text>
+            </View>
+            <ChevronRight size={20} color={colors.mutedForeground} />
+          </Card>
+        </Pressable>
 
-        <View style={styles.weekStrip}>
-          {weekDays.map((d) => {
-            const iso = d.toISOString().slice(0, 10);
-            const hasBooking = data.weekBookingDates.includes(iso);
-            const isToday = iso === new Date().toISOString().slice(0, 10);
-            return (
-              <View key={iso} style={styles.weekDay}>
-                <Text variant="caption" color="muted">
-                  {d.toLocaleDateString('en-GB', { weekday: 'narrow' })}
-                </Text>
-                <View
-                  style={[
-                    styles.weekDot,
-                    { borderColor: isToday ? colors.brand[600] : 'transparent' },
-                    hasBooking && { backgroundColor: colors.brand[600] },
-                  ]}
-                />
-              </View>
-            );
-          })}
-        </View>
+        <Pressable onPress={() => router.navigate('/calendar')}>
+          <Card style={[styles.weekCard, { borderRadius: radius.xl }]}>
+            <View style={styles.weekStrip}>
+              {weekDays.map((d) => {
+                const iso = localIsoDate(d);
+                const hasBooking = data.weekBookingDates.includes(iso);
+                const isToday = iso === todayIso;
+                return (
+                  <View key={iso} style={styles.weekDay}>
+                    <Text variant="caption" color="muted">
+                      {DAY_LABELS[(d.getDay() + 6) % 7]}
+                    </Text>
+                    <View
+                      style={[
+                        styles.weekNumWrap,
+                        { borderRadius: radius.full },
+                        isToday && { backgroundColor: colors.brand[500] },
+                      ]}
+                    >
+                      <Text variant="smallMedium" color={isToday ? 'inverse' : 'foreground'}>
+                        {d.getDate()}
+                      </Text>
+                    </View>
+                    <View style={[styles.weekDot, hasBooking && { backgroundColor: colors.brand[500] }]} />
+                  </View>
+                );
+              })}
+            </View>
+          </Card>
+        </Pressable>
 
         <View style={styles.mapSection}>
           <RadarMap center={data.center} baseRadiusMiles={data.baseRadiusMiles} serviceAreas={data.serviceAreas} />
@@ -166,6 +204,58 @@ export default function DashboardScreen() {
           ))
         )}
       </ScrollView>
+
+      <Modal visible={earningsModalOpen} transparent animationType="slide" onRequestClose={() => setEarningsModalOpen(false)}>
+        <View style={styles.modalOverlay}>
+          <Pressable style={styles.modalBackdrop} onPress={() => setEarningsModalOpen(false)} />
+          <Card style={[styles.modalSheet, { backgroundColor: colors.surface, borderTopLeftRadius: radius.xl, borderTopRightRadius: radius.xl }]}>
+            <View style={styles.modalHeader}>
+              <Text variant="subtitle">This week's earnings</Text>
+              <Pressable onPress={() => setEarningsModalOpen(false)} hitSlop={8}>
+                <X size={20} color={colors.mutedForeground} />
+              </Pressable>
+            </View>
+
+            <View style={styles.breakdownList}>
+              {dailyBreakdown.map((d, i) => (
+                <View key={d.date} style={styles.breakdownRow}>
+                  <Text variant="caption" color="muted" style={styles.breakdownLabel}>
+                    {DAY_LABELS[i]}
+                  </Text>
+                  <View style={[styles.breakdownTrack, { backgroundColor: colors.muted, borderRadius: radius.full }]}>
+                    <View
+                      style={[
+                        styles.breakdownFill,
+                        {
+                          width: `${Math.max(4, (d.amountPence / maxDailyEarning) * 100)}%`,
+                          backgroundColor: colors.brand[500],
+                          borderRadius: radius.full,
+                        },
+                      ]}
+                    />
+                  </View>
+                  <Text variant="caption" style={styles.breakdownValue}>
+                    {formatPence(d.amountPence)}
+                  </Text>
+                </View>
+              ))}
+            </View>
+
+            <View style={[styles.modalTotalRow, { borderTopColor: colors.border }]}>
+              <Text variant="small" color="muted">
+                Week total
+              </Text>
+              <Text variant="smallMedium">{formatPence(data.earnings.weekTotalPence)}</Text>
+            </View>
+            <View style={styles.modalTotalRow}>
+              <Text variant="small" color="muted">
+                All time
+              </Text>
+              <Text variant="smallMedium">{formatPence(data.earnings.allTimePence)}</Text>
+            </View>
+          </Card>
+        </View>
+      </Modal>
     </Screen>
   );
 }
@@ -200,12 +290,15 @@ function StatCard({ label, value, sub, onPress }: { label: string; value: string
 
 const styles = StyleSheet.create({
   centered: { alignItems: 'center', justifyContent: 'center' },
-  earningsCard: { gap: 2 },
-  earningsValue: { fontSize: 28, lineHeight: 34 },
-  weekStrip: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 16 },
+  flex1: { flex: 1 },
+  earningsCard: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
+  earningsValue: { fontSize: 28, lineHeight: 34, marginTop: 2 },
+  weekCard: { marginTop: 12, padding: 12 },
+  weekStrip: { flexDirection: 'row', justifyContent: 'space-between' },
   mapSection: { marginTop: 20 },
-  weekDay: { alignItems: 'center', gap: 6 },
-  weekDot: { width: 8, height: 8, borderRadius: 4, borderWidth: 2 },
+  weekDay: { alignItems: 'center', gap: 4 },
+  weekNumWrap: { width: 28, height: 28, alignItems: 'center', justifyContent: 'center' },
+  weekDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: 'transparent' },
   statGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 20 },
   statCard: { width: '48%' },
   statCardInner: { gap: 2 },
@@ -213,4 +306,15 @@ const styles = StyleSheet.create({
   leadCard: { gap: 4, marginBottom: 8 },
   leadRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8 },
   flexShrink: { flexShrink: 1 },
+  modalOverlay: { flex: 1, justifyContent: 'flex-end' },
+  modalBackdrop: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.4)' },
+  modalSheet: { borderBottomLeftRadius: 0, borderBottomRightRadius: 0 },
+  modalHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 },
+  breakdownList: { gap: 10 },
+  breakdownRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  breakdownLabel: { width: 32 },
+  breakdownTrack: { flex: 1, height: 8, overflow: 'hidden' },
+  breakdownFill: { height: '100%' },
+  breakdownValue: { width: 64, textAlign: 'right' },
+  modalTotalRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 14, paddingTop: 14, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: 'transparent' },
 });

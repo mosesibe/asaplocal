@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Switch, View } from 'react-native';
 import { useRouter } from 'expo-router';
-import * as ImagePicker from 'expo-image-picker';
 import { Trash2, X } from 'lucide-react-native';
 import { Screen, Card, Text, Button, TextField, useAppTheme } from '@asaplocal/ui-native';
 import { ApiError } from '@asaplocal/api-client';
@@ -9,6 +8,7 @@ import Slider from '@react-native-community/slider';
 
 import { api } from '@/lib/api';
 import { uploadImage } from '@/lib/upload';
+import { usePhotoPicker } from '@/lib/photo-picker';
 import { LocationPicker, type LocationValue } from '@/components/LocationPicker';
 
 type DayKey = 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat' | 'sun';
@@ -90,6 +90,7 @@ export default function BusinessProfileScreen() {
   const [saved, setSaved] = useState(false);
   const [verificationReset, setVerificationReset] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { pick, sheet } = usePhotoPicker();
 
   // Addresses section
   const [addingAddress, setAddingAddress] = useState(false);
@@ -131,17 +132,12 @@ export default function BusinessProfileScreen() {
   }, [load]);
 
   const pickLogo = useCallback(async () => {
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) {
-      setError('Photo library permission is needed to set a logo.');
-      return;
-    }
-    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.7 });
-    if (result.canceled) return;
+    const assets = await pick({ quality: 0.7 });
+    if (assets.length === 0) return;
     setUploadingLogo(true);
     setError(null);
     try {
-      const asset = result.assets[0];
+      const asset = assets[0];
       const url = await uploadImage(asset.uri, 'business-logo', asset.mimeType ?? 'image/jpeg');
       setLogoUrl(url);
     } catch {
@@ -149,20 +145,15 @@ export default function BusinessProfileScreen() {
     } finally {
       setUploadingLogo(false);
     }
-  }, []);
+  }, [pick]);
 
   const pickCover = useCallback(async () => {
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) {
-      setError('Photo library permission is needed to set a cover image.');
-      return;
-    }
-    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.7 });
-    if (result.canceled) return;
+    const assets = await pick({ quality: 0.7 });
+    if (assets.length === 0) return;
     setUploadingCover(true);
     setError(null);
     try {
-      const asset = result.assets[0];
+      const asset = assets[0];
       const url = await uploadImage(asset.uri, 'business-cover', asset.mimeType ?? 'image/jpeg');
       setCoverImageUrl(url);
     } catch {
@@ -170,20 +161,15 @@ export default function BusinessProfileScreen() {
     } finally {
       setUploadingCover(false);
     }
-  }, []);
+  }, [pick]);
 
   const pickPhotos = useCallback(async () => {
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) {
-      setError('Photo library permission is needed to add business photos.');
-      return;
-    }
-    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.7, allowsMultipleSelection: true });
-    if (result.canceled) return;
+    const assets = await pick({ quality: 0.7, allowsMultipleSelection: true });
+    if (assets.length === 0) return;
     setUploadingPhoto(true);
     setError(null);
     try {
-      const results = await Promise.allSettled(result.assets.map((a) => uploadImage(a.uri, 'business-photo', a.mimeType ?? 'image/jpeg')));
+      const results = await Promise.allSettled(assets.map((a) => uploadImage(a.uri, 'business-photo', a.mimeType ?? 'image/jpeg')));
       const urls = results.filter((r): r is PromiseFulfilledResult<string> => r.status === 'fulfilled').map((r) => r.value);
       const failures = results.length - urls.length;
       if (urls.length > 0) setPhotoUrls((p) => [...p, ...urls]);
@@ -191,7 +177,7 @@ export default function BusinessProfileScreen() {
     } finally {
       setUploadingPhoto(false);
     }
-  }, []);
+  }, [pick]);
 
   function removePhoto(url: string) {
     setPhotoUrls((p) => p.filter((u) => u !== url));
@@ -562,6 +548,7 @@ export default function BusinessProfileScreen() {
           </Card>
         )}
       </ScrollView>
+      {sheet}
     </Screen>
   );
 }

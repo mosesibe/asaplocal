@@ -59,7 +59,7 @@ export async function GET() {
     baseRadiusMiles: business.baseRadiusMiles,
     serviceAreas: business.serviceAreas.map((a) => ({ lat: Number(a.lat), lng: Number(a.lng), radiusMiles: a.radiusMiles })),
     analytics: { total: analytics.total, conversionRate: analytics.conversionRate },
-    earnings: { weekTotalPence: earnings.weekTotalPence, allTimePence: earnings.allTimePence },
+    earnings: { weekTotalPence: earnings.weekTotalPence, allTimePence: earnings.allTimePence, dailyBreakdown: earnings.dailyBreakdown },
     weekBookingDates: weekBookings.map((b) => b.scheduledDate.toISOString().slice(0, 10)),
     recentLeads: recentLeads.map((l) => ({
       id: l.id,

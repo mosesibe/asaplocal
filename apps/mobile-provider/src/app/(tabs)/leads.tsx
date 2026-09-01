@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, View } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import { Screen, Card, Text, Button, useAppTheme, useBottomNavInset } from '@asaplocal/ui-native';
 import { ApiError } from '@asaplocal/api-client';
@@ -34,7 +34,8 @@ function formatPence(pence: number): string {
 
 export default function LeadsInboxScreen() {
   const router = useRouter();
-  const { colors, spacing } = useAppTheme();
+  const { highlight } = useLocalSearchParams<{ highlight?: string }>();
+  const { colors, spacing, radius } = useAppTheme();
   const bottomInset = useBottomNavInset();
   const [data, setData] = useState<LeadsResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -42,6 +43,7 @@ export default function LeadsInboxScreen() {
   const [acquiringId, setAcquiringId] = useState<string | null>(null);
   const [purchasableIds, setPurchasableIds] = useState<Set<string>>(new Set());
   const [error, setError] = useState<string | null>(null);
+  const listRef = useRef<FlatList<NearbyLead>>(null);
 
   const load = useCallback(async () => {
     try {
@@ -56,6 +58,19 @@ export default function LeadsInboxScreen() {
   useEffect(() => {
     load().finally(() => setLoading(false));
   }, [load]);
+
+  // Scroll to (and visually pick out) the lead the provider tapped on the
+  // dashboard's radar map — arriving on an unfiltered list with no sense of
+  // which card was theirs read as "nothing happened" from the map.
+  useEffect(() => {
+    if (!highlight || !data) return;
+    const index = data.leads.findIndex((l) => l.id === highlight);
+    if (index < 0) return;
+    const timer = setTimeout(() => {
+      listRef.current?.scrollToIndex({ index, animated: true, viewPosition: 0.3 });
+    }, 150);
+    return () => clearTimeout(timer);
+  }, [highlight, data]);
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -118,11 +133,15 @@ export default function LeadsInboxScreen() {
         )}
 
         <FlatList
+          ref={listRef}
           data={data?.leads ?? []}
           keyExtractor={(l) => l.id}
           contentContainerStyle={[styles.list, { paddingHorizontal: spacing.four, paddingBottom: bottomInset }]}
           refreshing={refreshing}
           onRefresh={handleRefresh}
+          onScrollToIndexFailed={({ index }) => {
+            setTimeout(() => listRef.current?.scrollToIndex({ index, animated: true, viewPosition: 0.3 }), 200);
+          }}
           ListEmptyComponent={
             !loading ? (
               <Text variant="small" color="muted" style={styles.empty}>
@@ -132,7 +151,7 @@ export default function LeadsInboxScreen() {
           }
           renderItem={({ item }) => (
             <Pressable onPress={() => (item.alreadyAcquired ? router.push(`/leads/${item.id}`) : undefined)} disabled={acquiringId === item.id}>
-              <Card style={styles.card}>
+              <Card style={[styles.card, item.id === highlight && { borderColor: colors.brand[500], borderWidth: 2, borderRadius: radius.lg }]}>
                 <View style={styles.cardHeader}>
                   <Text variant="bodyMedium" style={styles.cardTitle}>
                     {item.title}

@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import { Camera, Sparkles, Info, X, Check } from 'lucide-react-native';
 import { Screen, Card, Text, Button, useAppTheme, useBottomNavInset } from '@asaplocal/ui-native';
 
 import { api } from '@/lib/api';
 import { uploadImage } from '@/lib/upload';
+import { usePhotoPicker } from '@/lib/photo-picker';
 import { ApiError } from '@asaplocal/api-client';
 
 const MAX_PHOTOS = 5;
@@ -65,22 +65,18 @@ export default function StudioScreen() {
   const [concepts, setConcepts] = useState<Concept[]>([]);
   const [remaining, setRemaining] = useState<number | null>(null);
   const [choosing, setChoosing] = useState<number | null>(null);
+  const { pick, sheet } = usePhotoPicker();
 
   async function pickPhotos() {
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) {
-      setError('Photo library access is needed to add photos.');
-      return;
-    }
     const remainingSlots = MAX_PHOTOS - photos.length;
     if (remainingSlots <= 0) return;
-    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.8, allowsMultipleSelection: true, selectionLimit: remainingSlots });
-    if (result.canceled || result.assets.length === 0) return;
+    const assets = await pick({ quality: 0.8, allowsMultipleSelection: true, selectionLimit: remainingSlots });
+    if (assets.length === 0) return;
 
     setUploading(true);
     setError(null);
     try {
-      const urls = await Promise.all(result.assets.map((a) => uploadImage(a.uri, 'job-photo', a.mimeType ?? 'image/jpeg')));
+      const urls = await Promise.all(assets.map((a) => uploadImage(a.uri, 'job-photo', a.mimeType ?? 'image/jpeg')));
       setPhotos((prev) => {
         const next = [...prev, ...urls].slice(0, MAX_PHOTOS);
         if (!heroUrl && next.length > 0) setHeroUrl(next[0]);
@@ -302,6 +298,7 @@ export default function StudioScreen() {
           </>
         )}
       </ScrollView>
+      {sheet}
     </Screen>
   );
 }

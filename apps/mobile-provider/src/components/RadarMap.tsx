@@ -138,7 +138,12 @@ export function RadarMap({
 
   const handleView = (lead: NearbyLead) => {
     setSelected(null);
-    router.push(lead.alreadyAcquired ? `/leads/${lead.id}` : '/leads');
+    // An un-acquired lead has no detail route of its own yet (acquiring is
+    // what unlocks one) — land on the marketplace list with this lead
+    // singled out, mirroring apps/provider/app/dashboard/radar-map.tsx's
+    // own `?highlight=` handoff, rather than dropping the user into an
+    // unfiltered list with no idea which card was the one they tapped.
+    router.push(lead.alreadyAcquired ? `/leads/${lead.id}` : { pathname: '/leads', params: { highlight: lead.id } });
   };
 
   return (
@@ -165,7 +170,13 @@ export function RadarMap({
             />
           ))}
 
-          <Marker coordinate={{ latitude: center.lat, longitude: center.lng }} anchor={{ x: 0.5, y: 0.5 }} tracksViewChanges={false}>
+          {/* tracksViewChanges must stay true here: react-native-maps only
+              re-renders a custom marker's child view (vs. reusing a static
+              snapshot) while this is true, so with it false the pulse
+              animation never actually plays — the marker just freezes as
+              whatever frame it first rendered. Lead pins below have no
+              animation, so they keep it false for performance. */}
+          <Marker coordinate={{ latitude: center.lat, longitude: center.lng }} anchor={{ x: 0.5, y: 0.5 }} tracksViewChanges>
             <PulsingDot />
           </Marker>
 

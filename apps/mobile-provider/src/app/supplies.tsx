@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, View } from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
 import { Package } from 'lucide-react-native';
 import { Screen, Card, Text, Button, TextField, Badge, useAppTheme } from '@asaplocal/ui-native';
 import { ApiError } from '@asaplocal/api-client';
 
 import { api } from '@/lib/api';
 import { uploadImage } from '@/lib/upload';
+import { usePhotoPicker } from '@/lib/photo-picker';
 
 interface Supply {
   id: string;
@@ -33,6 +33,7 @@ export default function SuppliesScreen() {
   const [uploading, setUploading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const { pick, sheet } = usePhotoPicker();
 
   const load = useCallback(async () => {
     try {
@@ -50,18 +51,13 @@ export default function SuppliesScreen() {
   }, [load]);
 
   const pickImage = useCallback(async () => {
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) {
-      setError('Photo library permission is needed to attach a product photo.');
-      return;
-    }
-    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.7 });
-    if (result.canceled) return;
+    const assets = await pick({ quality: 0.7 });
+    if (assets.length === 0) return;
 
     setUploading(true);
     setError(null);
     try {
-      const asset = result.assets[0];
+      const asset = assets[0];
       const url = await uploadImage(asset.uri, 'supply-image', asset.mimeType ?? 'image/jpeg');
       setImageUrl(url);
     } catch (e) {
@@ -69,7 +65,7 @@ export default function SuppliesScreen() {
     } finally {
       setUploading(false);
     }
-  }, []);
+  }, [pick]);
 
   const resetForm = useCallback(() => {
     setName('');
@@ -237,6 +233,7 @@ export default function SuppliesScreen() {
           </Text>
         )}
       </ScrollView>
+      {sheet}
     </Screen>
   );
 }

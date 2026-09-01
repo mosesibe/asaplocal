@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, FlatList, Image, KeyboardAvoidingView, Platform, Pressable, StyleSheet, View } from 'react-native';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import * as ImagePicker from 'expo-image-picker';
 import { Paperclip, X } from 'lucide-react-native';
 import { Card, Screen, Text, TextField, useAppTheme, useBottomNavInset } from '@asaplocal/ui-native';
 
 import { api } from '@/lib/api';
 import { useSession } from '@/lib/session';
 import { uploadImage } from '@/lib/upload';
+import { usePhotoPicker } from '@/lib/photo-picker';
 
 interface Message {
   id: string;
@@ -42,6 +42,7 @@ export default function ConversationScreen() {
   const [attachments, setAttachments] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
   const [sending, setSending] = useState(false);
+  const { pick, sheet } = usePhotoPicker();
   const listRef = useRef<FlatList>(null);
 
   const load = useCallback(async () => {
@@ -84,13 +85,11 @@ export default function ConversationScreen() {
 
   async function addAttachment() {
     if (attachments.length >= 5) return;
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) return;
-    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.7, allowsMultipleSelection: true, selectionLimit: 5 - attachments.length });
-    if (result.canceled) return;
+    const assets = await pick({ quality: 0.7, allowsMultipleSelection: true, selectionLimit: 5 - attachments.length });
+    if (assets.length === 0) return;
     setUploading(true);
     try {
-      const urls = await Promise.all(result.assets.map((a) => uploadImage(a.uri, 'job-photo', a.mimeType ?? 'image/jpeg')));
+      const urls = await Promise.all(assets.map((a) => uploadImage(a.uri, 'job-photo', a.mimeType ?? 'image/jpeg')));
       setAttachments((prev) => [...prev, ...urls].slice(0, 5));
     } finally {
       setUploading(false);
@@ -199,6 +198,7 @@ export default function ConversationScreen() {
           </Pressable>
         </View>
       </Screen>
+      {sheet}
     </KeyboardAvoidingView>
   );
 }

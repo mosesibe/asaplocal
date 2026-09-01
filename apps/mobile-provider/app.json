@@ -51,7 +51,8 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "AsapLocal Business uses your photos for job-sheet entries, staff verification, portfolio, and profile images."
+          "photosPermission": "AsapLocal Business uses your photos for job-sheet entries, staff verification, portfolio, and profile images.",
+          "cameraPermission": "AsapLocal Business uses your camera so you can take a photo directly for job sheets, verification, portfolio, and profile images."
         }
       ],
       [

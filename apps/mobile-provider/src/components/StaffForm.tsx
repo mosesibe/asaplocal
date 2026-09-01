@@ -1,11 +1,11 @@
 import { useCallback, useState } from 'react';
 import { Image, StyleSheet, View } from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
 import { Card, Text, Button, TextField, useAppTheme } from '@asaplocal/ui-native';
 import { ApiError } from '@asaplocal/api-client';
 
 import { api } from '@/lib/api';
 import { uploadImage, type UploadPurpose } from '@/lib/upload';
+import { usePhotoPicker } from '@/lib/photo-picker';
 
 type ImageField = 'profilePhotoUrl' | 'idFrontImageUrl' | 'idBackImageUrl';
 
@@ -48,28 +48,27 @@ export function StaffForm({ staffId, initial, onSaved }: StaffFormProps) {
   const [uploading, setUploading] = useState<ImageField | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { pick, sheet } = usePhotoPicker();
 
-  const handlePickImage = useCallback(async (field: ImageField, purpose: UploadPurpose) => {
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) {
-      setError('Photo library permission is needed to upload this image.');
-      return;
-    }
-    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.7, allowsMultipleSelection: false });
-    if (result.canceled) return;
+  const handlePickImage = useCallback(
+    async (field: ImageField, purpose: UploadPurpose) => {
+      const assets = await pick({ quality: 0.7 });
+      if (assets.length === 0) return;
 
-    const asset = result.assets[0];
-    setUploading(field);
-    setError(null);
-    try {
-      const url = await uploadImage(asset.uri, purpose, asset.mimeType ?? 'image/jpeg');
-      setImages((prev) => ({ ...prev, [field]: url }));
-    } catch {
-      setError('Upload failed. Please try again.');
-    } finally {
-      setUploading(null);
-    }
-  }, []);
+      const asset = assets[0];
+      setUploading(field);
+      setError(null);
+      try {
+        const url = await uploadImage(asset.uri, purpose, asset.mimeType ?? 'image/jpeg');
+        setImages((prev) => ({ ...prev, [field]: url }));
+      } catch {
+        setError('Upload failed. Please try again.');
+      } finally {
+        setUploading(null);
+      }
+    },
+    [pick]
+  );
 
   const handleSubmit = useCallback(async () => {
     if (!images.profilePhotoUrl || !images.idFrontImageUrl || !images.idBackImageUrl) {
@@ -150,6 +149,7 @@ export function StaffForm({ staffId, initial, onSaved }: StaffFormProps) {
       <Button onPress={handleSubmit} loading={saving}>
         {staffId ? 'Save changes' : 'Submit for approval'}
       </Button>
+      {sheet}
     </View>
   );
 }

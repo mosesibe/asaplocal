@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Image, Modal, Pressable, ScrollView, StyleSheet, Switch, View } from 'react-native';
 import { useFocusEffect, useLocalSearchParams } from 'expo-router';
-import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
 import { Screen, Card, Text, Button, Badge, TextField, useAppTheme } from '@asaplocal/ui-native';
 
 import { api } from '@/lib/api';
 import { uploadImage } from '@/lib/upload';
+import { usePhotoPicker } from '@/lib/photo-picker';
 
 interface Variation {
   id: string;
@@ -69,6 +69,7 @@ export default function BookingDetailScreen() {
   const [photos, setPhotos] = useState<string[]>([]);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [busy, setBusy] = useState<'start' | 'add' | 'finish' | null>(null);
+  const { pick, sheet } = usePhotoPicker();
 
   // ETA / live-location sharing
   const [etaMinutesInput, setEtaMinutesInput] = useState('15');
@@ -172,67 +173,52 @@ export default function BookingDetailScreen() {
   );
 
   const handlePickPhoto = useCallback(async () => {
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) {
-      setError('Photo library permission is needed to attach work photos.');
-      return;
-    }
-    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.7, allowsMultipleSelection: true });
-    if (result.canceled) return;
+    const assets = await pick({ quality: 0.7, allowsMultipleSelection: true });
+    if (assets.length === 0) return;
 
     setUploadingPhoto(true);
     setError(null);
     try {
-      const urls = await Promise.all(result.assets.map((a) => uploadImage(a.uri, 'job-photo', a.mimeType ?? 'image/jpeg')));
+      const urls = await Promise.all(assets.map((a) => uploadImage(a.uri, 'job-photo', a.mimeType ?? 'image/jpeg')));
       setPhotos((p) => [...p, ...urls]);
     } catch {
       setError('One or more photos failed to upload.');
     } finally {
       setUploadingPhoto(false);
     }
-  }, []);
+  }, [pick]);
 
   const handlePickVariationPhoto = useCallback(async () => {
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) {
-      setVariationError('Photo library permission is needed to attach photos.');
-      return;
-    }
-    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.7, allowsMultipleSelection: true });
-    if (result.canceled) return;
+    const assets = await pick({ quality: 0.7, allowsMultipleSelection: true });
+    if (assets.length === 0) return;
 
     setVariationUploading(true);
     setVariationError(null);
     try {
-      const urls = await Promise.all(result.assets.map((a) => uploadImage(a.uri, 'job-photo', a.mimeType ?? 'image/jpeg')));
+      const urls = await Promise.all(assets.map((a) => uploadImage(a.uri, 'job-photo', a.mimeType ?? 'image/jpeg')));
       setVariationPhotos((p) => [...p, ...urls]);
     } catch {
       setVariationError('One or more photos failed to upload.');
     } finally {
       setVariationUploading(false);
     }
-  }, []);
+  }, [pick]);
 
   const handlePickDisputePhoto = useCallback(async () => {
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) {
-      setDisputeError('Photo library permission is needed to attach photos.');
-      return;
-    }
-    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.7, allowsMultipleSelection: true });
-    if (result.canceled) return;
+    const assets = await pick({ quality: 0.7, allowsMultipleSelection: true });
+    if (assets.length === 0) return;
 
     setDisputeUploading(true);
     setDisputeError(null);
     try {
-      const urls = await Promise.all(result.assets.map((a) => uploadImage(a.uri, 'dispute-photo', a.mimeType ?? 'image/jpeg')));
+      const urls = await Promise.all(assets.map((a) => uploadImage(a.uri, 'dispute-photo', a.mimeType ?? 'image/jpeg')));
       setDisputePhotos((p) => [...p, ...urls]);
     } catch {
       setDisputeError('One or more photos failed to upload.');
     } finally {
       setDisputeUploading(false);
     }
-  }, []);
+  }, [pick]);
 
   const handleStart = useCallback(async () => {
     setBusy('start');
@@ -809,6 +795,7 @@ export default function BookingDetailScreen() {
           </Card>
         </View>
       </Modal>
+      {sheet}
     </Screen>
   );
 }
