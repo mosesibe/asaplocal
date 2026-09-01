@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, Pressable, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, FlatList, Keyboard, KeyboardAvoidingView, Platform, Pressable, StyleSheet, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Badge, Card, Screen, Text, TextField, useAppTheme, useBottomNavInset } from '@asaplocal/ui-native';
 
 import { api } from '@/lib/api';
@@ -45,13 +46,31 @@ export default function ConversationScreen() {
   const router = useRouter();
   const { colors, radius, spacing } = useAppTheme();
   const bottomInset = useBottomNavInset();
+  const safeAreaInsets = useSafeAreaInsets();
   const [messages, setMessages] = useState<Message[]>([]);
   const [meta, setMeta] = useState<ConversationMeta | null>(null);
   const [loading, setLoading] = useState(true);
   const [draft, setDraft] = useState('');
   const [sending, setSending] = useState(false);
   const [suggesting, setSuggesting] = useState(false);
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
   const listRef = useRef<FlatList>(null);
+
+  // bottomInset clears the floating tab bar's height — needed at rest, but
+  // once the keyboard is up (and FloatingBottomNav has hidden itself) it's
+  // just dead space between the composer and the keyboard, not WhatsApp's
+  // input-bar-flush-above-the-keyboard look. Swap to the plain safe-area
+  // inset while typing.
+  useEffect(() => {
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+    const showSub = Keyboard.addListener(showEvent, () => setKeyboardVisible(true));
+    const hideSub = Keyboard.addListener(hideEvent, () => setKeyboardVisible(false));
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
 
   const load = useCallback(async () => {
     try {
@@ -187,7 +206,7 @@ export default function ConversationScreen() {
             </Text>
           }
         />
-        <View style={[styles.inputRow, { borderTopColor: colors.border, paddingBottom: bottomInset }]}>
+        <View style={[styles.inputRow, { borderTopColor: colors.border, paddingBottom: keyboardVisible ? safeAreaInsets.bottom : bottomInset }]}>
           <Pressable
             style={[styles.suggestButton, { borderRadius: radius.lg, borderColor: colors.border }]}
             onPress={handleSuggestReply}

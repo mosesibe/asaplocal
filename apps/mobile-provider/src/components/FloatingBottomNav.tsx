@@ -1,3 +1,5 @@
+import { useEffect, useState } from 'react';
+import { Keyboard, Platform } from 'react-native';
 import { usePathname, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LayoutDashboard, Target, CalendarDays, MessageSquare } from 'lucide-react-native';
@@ -14,6 +16,26 @@ export function FloatingBottomNav() {
   const pathname = usePathname();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
+
+  // This is fixed-positioned at the window level (not scoped to any one
+  // screen's KeyboardAvoidingView), so on Android — where the window itself
+  // resizes for the keyboard — it would otherwise end up floating right on
+  // top of whatever composer/input is now docked above the keyboard (e.g.
+  // the conversation screen's message bar). Hiding it while the keyboard is
+  // up avoids that stacking and matches how a real chat app's nav behaves.
+  useEffect(() => {
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+    const showSub = Keyboard.addListener(showEvent, () => setKeyboardVisible(true));
+    const hideSub = Keyboard.addListener(hideEvent, () => setKeyboardVisible(false));
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
+
+  if (keyboardVisible) return null;
 
   return (
     <BottomNav style={{ position: 'absolute', left: 0, right: 0, bottom: 16 + insets.bottom }}>
