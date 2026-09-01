@@ -72,12 +72,17 @@ function PulsingDot() {
   const scale3 = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
+    // useNativeDriver must be false here: a Marker's custom child view only
+    // gets re-captured (with tracksViewChanges) when RN's own JS-side render
+    // cycle sees it change. A native-driven animation updates the view
+    // directly on the native side, invisibly to that cycle, so the Marker
+    // snapshot never refreshes and the rings just sit frozen on frame one.
     const loop = (value: Animated.Value, delay: number) =>
       Animated.loop(
         Animated.sequence([
           Animated.delay(delay),
-          Animated.timing(value, { toValue: 1, duration: 2500, easing: Easing.out(Easing.ease), useNativeDriver: true }),
-          Animated.timing(value, { toValue: 0, duration: 0, useNativeDriver: true }),
+          Animated.timing(value, { toValue: 1, duration: 2500, easing: Easing.out(Easing.ease), useNativeDriver: false }),
+          Animated.timing(value, { toValue: 0, duration: 0, useNativeDriver: false }),
         ])
       );
     const animations = [loop(scale1, 0), loop(scale2, 800), loop(scale3, 1600)];
@@ -185,7 +190,15 @@ export function RadarMap({
               key={lead.id}
               coordinate={{ latitude: lead.jitteredLat, longitude: lead.jitteredLng }}
               pinColor="#c15f2a"
-              onPress={() => setSelected(lead)}
+              onPress={(e) => {
+                // On Android a marker tap also bubbles up to the MapView's
+                // own onPress, which clears `selected` — so without this the
+                // two handlers fired in the same tick and the info card
+                // never actually appeared, no matter how reliably the
+                // marker's own onPress ran.
+                e.stopPropagation();
+                setSelected(lead);
+              }}
             />
           ))}
         </MapView>
