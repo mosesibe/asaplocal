@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Animated, Easing, Pressable, StyleSheet, View } from 'react-native';
-import MapView, { Circle, Marker, PROVIDER_GOOGLE, type LatLng, type Point } from 'react-native-maps';
+import MapView, { Circle, Marker, PROVIDER_GOOGLE, type Point, type Region } from 'react-native-maps';
 import { useRouter } from 'expo-router';
 import { X } from 'lucide-react-native';
 import { Card, Text, Button, useAppTheme } from '@asaplocal/ui-native';
@@ -8,10 +8,15 @@ import { Card, Text, Button, useAppTheme } from '@asaplocal/ui-native';
 import { api } from '@/lib/api';
 
 const MILES_TO_METERS = 1609.34;
+const INITIAL_LAT_DELTA = 0.25;
+const INITIAL_LNG_DELTA = 0.25;
 const INFO_CARD_WIDTH = 240;
 const INFO_CARD_FALLBACK_HEIGHT = 150;
 const POINTER_SIZE = 8;
 const PIN_HEIGHT = 42; // default react-native-maps pin anchors at its bottom tip, and stands roughly this tall above the coordinate point
+const EDGE_BUFFER = 16;
+const PULSE_RING_SIZE = 64; // matches web's dashboard radar-map.tsx pulse overlay: h-16 w-16 rings, animate-ping to 2x
+const PULSE_DOT_SIZE = 12;
 
 // Ports apps/provider/app/dashboard/radar-map.tsx's exact style array — the
 // Google Maps JSON style format is identical between @vis.gl/react-google-
@@ -75,41 +80,83 @@ function clamp(value: number, min: number, max: number): number {
   return Math.min(Math.max(value, min), Math.max(min, max));
 }
 
-// A Marker's custom child view is only re-captured (with tracksViewChanges)
-// when RN's own JS-side render cycle sees it change — react-native-maps
-// snapshots it as a bitmap otherwise, and in practice that snapshot timing
-// proved unreliable for a continuously-looping animation even with
-// tracksViewChanges + a JS-driven (non-native-driver) Animated value.
-// Circle is a native map primitive with its own props (radius, fillColor),
-// not a view snapshot, so animating those directly sidesteps the whole
-// marker-snapshot mechanism rather than continuing to fight it.
-function PulseRing({ center, delayMs }: { center: LatLng; delayMs: number }) {
-  const [progress, setProgress] = useState(0);
+function useRingAnim(delayMs: number) {
+  const scale = useRef(new Animated.Value(1)).current;
+  const opacity = useRef(new Animated.Value(0.3)).current;
 
   useEffect(() => {
-    const value = new Animated.Value(0);
-    const listenerId = value.addListener(({ value: v }) => setProgress(v));
     const loop = Animated.loop(
       Animated.sequence([
         Animated.delay(delayMs),
-        Animated.timing(value, { toValue: 1, duration: 2500, easing: Easing.out(Easing.ease), useNativeDriver: false }),
-        Animated.timing(value, { toValue: 0, duration: 0, useNativeDriver: false }),
+        Animated.parallel([
+          Animated.timing(scale, { toValue: 2, duration: 1000, easing: Easing.out(Easing.ease), useNativeDriver: true }),
+          Animated.timing(opacity, { toValue: 0, duration: 1000, easing: Easing.out(Easing.ease), useNativeDriver: true }),
+        ]),
+        Animated.parallel([
+          Animated.timing(scale, { toValue: 1, duration: 0, useNativeDriver: true }),
+          Animated.timing(opacity, { toValue: 0.3, duration: 0, useNativeDriver: true }),
+        ]),
       ])
     );
     loop.start();
-    return () => {
-      loop.stop();
-      value.removeListener(listenerId);
-    };
-  }, [delayMs]);
+    return () => loop.stop();
+  }, [delayMs, scale, opacity]);
+
+  return { opacity, transform: [{ scale }] };
+}
+
+// A world-space Circle's radius is in real metres, so it visually shrinks
+// as the map zooms out — invisible at the dashboard's default zoom unless
+// the provider zoomed in a long way. Web's own pulse is a fixed-CSS-pixel
+// DOM overlay glued to the location's on-screen point, unaffected by zoom
+// at all — this ports that: a plain (non-map) Animated.View positioned via
+// pointForCoordinate, so it's always exactly this visible regardless of
+// zoom, and — being outside react-native-maps' Marker system entirely —
+// fully native-driver animated with none of the Marker/tracksViewChanges
+// snapshot unreliability that broke the previous two attempts.
+function PulseOverlay({ point }: { point: Point }) {
+  const ring1 = useRingAnim(0);
+  const ring2 = useRingAnim(333);
+  const ring3 = useRingAnim(666);
 
   return (
-    <Circle
-      center={center}
-      radius={20 + progress * 350}
-      strokeWidth={0}
-      fillColor={`rgba(193, 95, 42, ${(0.35 * (1 - progress)).toFixed(2)})`}
-    />
+    <View pointerEvents="none" style={[styles.pulseOverlay, { left: point.x - PULSE_RING_SIZE / 2, top: point.y - PULSE_RING_SIZE / 2 }]}>
+      <Animated.View style={[styles.pulseRing, ring1]} />
+      <Animated.View style={[styles.pulseRing, ring2]} />
+      <Animated.View style={[styles.pulseRing, ring3]} />
+      <View style={styles.pulseDot} />
+    </View>
+  );
+}
+
+// Ports web's google.maps.Animation.DROP for newly-appeared leads — react-
+// native-maps has no built-in equivalent, and (per PulseOverlay above) a
+// Marker-snapshot animation can't be trusted to render reliably, so this is
+// the same screen-space-overlay technique: a plain View that falls in with
+// a spring/bounce and un-mounts once settled, drawn on top of the always-
+// present (and always correctly positioned, even mid-pan) real Marker
+// underneath.
+function DropInPin({ point }: { point: Point }) {
+  const translateY = useRef(new Animated.Value(-260)).current;
+  const scale = useRef(new Animated.Value(0.5)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.spring(translateY, { toValue: 0, friction: 4.5, tension: 55, useNativeDriver: true }),
+      Animated.sequence([
+        Animated.timing(scale, { toValue: 1.2, duration: 200, easing: Easing.out(Easing.ease), useNativeDriver: true }),
+        Animated.spring(scale, { toValue: 1, friction: 3.5, tension: 80, useNativeDriver: true }),
+      ]),
+    ]).start();
+  }, [translateY, scale]);
+
+  return (
+    <Animated.View
+      pointerEvents="none"
+      style={[styles.dropPinWrap, { left: point.x - 9, top: point.y - 9, transform: [{ translateY }, { scale }] }]}
+    >
+      <View style={styles.dropPinDot} />
+    </Animated.View>
   );
 }
 
@@ -133,8 +180,18 @@ export function RadarMap({
   const [leads, setLeads] = useState<NearbyLead[]>([]);
   const [selected, setSelected] = useState<NearbyLead | null>(null);
   const [selectedPoint, setSelectedPoint] = useState<Point | null>(null);
+  const [centerPoint, setCenterPoint] = useState<Point | null>(null);
   const [infoCardHeight, setInfoCardHeight] = useState(INFO_CARD_FALLBACK_HEIGHT);
   const [mapWidth, setMapWidth] = useState(0);
+  const [mapHeight, setMapHeight] = useState(0);
+  const [region, setRegion] = useState<Region>({
+    latitude: center.lat,
+    longitude: center.lng,
+    latitudeDelta: INITIAL_LAT_DELTA,
+    longitudeDelta: INITIAL_LNG_DELTA,
+  });
+  const [droppingLeads, setDroppingLeads] = useState<Record<string, Point>>({});
+  const seenLeadIds = useRef<Set<string>>(new Set());
 
   const poll = useCallback(async () => {
     try {
@@ -151,6 +208,54 @@ export function RadarMap({
     return () => clearInterval(interval);
   }, [poll]);
 
+  // Drop-in animation for newly-appeared leads only — everything visible on
+  // first load counts as "new" (seenLeadIds starts empty), later poll ticks
+  // only animate genuinely new pins rather than replaying the drop for
+  // leads already sitting on the map.
+  useEffect(() => {
+    const newLeads = leads.filter((l) => !seenLeadIds.current.has(l.id));
+    if (newLeads.length === 0) return;
+    newLeads.forEach((l) => seenLeadIds.current.add(l.id));
+
+    let cancelled = false;
+    (async () => {
+      const results = await Promise.all(
+        newLeads.map(async (lead) => {
+          const point = await mapRef.current?.pointForCoordinate({ latitude: lead.jitteredLat, longitude: lead.jitteredLng }).catch(() => null);
+          return point ? { id: lead.id, point } : null;
+        })
+      );
+      if (cancelled) return;
+      const valid = results.filter((r): r is { id: string; point: Point } => r !== null);
+      if (valid.length === 0) return;
+      setDroppingLeads((prev) => {
+        const next = { ...prev };
+        valid.forEach(({ id, point }) => {
+          next[id] = point;
+        });
+        return next;
+      });
+      valid.forEach(({ id }) => {
+        setTimeout(() => {
+          setDroppingLeads((prev) => {
+            if (!(id in prev)) return prev;
+            const next = { ...prev };
+            delete next[id];
+            return next;
+          });
+        }, 900);
+      });
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [leads]);
+
+  const updatePoints = useCallback(async () => {
+    const centerPt = await mapRef.current?.pointForCoordinate({ latitude: center.lat, longitude: center.lng }).catch(() => null);
+    if (centerPt) setCenterPoint(centerPt);
+  }, [center.lat, center.lng]);
+
   const circles = serviceAreas.length > 0 ? serviceAreas : [{ ...center, radiusMiles: baseRadiusMiles }];
 
   const clearSelection = useCallback(() => {
@@ -158,20 +263,39 @@ export function RadarMap({
     setSelectedPoint(null);
   }, []);
 
-  // The popup needs to sit above the exact pin the provider tapped, so its
-  // on-screen position is looked up from the pin's lat/lng rather than
-  // pinned to a fixed spot on the card — and re-looked-up on pan/zoom so it
-  // stays anchored to that pin instead of drifting off it.
-  const selectLead = useCallback(async (lead: NearbyLead) => {
-    setSelected(lead);
-    setInfoCardHeight(INFO_CARD_FALLBACK_HEIGHT);
-    try {
-      const point = await mapRef.current?.pointForCoordinate({ latitude: lead.jitteredLat, longitude: lead.jitteredLng });
-      if (point) setSelectedPoint(point);
-    } catch {
-      // best-effort — falls back to no popup rather than a mispositioned one
-    }
-  }, []);
+  // The popup needs to sit fully above the tapped pin — but if the pin is
+  // too close to the top of the map, there's no room and it gets clipped
+  // by the card's own overflow:hidden. Rather than let that happen, pan the
+  // map so the pin ends up lower on screen first, then position the popup
+  // once that settles (onRegionChangeComplete re-syncs selectedPoint).
+  const selectLead = useCallback(
+    async (lead: NearbyLead) => {
+      setSelected(lead);
+      setInfoCardHeight(INFO_CARD_FALLBACK_HEIGHT);
+      const point = await mapRef.current?.pointForCoordinate({ latitude: lead.jitteredLat, longitude: lead.jitteredLng }).catch(() => null);
+      if (!point) return;
+      const requiredHeadroom = INFO_CARD_FALLBACK_HEIGHT + POINTER_SIZE + PIN_HEIGHT + EDGE_BUFFER;
+      const deficit = requiredHeadroom - point.y;
+      if (deficit > 0 && mapHeight > 0) {
+        const offsetLat = (deficit / mapHeight) * region.latitudeDelta;
+        mapRef.current?.animateToRegion(
+          {
+            latitude: lead.jitteredLat + offsetLat,
+            longitude: lead.jitteredLng,
+            latitudeDelta: region.latitudeDelta,
+            longitudeDelta: region.longitudeDelta,
+          },
+          300
+        );
+        // selectedPoint stays null until the pan settles and
+        // onRegionChangeComplete re-syncs it, so the popup doesn't flash
+        // into view mispositioned first.
+      } else {
+        setSelectedPoint(point);
+      }
+    },
+    [mapHeight, region]
+  );
 
   const handleView = (lead: NearbyLead) => {
     clearSelection();
@@ -190,19 +314,33 @@ export function RadarMap({
 
   return (
     <Card style={styles.card}>
-      <View style={styles.mapWrap} onLayout={(e) => setMapWidth(e.nativeEvent.layout.width)}>
+      <View
+        style={styles.mapWrap}
+        onLayout={(e) => {
+          setMapWidth(e.nativeEvent.layout.width);
+          setMapHeight(e.nativeEvent.layout.height);
+        }}
+      >
         <MapView
           ref={mapRef}
           provider={PROVIDER_GOOGLE}
           style={StyleSheet.absoluteFill}
-          initialRegion={{ latitude: center.lat, longitude: center.lng, latitudeDelta: 0.25, longitudeDelta: 0.25 }}
+          initialRegion={{ latitude: center.lat, longitude: center.lng, latitudeDelta: INITIAL_LAT_DELTA, longitudeDelta: INITIAL_LNG_DELTA }}
           customMapStyle={scheme === 'dark' ? MONOCHROME_DARK_STYLE : []}
           showsUserLocation={false}
           showsCompass={false}
           toolbarEnabled={false}
           onPress={clearSelection}
-          onRegionChangeComplete={() => {
-            if (selected) selectLead(selected);
+          onMapReady={updatePoints}
+          onRegionChangeComplete={(r) => {
+            setRegion(r);
+            updatePoints();
+            if (selected) {
+              mapRef.current
+                ?.pointForCoordinate({ latitude: selected.jitteredLat, longitude: selected.jitteredLng })
+                .then((p) => setSelectedPoint(p))
+                .catch(() => {});
+            }
           }}
         >
           {circles.map((area, i) => (
@@ -215,13 +353,6 @@ export function RadarMap({
               fillColor="#c15f2a12"
             />
           ))}
-
-          <PulseRing center={{ latitude: center.lat, longitude: center.lng }} delayMs={0} />
-          <PulseRing center={{ latitude: center.lat, longitude: center.lng }} delayMs={800} />
-          <PulseRing center={{ latitude: center.lat, longitude: center.lng }} delayMs={1600} />
-          <Marker coordinate={{ latitude: center.lat, longitude: center.lng }} anchor={{ x: 0.5, y: 0.5 }} tracksViewChanges={false}>
-            <View style={styles.centerDot} />
-          </Marker>
 
           {leads.map((lead) => (
             <Marker
@@ -240,6 +371,12 @@ export function RadarMap({
             />
           ))}
         </MapView>
+
+        {centerPoint && <PulseOverlay point={centerPoint} />}
+
+        {Object.entries(droppingLeads).map(([id, point]) => (
+          <DropInPin key={id} point={point} />
+        ))}
 
         {selected && selectedPoint && (
           <>
@@ -307,12 +444,26 @@ const styles = StyleSheet.create({
     borderLeftColor: 'transparent',
     borderRightColor: 'transparent',
   },
-  centerDot: {
-    width: 14,
-    height: 14,
-    borderRadius: 7,
-    backgroundColor: '#c15f2a',
-    borderWidth: 2,
-    borderColor: '#fff',
+  pulseOverlay: {
+    position: 'absolute',
+    width: PULSE_RING_SIZE,
+    height: PULSE_RING_SIZE,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
+  pulseRing: {
+    position: 'absolute',
+    width: PULSE_RING_SIZE,
+    height: PULSE_RING_SIZE,
+    borderRadius: PULSE_RING_SIZE / 2,
+    backgroundColor: 'rgba(193, 95, 42, 0.3)',
+  },
+  pulseDot: {
+    width: PULSE_DOT_SIZE,
+    height: PULSE_DOT_SIZE,
+    borderRadius: PULSE_DOT_SIZE / 2,
+    backgroundColor: '#c15f2a',
+  },
+  dropPinWrap: { position: 'absolute', width: 18, height: 18 },
+  dropPinDot: { width: 18, height: 18, borderRadius: 9, backgroundColor: '#c15f2a', borderWidth: 2, borderColor: '#fff' },
 });

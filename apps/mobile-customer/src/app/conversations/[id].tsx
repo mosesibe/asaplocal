@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, FlatList, Image, KeyboardAvoidingView, Platform, Pressable, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, FlatList, Image, Keyboard, KeyboardAvoidingView, Platform, Pressable, StyleSheet, View } from 'react-native';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import { Paperclip, X } from 'lucide-react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { ArrowUp, Paperclip, X } from 'lucide-react-native';
 import { Card, Screen, Text, TextField, useAppTheme, useBottomNavInset } from '@asaplocal/ui-native';
 
 import { api } from '@/lib/api';
@@ -35,6 +36,7 @@ export default function ConversationScreen() {
   const { user } = useSession();
   const { colors, radius, spacing } = useAppTheme();
   const bottomInset = useBottomNavInset();
+  const safeAreaInsets = useSafeAreaInsets();
   const [messages, setMessages] = useState<Message[]>([]);
   const [header, setHeader] = useState<{ recipientName: string; jobRequestId: string | null; jobTitle: string | null; jobCity: string | null } | null>(null);
   const [loading, setLoading] = useState(true);
@@ -42,8 +44,24 @@ export default function ConversationScreen() {
   const [attachments, setAttachments] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
   const [sending, setSending] = useState(false);
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
   const { pick, sheet } = usePhotoPicker();
   const listRef = useRef<FlatList>(null);
+
+  // bottomInset clears the floating tab bar's height — needed at rest, but
+  // once the keyboard is up it's just dead space between the composer and
+  // the keyboard, not WhatsApp's input-bar-flush-above-the-keyboard look.
+  // Swap to the plain safe-area inset while typing.
+  useEffect(() => {
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+    const showSub = Keyboard.addListener(showEvent, () => setKeyboardVisible(true));
+    const hideSub = Keyboard.addListener(hideEvent, () => setKeyboardVisible(false));
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
 
   const load = useCallback(async () => {
     try {
@@ -182,19 +200,25 @@ export default function ConversationScreen() {
             ))}
           </View>
         )}
-        <View style={[styles.inputRow, { borderTopColor: colors.border, paddingBottom: 16 + bottomInset }]}>
-          <Pressable onPress={addAttachment} disabled={uploading} style={styles.attachButton} hitSlop={8}>
-            {uploading ? <ActivityIndicator size="small" color={colors.mutedForeground} /> : <Paperclip size={20} color={colors.mutedForeground} />}
-          </Pressable>
-          <TextField style={styles.input} placeholder="Message" value={draft} onChangeText={setDraft} multiline />
+        <View style={[styles.inputRow, { paddingBottom: keyboardVisible ? safeAreaInsets.bottom : bottomInset }]}>
+          <View style={[styles.pill, { backgroundColor: colors.muted, borderRadius: radius.full }]}>
+            <Pressable onPress={addAttachment} disabled={uploading} style={styles.pillIcon} hitSlop={4}>
+              {uploading ? <ActivityIndicator size="small" color={colors.mutedForeground} /> : <Paperclip size={17} color={colors.mutedForeground} />}
+            </Pressable>
+            <TextField
+              style={[styles.pillInput, { backgroundColor: 'transparent', borderWidth: 0 }]}
+              placeholder="Message"
+              value={draft}
+              onChangeText={setDraft}
+              multiline
+            />
+          </View>
           <Pressable
-            style={[styles.sendButton, { borderRadius: radius.lg, backgroundColor: colors.brand[600] }]}
             onPress={handleSend}
             disabled={sending || !draft.trim()}
+            style={[styles.sendCircle, { backgroundColor: colors.brand[600], opacity: draft.trim() ? 1 : 0.4 }]}
           >
-            <Text variant="smallMedium" color="inverse">
-              Send
-            </Text>
+            {sending ? <ActivityIndicator size="small" color="#fff" /> : <ArrowUp size={18} color="#fff" />}
           </Pressable>
         </View>
       </Screen>
@@ -239,16 +263,37 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-end',
     gap: 8,
-    padding: 16,
-    borderTopWidth: StyleSheet.hairlineWidth,
+    paddingHorizontal: 12,
+    paddingTop: 8,
+    paddingBottom: 8,
   },
-  attachButton: { paddingBottom: 10 },
-  input: {
+  pill: {
     flex: 1,
-    maxHeight: 100,
+    flexDirection: 'row',
+    alignItems: 'center',
+    minHeight: 38,
+    paddingLeft: 4,
+    paddingRight: 6,
   },
-  sendButton: {
-    paddingHorizontal: 20,
-    paddingVertical: 12,
+  pillIcon: {
+    width: 28,
+    height: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  pillInput: {
+    flex: 1,
+    minHeight: 20,
+    maxHeight: 90,
+    paddingVertical: 7,
+    paddingHorizontal: 2,
+    fontSize: 15,
+  },
+  sendCircle: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

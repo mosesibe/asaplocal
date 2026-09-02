@@ -210,7 +210,7 @@ export default function ConversationScreen() {
         <View style={[styles.inputRow, { paddingBottom: keyboardVisible ? safeAreaInsets.bottom : bottomInset }]}>
           <View style={[styles.pill, { backgroundColor: colors.muted, borderRadius: radius.full }]}>
             <Pressable onPress={handleSuggestReply} disabled={suggesting} style={styles.pillIcon} hitSlop={4}>
-              {suggesting ? <ActivityIndicator size="small" color={colors.brand[600]} /> : <Sparkles size={20} color={colors.mutedForeground} />}
+              {suggesting ? <ActivityIndicator size="small" color={colors.brand[600]} /> : <Sparkles size={17} color={colors.mutedForeground} />}
             </Pressable>
             <TextField
               style={[styles.pillInput, { backgroundColor: 'transparent', borderWidth: 0 }]}
@@ -225,7 +225,7 @@ export default function ConversationScreen() {
             disabled={sending || !draft.trim()}
             style={[styles.sendCircle, { backgroundColor: colors.brand[600], opacity: draft.trim() ? 1 : 0.4 }]}
           >
-            {sending ? <ActivityIndicator size="small" color="#fff" /> : <ArrowUp size={20} color="#fff" />}
+            {sending ? <ActivityIndicator size="small" color="#fff" /> : <ArrowUp size={18} color="#fff" />}
           </Pressable>
         </View>
       </Screen>
@@ -250,31 +250,36 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-end',
     gap: 8,
-    padding: 12,
+    paddingHorizontal: 12,
+    paddingTop: 8,
+    paddingBottom: 8,
   },
   pill: {
     flex: 1,
     flexDirection: 'row',
-    alignItems: 'flex-end',
-    minHeight: 44,
-    paddingLeft: 6,
-    paddingRight: 4,
+    alignItems: 'center',
+    minHeight: 38,
+    paddingLeft: 4,
+    paddingRight: 6,
   },
   pillIcon: {
-    width: 32,
-    height: 44,
+    width: 28,
+    height: 30,
     alignItems: 'center',
     justifyContent: 'center',
   },
   pillInput: {
     flex: 1,
-    maxHeight: 100,
-    paddingVertical: 10,
+    minHeight: 20,
+    maxHeight: 90,
+    paddingVertical: 7,
+    paddingHorizontal: 2,
+    fontSize: 15,
   },
   sendCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     alignItems: 'center',
     justifyContent: 'center',
   },
