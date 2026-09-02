@@ -1,25 +1,27 @@
 import { Pressable, StyleSheet, View, type GestureResponderEvent, type StyleProp, type ViewStyle } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { LucideIcon } from "lucide-react-native";
 import { Text } from "./Text";
 import { useAppTheme } from "./theme";
 
-// Matches packages/ui's <BottomNav>/<BottomNavItem>: a floating rounded
-// pill inset from the screen edges (web: rounded-[28px], inset-x-4,
-// bottom-4, border, shadow-xl, translucent surface), not a flush bar.
-// True backdrop-blur isn't attempted here (would need expo-blur cross-
-// platform tuning) — a solid surface color at full opacity approximates it.
-// `style` is for the consumer's own placement (bottom safe-area inset) —
-// merged in, not replacing, the pill's own visual styles.
+// Matches packages/ui/src/bottom-nav.tsx's actual CSS: `fixed inset-x-0
+// bottom-0 ... border-t ... pb-[env(safe-area-inset-bottom)]` — a flush,
+// full-width sticky bar, not a rounded pill inset from the edges (an
+// earlier version of this file described that pill as "matching web",
+// which it never did). Self-positions and pads for the safe area itself,
+// same as web bakes both into the one component, so callers just render
+// <BottomNav> with no placement style of their own.
 export function BottomNav({ children, style }: { children: React.ReactNode; style?: StyleProp<ViewStyle> }) {
-  const { colors, radius } = useAppTheme();
+  const { colors } = useAppTheme();
+  const insets = useSafeAreaInsets();
   return (
     <View
       style={StyleSheet.flatten([
         styles.nav,
         {
           backgroundColor: colors.surface,
-          borderColor: colors.border,
-          borderRadius: radius.xl + 8,
+          borderTopColor: colors.border,
+          paddingBottom: insets.bottom,
         },
         style,
       ])}
@@ -38,7 +40,7 @@ export interface BottomNavItemProps {
 }
 
 // `emphasized` matches web's raised center "Post a job" nav item: a rounded-
-// square icon button pulled up out of the pill (packages/ui/src/bottom-nav.tsx
+// square icon button pulled up out of the bar (packages/ui/src/bottom-nav.tsx
 // `-mt-9 h-16 w-16 rounded-[22px]`), label stays mutedForeground even though
 // the icon pill itself is brand-colored.
 export function BottomNavItem({ icon: Icon, label, active, emphasized, onPress }: BottomNavItemProps) {
@@ -70,17 +72,15 @@ export function BottomNavItem({ icon: Icon, label, active, emphasized, onPress }
 
 const styles = StyleSheet.create({
   nav: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
     flexDirection: "row",
     alignItems: "stretch",
     justifyContent: "space-around",
     height: 64,
-    marginHorizontal: 16,
-    borderWidth: StyleSheet.hairlineWidth,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.12,
-    shadowRadius: 16,
-    elevation: 8,
+    borderTopWidth: StyleSheet.hairlineWidth,
   },
   item: {
     flex: 1,

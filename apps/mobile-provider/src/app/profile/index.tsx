@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Switch, View } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Trash2, X } from 'lucide-react-native';
-import { Screen, Card, Text, Button, TextField, useAppTheme } from '@asaplocal/ui-native';
+import { MapPin, Trash2, X } from 'lucide-react-native';
+import { Screen, Card, Text, Button, TextField, useAppTheme, useBottomNavInset } from '@asaplocal/ui-native';
 import { ApiError } from '@asaplocal/api-client';
 import Slider from '@react-native-community/slider';
 
@@ -61,6 +61,7 @@ interface BusinessProfileResponse {
 export default function BusinessProfileScreen() {
   const router = useRouter();
   const { colors, radius, spacing } = useAppTheme();
+  const bottomInset = useBottomNavInset();
 
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -285,7 +286,7 @@ export default function BusinessProfileScreen() {
 
   return (
     <Screen>
-      <ScrollView contentContainerStyle={[styles.scroll, { padding: spacing.four }]}>
+      <ScrollView contentContainerStyle={[styles.scroll, { padding: spacing.four, paddingBottom: bottomInset }]}>
         <View style={styles.headerRow}>
           <Text variant="small" color="muted" style={styles.flex1}>
             This is what customers see on your public listing.
@@ -471,15 +472,20 @@ export default function BusinessProfileScreen() {
           </Button>
         </Card>
 
-        {businessType !== 'SOLE_TRADER' && (
-          <Card style={styles.card}>
-            <Text variant="subtitle">Addresses</Text>
+        <Card style={styles.card}>
+          <View>
+            <Text variant="subtitle">{businessType === 'SOLE_TRADER' ? 'Trading address' : 'Addresses'}</Text>
             <Text variant="small" color="muted">
-              Your main address is used for lead matching. Add branches or sites you also trade from.
+              {businessType === 'SOLE_TRADER'
+                ? "Where you're based. This is what we match leads against."
+                : 'Your main address is used for lead matching. Add branches or sites you also trade from.'}
             </Text>
+          </View>
 
-            {primaryAddress && (
-              <View style={[styles.addressRow, { borderColor: colors.border }]}>
+          {primaryAddress && (
+            <View style={[styles.addressRow, { borderColor: colors.border }]}>
+              <MapPin size={16} color={colors.brand[600]} style={styles.addressIcon} />
+              <View style={styles.flex1}>
                 <Text variant="small">
                   {primaryAddress.addressLine ? `${primaryAddress.addressLine}, ` : ''}
                   {primaryAddress.city}
@@ -489,28 +495,31 @@ export default function BusinessProfileScreen() {
                   Main address
                 </Text>
               </View>
-            )}
+            </View>
+          )}
 
-            {addresses.map((a) => (
-              <View key={a.id} style={[styles.addressRow, { borderColor: colors.border }]}>
-                <View style={styles.flex1}>
-                  <Text variant="small">
-                    {a.addressLine}, {a.city}
-                    {a.postcode ? `, ${a.postcode}` : ''}
+          {addresses.map((a) => (
+            <View key={a.id} style={[styles.addressRow, { borderColor: colors.border }]}>
+              <MapPin size={16} color={colors.mutedForeground} style={styles.addressIcon} />
+              <View style={styles.flex1}>
+                <Text variant="small">
+                  {a.addressLine}, {a.city}
+                  {a.postcode ? `, ${a.postcode}` : ''}
+                </Text>
+                {a.label && (
+                  <Text variant="caption" color="muted">
+                    {a.label}
                   </Text>
-                  {a.label && (
-                    <Text variant="caption" color="muted">
-                      {a.label}
-                    </Text>
-                  )}
-                </View>
-                <Pressable onPress={() => removeAddress(a.id)} disabled={addressBusyId === a.id}>
-                  <Trash2 size={15} color={colors.mutedForeground} />
-                </Pressable>
+                )}
               </View>
-            ))}
+              <Pressable onPress={() => removeAddress(a.id)} disabled={addressBusyId === a.id}>
+                <Trash2 size={15} color={colors.mutedForeground} />
+              </Pressable>
+            </View>
+          ))}
 
-            {addingAddress ? (
+          {businessType !== 'SOLE_TRADER' &&
+            (addingAddress ? (
               <View style={styles.addAddressBlock}>
                 <View style={styles.switchRow}>
                   <Text variant="smallMedium" style={styles.flex1}>
@@ -535,18 +544,15 @@ export default function BusinessProfileScreen() {
               <Button variant="outline" onPress={() => setAddingAddress(true)} style={styles.sectionLabel}>
                 Add another address
               </Button>
-            )}
-          </Card>
-        )}
+            ))}
 
-        {businessType === 'SOLE_TRADER' && (
-          <Card style={styles.card}>
-            <Text variant="small" color="muted">
+          {businessType === 'SOLE_TRADER' && (
+            <Text variant="caption" color="muted">
               Registered as a sole trader, so you have a single trading address. Change your business type in onboarding if you
               operate from more than one site.
             </Text>
-          </Card>
-        )}
+          )}
+        </Card>
       </ScrollView>
       {sheet}
     </Screen>
@@ -595,7 +601,8 @@ const styles = StyleSheet.create({
   bannerLink: { color: '#92400e', textDecorationLine: 'underline' },
   success: { color: '#047857', marginTop: 8 },
   error: { color: '#dc2626', marginTop: 8 },
-  addressRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, borderWidth: StyleSheet.hairlineWidth, borderRadius: 12, padding: 10, marginTop: 8 },
+  addressRow: { flexDirection: 'row', alignItems: 'center', gap: 8, borderWidth: StyleSheet.hairlineWidth, borderRadius: 12, padding: 10, marginTop: 8 },
+  addressIcon: { marginTop: 1 },
   addAddressBlock: { gap: 8, marginTop: 12 },
   flex1: { flex: 1 },
 });

@@ -1,12 +1,17 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Animated, Easing, Pressable, StyleSheet, View } from 'react-native';
-import MapView, { Circle, Marker, PROVIDER_GOOGLE } from 'react-native-maps';
+import MapView, { Circle, Marker, PROVIDER_GOOGLE, type LatLng, type Point } from 'react-native-maps';
 import { useRouter } from 'expo-router';
+import { X } from 'lucide-react-native';
 import { Card, Text, Button, useAppTheme } from '@asaplocal/ui-native';
 
 import { api } from '@/lib/api';
 
 const MILES_TO_METERS = 1609.34;
+const INFO_CARD_WIDTH = 240;
+const INFO_CARD_FALLBACK_HEIGHT = 150;
+const POINTER_SIZE = 8;
+const PIN_HEIGHT = 42; // default react-native-maps pin anchors at its bottom tip, and stands roughly this tall above the coordinate point
 
 // Ports apps/provider/app/dashboard/radar-map.tsx's exact style array — the
 // Google Maps JSON style format is identical between @vis.gl/react-google-
@@ -66,42 +71,45 @@ function budgetLabel(lead: NearbyLead): string {
   return 'Not specified';
 }
 
-function PulsingDot() {
-  const scale1 = useRef(new Animated.Value(0)).current;
-  const scale2 = useRef(new Animated.Value(0)).current;
-  const scale3 = useRef(new Animated.Value(0)).current;
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(Math.max(value, min), Math.max(min, max));
+}
+
+// A Marker's custom child view is only re-captured (with tracksViewChanges)
+// when RN's own JS-side render cycle sees it change — react-native-maps
+// snapshots it as a bitmap otherwise, and in practice that snapshot timing
+// proved unreliable for a continuously-looping animation even with
+// tracksViewChanges + a JS-driven (non-native-driver) Animated value.
+// Circle is a native map primitive with its own props (radius, fillColor),
+// not a view snapshot, so animating those directly sidesteps the whole
+// marker-snapshot mechanism rather than continuing to fight it.
+function PulseRing({ center, delayMs }: { center: LatLng; delayMs: number }) {
+  const [progress, setProgress] = useState(0);
 
   useEffect(() => {
-    // useNativeDriver must be false here: a Marker's custom child view only
-    // gets re-captured (with tracksViewChanges) when RN's own JS-side render
-    // cycle sees it change. A native-driven animation updates the view
-    // directly on the native side, invisibly to that cycle, so the Marker
-    // snapshot never refreshes and the rings just sit frozen on frame one.
-    const loop = (value: Animated.Value, delay: number) =>
-      Animated.loop(
-        Animated.sequence([
-          Animated.delay(delay),
-          Animated.timing(value, { toValue: 1, duration: 2500, easing: Easing.out(Easing.ease), useNativeDriver: false }),
-          Animated.timing(value, { toValue: 0, duration: 0, useNativeDriver: false }),
-        ])
-      );
-    const animations = [loop(scale1, 0), loop(scale2, 800), loop(scale3, 1600)];
-    animations.forEach((a) => a.start());
-    return () => animations.forEach((a) => a.stop());
-  }, [scale1, scale2, scale3]);
-
-  const ringStyle = (value: Animated.Value) => ({
-    opacity: value.interpolate({ inputRange: [0, 1], outputRange: [0.3, 0] }),
-    transform: [{ scale: value.interpolate({ inputRange: [0, 1], outputRange: [1, 2.4] }) }],
-  });
+    const value = new Animated.Value(0);
+    const listenerId = value.addListener(({ value: v }) => setProgress(v));
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.delay(delayMs),
+        Animated.timing(value, { toValue: 1, duration: 2500, easing: Easing.out(Easing.ease), useNativeDriver: false }),
+        Animated.timing(value, { toValue: 0, duration: 0, useNativeDriver: false }),
+      ])
+    );
+    loop.start();
+    return () => {
+      loop.stop();
+      value.removeListener(listenerId);
+    };
+  }, [delayMs]);
 
   return (
-    <View style={styles.pulseWrap}>
-      <Animated.View style={[styles.pulseRing, ringStyle(scale1)]} />
-      <Animated.View style={[styles.pulseRing, ringStyle(scale2)]} />
-      <Animated.View style={[styles.pulseRing, ringStyle(scale3)]} />
-      <View style={styles.pulseDot} />
-    </View>
+    <Circle
+      center={center}
+      radius={20 + progress * 350}
+      strokeWidth={0}
+      fillColor={`rgba(193, 95, 42, ${(0.35 * (1 - progress)).toFixed(2)})`}
+    />
   );
 }
 
@@ -121,8 +129,12 @@ export function RadarMap({
 }) {
   const router = useRouter();
   const { colors, scheme } = useAppTheme();
+  const mapRef = useRef<MapView>(null);
   const [leads, setLeads] = useState<NearbyLead[]>([]);
   const [selected, setSelected] = useState<NearbyLead | null>(null);
+  const [selectedPoint, setSelectedPoint] = useState<Point | null>(null);
+  const [infoCardHeight, setInfoCardHeight] = useState(INFO_CARD_FALLBACK_HEIGHT);
+  const [mapWidth, setMapWidth] = useState(0);
 
   const poll = useCallback(async () => {
     try {
@@ -141,8 +153,28 @@ export function RadarMap({
 
   const circles = serviceAreas.length > 0 ? serviceAreas : [{ ...center, radiusMiles: baseRadiusMiles }];
 
-  const handleView = (lead: NearbyLead) => {
+  const clearSelection = useCallback(() => {
     setSelected(null);
+    setSelectedPoint(null);
+  }, []);
+
+  // The popup needs to sit above the exact pin the provider tapped, so its
+  // on-screen position is looked up from the pin's lat/lng rather than
+  // pinned to a fixed spot on the card — and re-looked-up on pan/zoom so it
+  // stays anchored to that pin instead of drifting off it.
+  const selectLead = useCallback(async (lead: NearbyLead) => {
+    setSelected(lead);
+    setInfoCardHeight(INFO_CARD_FALLBACK_HEIGHT);
+    try {
+      const point = await mapRef.current?.pointForCoordinate({ latitude: lead.jitteredLat, longitude: lead.jitteredLng });
+      if (point) setSelectedPoint(point);
+    } catch {
+      // best-effort — falls back to no popup rather than a mispositioned one
+    }
+  }, []);
+
+  const handleView = (lead: NearbyLead) => {
+    clearSelection();
     // An un-acquired lead has no detail route of its own yet (acquiring is
     // what unlocks one) — land on the marketplace list with this lead
     // singled out, mirroring apps/provider/app/dashboard/radar-map.tsx's
@@ -151,10 +183,16 @@ export function RadarMap({
     router.push(lead.alreadyAcquired ? `/leads/${lead.id}` : { pathname: '/leads', params: { highlight: lead.id } });
   };
 
+  const infoLeft = selectedPoint ? clamp(selectedPoint.x - INFO_CARD_WIDTH / 2, 8, mapWidth - INFO_CARD_WIDTH - 8) : 0;
+  const infoTop = selectedPoint ? selectedPoint.y - infoCardHeight - POINTER_SIZE - PIN_HEIGHT : 0;
+  const pointerLeft = selectedPoint ? selectedPoint.x - POINTER_SIZE : 0;
+  const pointerTop = selectedPoint ? selectedPoint.y - POINTER_SIZE * 2 - PIN_HEIGHT : 0;
+
   return (
     <Card style={styles.card}>
-      <View style={styles.mapWrap}>
+      <View style={styles.mapWrap} onLayout={(e) => setMapWidth(e.nativeEvent.layout.width)}>
         <MapView
+          ref={mapRef}
           provider={PROVIDER_GOOGLE}
           style={StyleSheet.absoluteFill}
           initialRegion={{ latitude: center.lat, longitude: center.lng, latitudeDelta: 0.25, longitudeDelta: 0.25 }}
@@ -162,7 +200,10 @@ export function RadarMap({
           showsUserLocation={false}
           showsCompass={false}
           toolbarEnabled={false}
-          onPress={() => setSelected(null)}
+          onPress={clearSelection}
+          onRegionChangeComplete={() => {
+            if (selected) selectLead(selected);
+          }}
         >
           {circles.map((area, i) => (
             <Circle
@@ -175,14 +216,11 @@ export function RadarMap({
             />
           ))}
 
-          {/* tracksViewChanges must stay true here: react-native-maps only
-              re-renders a custom marker's child view (vs. reusing a static
-              snapshot) while this is true, so with it false the pulse
-              animation never actually plays — the marker just freezes as
-              whatever frame it first rendered. Lead pins below have no
-              animation, so they keep it false for performance. */}
-          <Marker coordinate={{ latitude: center.lat, longitude: center.lng }} anchor={{ x: 0.5, y: 0.5 }} tracksViewChanges>
-            <PulsingDot />
+          <PulseRing center={{ latitude: center.lat, longitude: center.lng }} delayMs={0} />
+          <PulseRing center={{ latitude: center.lat, longitude: center.lng }} delayMs={800} />
+          <PulseRing center={{ latitude: center.lat, longitude: center.lng }} delayMs={1600} />
+          <Marker coordinate={{ latitude: center.lat, longitude: center.lng }} anchor={{ x: 0.5, y: 0.5 }} tracksViewChanges={false}>
+            <View style={styles.centerDot} />
           </Marker>
 
           {leads.map((lead) => (
@@ -192,30 +230,41 @@ export function RadarMap({
               pinColor="#c15f2a"
               onPress={(e) => {
                 // On Android a marker tap also bubbles up to the MapView's
-                // own onPress, which clears `selected` — so without this the
-                // two handlers fired in the same tick and the info card
+                // own onPress, which clears the selection — so without this
+                // the two handlers fired in the same tick and the info card
                 // never actually appeared, no matter how reliably the
                 // marker's own onPress ran.
                 e.stopPropagation();
-                setSelected(lead);
+                selectLead(lead);
               }}
             />
           ))}
         </MapView>
 
-        {selected && (
-          <Card style={[styles.infoCard, { backgroundColor: colors.surface }]}>
-            <Text variant="smallMedium">{selected.title}</Text>
-            <Text variant="caption" color="muted">
-              {selected.categoryName} · {selected.city} · {selected.distanceMiles.toFixed(1)} mi away
-            </Text>
-            <Text variant="small" style={styles.infoBudget}>
-              Expected cost: {budgetLabel(selected)}
-            </Text>
-            <Button size="sm" onPress={() => handleView(selected)} style={styles.infoButton}>
-              {selected.alreadyAcquired ? 'View details' : 'View & acquire'}
-            </Button>
-          </Card>
+        {selected && selectedPoint && (
+          <>
+            <Card
+              onLayout={(e) => setInfoCardHeight(e.nativeEvent.layout.height)}
+              style={[styles.infoCard, { backgroundColor: colors.surface, left: infoLeft, top: infoTop, width: INFO_CARD_WIDTH }]}
+            >
+              <Pressable onPress={clearSelection} style={styles.infoClose} hitSlop={8}>
+                <X size={16} color={colors.mutedForeground} />
+              </Pressable>
+              <Text variant="smallMedium" style={styles.infoTitle}>
+                {selected.title}
+              </Text>
+              <Text variant="caption" color="muted">
+                {selected.categoryName} · {selected.city} · {selected.distanceMiles.toFixed(1)} mi away
+              </Text>
+              <Text variant="small" style={styles.infoBudget}>
+                Expected cost: {budgetLabel(selected)}
+              </Text>
+              <Button size="sm" onPress={() => handleView(selected)} style={styles.infoButton}>
+                {selected.alreadyAcquired ? 'View details' : 'View & acquire'}
+              </Button>
+            </Card>
+            <View style={[styles.infoPointer, { left: pointerLeft, top: pointerTop, borderTopColor: colors.surface }]} />
+          </>
         )}
 
         <Pressable style={styles.pill} onPress={() => router.push('/leads')}>
@@ -242,25 +291,26 @@ const styles = StyleSheet.create({
   },
   infoCard: {
     position: 'absolute',
-    left: 12,
-    right: 12,
-    bottom: 52,
     gap: 2,
   },
+  infoClose: { position: 'absolute', top: 8, right: 8, zIndex: 1 },
+  infoTitle: { paddingRight: 20 },
   infoBudget: { marginTop: 2 },
   infoButton: { marginTop: 8 },
-  pulseWrap: { width: 64, height: 64, alignItems: 'center', justifyContent: 'center' },
-  pulseRing: {
+  infoPointer: {
     position: 'absolute',
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: '#c15f2a',
+    width: 0,
+    height: 0,
+    borderLeftWidth: POINTER_SIZE,
+    borderRightWidth: POINTER_SIZE,
+    borderTopWidth: POINTER_SIZE,
+    borderLeftColor: 'transparent',
+    borderRightColor: 'transparent',
   },
-  pulseDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
+  centerDot: {
+    width: 14,
+    height: 14,
+    borderRadius: 7,
     backgroundColor: '#c15f2a',
     borderWidth: 2,
     borderColor: '#fff',

@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Keyboard, Platform } from 'react-native';
 import { usePathname, useRouter } from 'expo-router';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LayoutDashboard, Target, CalendarDays, MessageSquare } from 'lucide-react-native';
 import { BottomNav, BottomNavItem } from '@asaplocal/ui-native';
 
@@ -15,7 +14,6 @@ import { BottomNav, BottomNavItem } from '@asaplocal/ui-native';
 export function FloatingBottomNav() {
   const pathname = usePathname();
   const router = useRouter();
-  const insets = useSafeAreaInsets();
   const [keyboardVisible, setKeyboardVisible] = useState(false);
 
   // This is fixed-positioned at the window level (not scoped to any one
@@ -38,7 +36,7 @@ export function FloatingBottomNav() {
   if (keyboardVisible) return null;
 
   return (
-    <BottomNav style={{ position: 'absolute', left: 0, right: 0, bottom: 16 + insets.bottom }}>
+    <BottomNav>
       <BottomNavItem icon={LayoutDashboard} label="Home" active={pathname === '/'} onPress={() => router.navigate('/')} />
       <BottomNavItem icon={Target} label="Leads" active={pathname.startsWith('/leads')} onPress={() => router.navigate('/leads')} />
       <BottomNavItem
