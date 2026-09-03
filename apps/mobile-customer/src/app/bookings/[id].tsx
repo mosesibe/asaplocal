@@ -8,6 +8,7 @@ import { Screen, Card, Text, Badge, Button, useAppTheme, useBottomNavInset } fro
 import { api } from '@/lib/api';
 import { uploadImage } from '@/lib/upload';
 import { usePhotoPicker } from '@/lib/photo-picker';
+import { TrackingMap } from '@/components/TrackingMap';
 import { ApiError } from '@asaplocal/api-client';
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:3000';
@@ -45,6 +46,11 @@ interface BookingDetail {
   durationMinutes: number | null;
   addressLine: string;
   city: string;
+  trackingEnabled: boolean;
+  etaMinutes: number | null;
+  providerLat: number | null;
+  providerLng: number | null;
+  destination: { lat: number; lng: number } | null;
   business: { id: string; slug: string; name: string; logoUrl: string | null; phone: string | null };
   balance: Balance;
   assignedStaff: { fullName: string; jobTitle: string | null; profilePhotoUrl: string; idFrontImageUrl: string; idBackImageUrl: string } | null;
@@ -87,6 +93,18 @@ export default function BookingDetailScreen() {
   useEffect(() => {
     load();
   }, [load]);
+
+  // Live tracking has no push channel on mobile (every other screen here
+  // polls rather than pulling in a Pusher client) — re-fetch the booking
+  // every 10s while a live map could actually be showing, so the provider's
+  // position and ETA keep moving instead of freezing at whatever they were
+  // on page load.
+  const showTracking = !!data?.trackingEnabled && ['CONFIRMED', 'IN_PROGRESS'].includes(data?.status ?? '');
+  useEffect(() => {
+    if (!showTracking) return;
+    const interval = setInterval(load, 10_000);
+    return () => clearInterval(interval);
+  }, [showTracking, load]);
 
   async function handleAcceptCompletion() {
     setBusy(true);
@@ -233,6 +251,16 @@ export default function BookingDetailScreen() {
               </View>
             ))}
           </Card>
+        )}
+
+        {showTracking && (
+          <View style={styles.mapSection}>
+            <TrackingMap
+              destination={data.destination}
+              providerPosition={data.providerLat != null && data.providerLng != null ? { lat: data.providerLat, lng: data.providerLng } : null}
+              etaMinutes={data.etaMinutes}
+            />
+          </View>
         )}
 
         {data.assignedStaff && (
@@ -535,6 +563,7 @@ const styles = StyleSheet.create({
   scroll: { gap: 8 },
   h1: { fontSize: 22, lineHeight: 28 },
   card: { gap: 8, marginTop: 8 },
+  mapSection: { marginTop: 8 },
   error: { color: '#dc2626' },
   priceRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 8 },
   divider: { borderTopWidth: StyleSheet.hairlineWidth, marginVertical: 2 },
