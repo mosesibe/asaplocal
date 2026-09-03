@@ -11,9 +11,6 @@
       "bundleIdentifier": "pro.asaplocal.customer",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
-      },
-      "config": {
-        "googleMapsApiKey": "AIzaSyCigTdR363LL5JG0I8cgY8yDXndQsgmDhA"
       }
     },
     "android": {
@@ -58,6 +55,12 @@
         "expo-location",
         {
           "locationWhenInUsePermission": "AsapLocal uses your location to find local pros and fill in your address."
+        }
+      ],
+      [
+        "react-native-maps",
+        {
+          "iosGoogleMapsApiKey": "AIzaSyCigTdR363LL5JG0I8cgY8yDXndQsgmDhA"
         }
       ]
     ],

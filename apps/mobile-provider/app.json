@@ -8,10 +8,7 @@
     "scheme": "asaplocalbusiness",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "bundleIdentifier": "pro.asaplocal.provider",
-      "config": {
-        "googleMapsApiKey": "AIzaSyCigTdR363LL5JG0I8cgY8yDXndQsgmDhA"
-      }
+      "bundleIdentifier": "pro.asaplocal.provider"
     },
     "android": {
       "package": "pro.asaplocal.provider",
@@ -59,6 +56,12 @@
         "expo-location",
         {
           "locationWhenInUsePermission": "AsapLocal Business uses your location to fill in your business address and service area."
+        }
+      ],
+      [
+        "react-native-maps",
+        {
+          "iosGoogleMapsApiKey": "AIzaSyCigTdR363LL5JG0I8cgY8yDXndQsgmDhA"
         }
       ]
     ],
