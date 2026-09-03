@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Screen, Text, useAppTheme, useBottomNavInset } from '@asaplocal/ui-native';
 
@@ -44,9 +44,8 @@ export default function HomeScreen() {
   }, []);
 
   return (
-    <Screen>
+    <Screen keyboardVerticalOffset={90}>
       <View style={styles.safeArea}>
-        <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : 'height'} keyboardVerticalOffset={90}>
           <ScrollView contentContainerStyle={{ paddingBottom: bottomInset }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
             <View style={[styles.hero, { paddingHorizontal: spacing.four }]}>
               <Text variant="title" style={styles.heroTitle}>
@@ -105,7 +104,6 @@ export default function HomeScreen() {
               <ServicesCarousel categories={categories} />
             </View>
           </ScrollView>
-        </KeyboardAvoidingView>
       </View>
     </Screen>
   );
@@ -113,7 +111,6 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1 },
-  flex: { flex: 1 },
   hero: { paddingTop: 24, paddingBottom: 32 },
   heroTitle: { textAlign: 'center', fontSize: 28, lineHeight: 34 },
   heroSubtitle: { textAlign: 'center', marginTop: 10 },

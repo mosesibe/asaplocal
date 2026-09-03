@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native';
 import { Star } from 'lucide-react-native';
-import { Screen, Card, Text, Button, TextField, useAppTheme } from '@asaplocal/ui-native';
+import { Screen, Card, Text, Button, TextField, useAppTheme, useBottomNavInset } from '@asaplocal/ui-native';
 
 import { api } from '@/lib/api';
 
@@ -40,6 +40,7 @@ function StarRow({ rating, size = 14 }: { rating: number; size?: number }) {
 // not shared with native), so this builds a small local star row instead.
 export default function ReviewsScreen() {
   const { colors, spacing } = useAppTheme();
+  const bottomInset = useBottomNavInset();
   const [data, setData] = useState<ReviewsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -102,7 +103,7 @@ export default function ReviewsScreen() {
 
   return (
     <Screen>
-      <ScrollView contentContainerStyle={{ padding: spacing.four }}>
+      <ScrollView contentContainerStyle={{ padding: spacing.four, paddingBottom: bottomInset }} keyboardShouldPersistTaps="handled">
         <Text variant="title">Reviews ({data.reviewCount})</Text>
 
         {error && (

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native';
-import { Screen, Card, Text, Button, TextField, Badge, useAppTheme } from '@asaplocal/ui-native';
+import { Screen, Card, Text, Button, TextField, Badge, useAppTheme, useBottomNavInset } from '@asaplocal/ui-native';
 import { ApiError } from '@asaplocal/api-client';
 
 import { api } from '@/lib/api';
@@ -19,6 +19,7 @@ const MAX_REFERENCES = 3;
 // of the three new screens — no uploads, just a request form gated at 3.
 export default function ReferencesScreen() {
   const { colors, spacing } = useAppTheme();
+  const bottomInset = useBottomNavInset();
   const [references, setReferences] = useState<Reference[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -76,7 +77,7 @@ export default function ReferencesScreen() {
 
   return (
     <Screen>
-      <ScrollView contentContainerStyle={[styles.scroll, { padding: spacing.four }]}>
+      <ScrollView contentContainerStyle={[styles.scroll, { padding: spacing.four, paddingBottom: bottomInset }]} keyboardShouldPersistTaps="handled">
         <Text variant="body" color="muted">
           Optional — request 2-3 customer references. They'll get an email to confirm.
         </Text>

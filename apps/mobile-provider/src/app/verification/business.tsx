@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native';
 import * as DocumentPicker from 'expo-document-picker';
-import { Screen, Card, Text, Button, Badge, TextField, useAppTheme, type BadgeVariant } from '@asaplocal/ui-native';
+import { Screen, Card, Text, Button, Badge, TextField, useAppTheme, useBottomNavInset, type BadgeVariant } from '@asaplocal/ui-native';
 import { ApiError } from '@asaplocal/api-client';
 
 import { api } from '@/lib/api';
@@ -52,6 +52,7 @@ function statusBadge(status: string | null | undefined): { variant: BadgeVariant
 // (sole trader etc.) gets the 4 manual document-upload rows.
 export default function BusinessVerificationScreen() {
   const { colors, spacing } = useAppTheme();
+  const bottomInset = useBottomNavInset();
   const [data, setData] = useState<BusinessVerification | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -143,7 +144,7 @@ export default function BusinessVerificationScreen() {
 
   return (
     <Screen>
-      <ScrollView contentContainerStyle={[styles.scroll, { padding: spacing.four }]}>
+      <ScrollView contentContainerStyle={[styles.scroll, { padding: spacing.four, paddingBottom: bottomInset }]} keyboardShouldPersistTaps="handled">
         {isLimitedCompany ? (
           <Card style={styles.card}>
             <Text variant="small" color="muted">

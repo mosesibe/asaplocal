@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Modal, Pressable, StyleSheet, View } from 'react-native';
+import { KeyboardAvoidingView, Modal, Platform, Pressable, StyleSheet, View } from 'react-native';
 import { MapPin, Pencil, Trash2, Plus } from 'lucide-react-native';
 import { Button, Card, Text, TextField, useAppTheme } from '@asaplocal/ui-native';
 
@@ -135,7 +135,7 @@ export function AddressesSection({ initial }: { initial: Address[] }) {
       )}
 
       <Modal visible={adding} animationType="slide" transparent onRequestClose={() => setAdding(false)}>
-        <View style={styles.overlay}>
+        <KeyboardAvoidingView style={styles.overlay} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
           <Pressable style={styles.backdrop} onPress={() => setAdding(false)} />
           <Card style={[styles.sheet, { backgroundColor: colors.surface, padding: spacing.four }]}>
             <Text variant="subtitle" style={styles.sheetTitle}>
@@ -146,7 +146,7 @@ export function AddressesSection({ initial }: { initial: Address[] }) {
               Save address
             </Button>
           </Card>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
     </View>
   );

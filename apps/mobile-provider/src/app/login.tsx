@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { Image, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Image, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Eye, EyeOff } from 'lucide-react-native';
 import { Screen, Card, Text, Button, TextField, useAppTheme } from '@asaplocal/ui-native';
@@ -37,7 +37,6 @@ export default function LoginScreen() {
 
   return (
     <Screen>
-      <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <ScrollView contentContainerStyle={[styles.scroll, { padding: spacing.four }]} keyboardShouldPersistTaps="handled">
           <View style={styles.brandRow}>
             <Image source={require('@/assets/images/splash-icon.png')} style={styles.mark} resizeMode="contain" />
@@ -88,13 +87,11 @@ export default function LoginScreen() {
             </Pressable>
           </Card>
         </ScrollView>
-      </KeyboardAvoidingView>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  flex: { flex: 1 },
   scroll: { flexGrow: 1 },
   brandRow: { flexDirection: 'row', alignItems: 'baseline', gap: 8, marginTop: 12 },
   mark: { width: 28, height: 28, alignSelf: 'center' },

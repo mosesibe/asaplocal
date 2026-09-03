@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
-import { Screen, Card, Text, Badge, Button, useAppTheme, type BadgeVariant } from '@asaplocal/ui-native';
+import { Screen, Card, Text, Badge, Button, useAppTheme, useBottomNavInset, type BadgeVariant } from '@asaplocal/ui-native';
 
 import { api } from '@/lib/api';
 import { StaffForm, type StaffFormInitial } from '@/components/StaffForm';
@@ -28,6 +28,7 @@ const STATUS_VARIANT: Record<ApprovalStatus, BadgeVariant> = {
 export default function StaffDetailScreen() {
   const { staffId } = useLocalSearchParams<{ staffId: string }>();
   const { colors, spacing } = useAppTheme();
+  const bottomInset = useBottomNavInset();
   const [data, setData] = useState<StaffDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -89,7 +90,7 @@ export default function StaffDetailScreen() {
 
   return (
     <Screen>
-      <ScrollView contentContainerStyle={[styles.scroll, { padding: spacing.four }]}>
+      <ScrollView contentContainerStyle={[styles.scroll, { padding: spacing.four, paddingBottom: bottomInset }]} keyboardShouldPersistTaps="handled">
         <View style={styles.headerRow}>
           <Text variant="title" style={styles.heading}>
             {data.fullName}

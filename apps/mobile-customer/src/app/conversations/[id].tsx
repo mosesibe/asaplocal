@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, FlatList, Image, Keyboard, KeyboardAvoidingView, Platform, Pressable, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, FlatList, Image, Keyboard, Platform, Pressable, StyleSheet, View } from 'react-native';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowUp, Paperclip, X } from 'lucide-react-native';
@@ -127,8 +127,8 @@ export default function ConversationScreen() {
   }
 
   return (
-    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : 'height'} keyboardVerticalOffset={90}>
-      <Screen>
+    <>
+      <Screen keyboardVerticalOffset={90}>
         {header && <Stack.Screen options={{ title: header.recipientName }} />}
         {header && (header.jobRequestId || header.jobTitle) && (
           <Card style={[styles.headerCard, { margin: spacing.four, marginBottom: 0 }]}>
@@ -223,12 +223,11 @@ export default function ConversationScreen() {
         </View>
       </Screen>
       {sheet}
-    </KeyboardAvoidingView>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
   centered: { alignItems: 'center', justifyContent: 'center' },
   headerCard: { gap: 2 },
   headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8 },

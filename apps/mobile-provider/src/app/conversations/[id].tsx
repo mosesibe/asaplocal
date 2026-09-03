@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, FlatList, Keyboard, KeyboardAvoidingView, Platform, Pressable, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, FlatList, Keyboard, Platform, Pressable, StyleSheet, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowUp, Sparkles } from 'lucide-react-native';
@@ -142,8 +142,7 @@ export default function ConversationScreen() {
   }
 
   return (
-    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : 'height'} keyboardVerticalOffset={90}>
-      <Screen>
+      <Screen keyboardVerticalOffset={90}>
         {meta && (
           <Card style={[styles.metaCard, { marginHorizontal: spacing.four, marginTop: spacing.four }]}>
             <View style={styles.metaHeaderRow}>
@@ -229,12 +228,10 @@ export default function ConversationScreen() {
           </Pressable>
         </View>
       </Screen>
-    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
   centered: { alignItems: 'center', justifyContent: 'center' },
   list: { gap: 8 },
   bubbleRow: { flexDirection: 'row' },

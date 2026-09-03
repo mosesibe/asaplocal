@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { Button, Card, Text, TextField, useAppTheme } from '@asaplocal/ui-native';
 
 export interface SearchFilterValues {
@@ -41,7 +41,7 @@ export function SearchFiltersSheet({
 
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
-      <View style={styles.overlay}>
+      <KeyboardAvoidingView style={styles.overlay} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <Pressable style={styles.backdrop} onPress={onClose} />
         <Card style={[styles.sheet, { backgroundColor: colors.surface, padding: spacing.four }]}>
           <Text variant="subtitle" style={styles.title}>
@@ -107,7 +107,7 @@ export function SearchFiltersSheet({
             Apply filters
           </Button>
         </Card>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }

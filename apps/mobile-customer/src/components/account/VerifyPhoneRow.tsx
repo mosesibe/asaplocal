@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Modal, Pressable, StyleSheet, View } from 'react-native';
+import { KeyboardAvoidingView, Modal, Platform, Pressable, StyleSheet } from 'react-native';
 import { Phone } from 'lucide-react-native';
 import { Badge, Button, Card, Text, TextField, useAppTheme } from '@asaplocal/ui-native';
 
@@ -62,7 +62,7 @@ export function VerifyPhoneRow({ phone, verified, onVerified }: { phone: string 
         right={verified ? <Badge variant="success">Verified</Badge> : <Button size="sm" variant="outline" onPress={openSheet}>Verify phone</Button>}
       />
       <Modal visible={open} animationType="slide" transparent onRequestClose={() => setOpen(false)}>
-        <View style={styles.overlay}>
+        <KeyboardAvoidingView style={styles.overlay} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
           <Pressable style={styles.backdrop} onPress={() => setOpen(false)} />
           <Card style={[styles.sheet, { backgroundColor: colors.surface, padding: spacing.four }]}>
             {step === 'phone' ? (
@@ -93,7 +93,7 @@ export function VerifyPhoneRow({ phone, verified, onVerified }: { phone: string 
               </>
             )}
           </Card>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
     </>
   );

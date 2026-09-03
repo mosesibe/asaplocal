@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { Pause, Play, Plus, Sparkles, Trash2, X } from 'lucide-react-native';
-import { Screen, Card, Text, Button, Badge, TextField, useAppTheme } from '@asaplocal/ui-native';
+import { Screen, Card, Text, Button, Badge, TextField, useAppTheme, useBottomNavInset } from '@asaplocal/ui-native';
 import { ApiError } from '@asaplocal/api-client';
 
 import { api } from '@/lib/api';
@@ -51,6 +51,7 @@ function formatPrice(s: ServiceRow): string {
 // checkbox-tree toggle logic, shown as a modal instead of an inline card.
 export default function ServicesScreen() {
   const { colors, radius, spacing } = useAppTheme();
+  const bottomInset = useBottomNavInset();
   const [services, setServices] = useState<ServiceRow[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
@@ -131,7 +132,7 @@ export default function ServicesScreen() {
 
   return (
     <Screen>
-      <ScrollView contentContainerStyle={[styles.scroll, { padding: spacing.four }]}>
+      <ScrollView contentContainerStyle={[styles.scroll, { padding: spacing.four, paddingBottom: bottomInset }]} keyboardShouldPersistTaps="handled">
         <Text variant="small" color="muted">
           <Text variant="smallMedium">{activeCount}</Text> active
           {services.length - activeCount > 0 ? ` · ${services.length - activeCount} paused` : ''}

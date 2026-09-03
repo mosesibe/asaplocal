@@ -1,6 +1,6 @@
 import { ScrollView, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Screen, Text, useAppTheme } from '@asaplocal/ui-native';
+import { Screen, Text, useAppTheme, useBottomNavInset } from '@asaplocal/ui-native';
 
 import { StaffForm } from '@/components/StaffForm';
 
@@ -8,10 +8,11 @@ import { StaffForm } from '@/components/StaffForm';
 export default function NewStaffScreen() {
   const router = useRouter();
   const { spacing } = useAppTheme();
+  const bottomInset = useBottomNavInset();
 
   return (
     <Screen>
-      <ScrollView contentContainerStyle={[styles.scroll, { padding: spacing.four }]}>
+      <ScrollView contentContainerStyle={[styles.scroll, { padding: spacing.four, paddingBottom: bottomInset }]} keyboardShouldPersistTaps="handled">
         <Text variant="title" style={styles.heading}>
           Add a staff member
         </Text>

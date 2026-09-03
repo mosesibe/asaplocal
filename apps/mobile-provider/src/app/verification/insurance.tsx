@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native';
 import * as DocumentPicker from 'expo-document-picker';
-import { Screen, Card, Text, Button, Badge, TextField, useAppTheme, type BadgeVariant } from '@asaplocal/ui-native';
+import { Screen, Card, Text, Button, Badge, TextField, useAppTheme, useBottomNavInset, type BadgeVariant } from '@asaplocal/ui-native';
 import { ApiError } from '@asaplocal/api-client';
 
 import { api } from '@/lib/api';
@@ -140,6 +140,7 @@ interface InsuranceResponse {
 // mirrored here rather than switching to a read-only view.
 export default function InsuranceScreen() {
   const { colors, spacing } = useAppTheme();
+  const bottomInset = useBottomNavInset();
   const [policies, setPolicies] = useState<Policy[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -168,7 +169,7 @@ export default function InsuranceScreen() {
 
   return (
     <Screen>
-      <ScrollView contentContainerStyle={[styles.scroll, { padding: spacing.four }]}>
+      <ScrollView contentContainerStyle={[styles.scroll, { padding: spacing.four, paddingBottom: bottomInset }]} keyboardShouldPersistTaps="handled">
         <Text variant="small" color="muted">
           Public Liability is required. Professional Indemnity and Employer's Liability are optional.
         </Text>

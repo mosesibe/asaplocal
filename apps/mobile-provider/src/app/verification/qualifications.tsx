@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import * as DocumentPicker from 'expo-document-picker';
-import { Screen, Card, Text, Button, Badge, TextField, useAppTheme, type BadgeVariant } from '@asaplocal/ui-native';
+import { Screen, Card, Text, Button, Badge, TextField, useAppTheme, useBottomNavInset, type BadgeVariant } from '@asaplocal/ui-native';
 import { ApiError } from '@asaplocal/api-client';
 
 import { api } from '@/lib/api';
@@ -39,6 +39,7 @@ function statusVariant(status: string): BadgeVariant {
 // with a suggested-qualifications hint from that category.
 export default function QualificationsScreen() {
   const { colors, radius, spacing } = useAppTheme();
+  const bottomInset = useBottomNavInset();
   const [data, setData] = useState<QualificationsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -130,7 +131,7 @@ export default function QualificationsScreen() {
 
   return (
     <Screen>
-      <ScrollView contentContainerStyle={[styles.scroll, { padding: spacing.four }]}>
+      <ScrollView contentContainerStyle={[styles.scroll, { padding: spacing.four, paddingBottom: bottomInset }]} keyboardShouldPersistTaps="handled">
         <Text variant="small" color="muted">
           {data.regulatedCategories.length > 0
             ? `Suggested for ${data.regulatedCategories.map((c) => c.name).join(', ')}: ${allSuggested.join(', ') || '—'}`

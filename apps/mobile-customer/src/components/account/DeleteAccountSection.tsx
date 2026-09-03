@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Modal, Pressable, StyleSheet, View } from 'react-native';
+import { KeyboardAvoidingView, Modal, Platform, Pressable, StyleSheet, View } from 'react-native';
 import { Trash2 } from 'lucide-react-native';
 import { Button, Card, Text, TextField, useAppTheme } from '@asaplocal/ui-native';
 
@@ -35,7 +35,7 @@ export function DeleteAccountSection() {
     <View style={styles.section}>
       <SectionRow icon={Trash2} label="Delete my account" description="Submit a request for our team to close your account" onPress={() => setOpen(true)} />
       <Modal visible={open} animationType="fade" transparent onRequestClose={close}>
-        <View style={styles.overlay}>
+        <KeyboardAvoidingView style={styles.overlay} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
           <Card style={[styles.dialog, { backgroundColor: colors.surface, padding: spacing.four }]}>
             {done ? (
               <>
@@ -74,7 +74,7 @@ export function DeleteAccountSection() {
               </>
             )}
           </Card>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
     </View>
   );
