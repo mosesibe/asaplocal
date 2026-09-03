@@ -416,7 +416,7 @@ export function RadarMap({
 
 const styles = StyleSheet.create({
   card: { padding: 0, overflow: 'hidden' },
-  mapWrap: { height: 280, width: '100%' },
+  mapWrap: { height: 380, width: '100%' },
   pill: {
     position: 'absolute',
     bottom: 12,

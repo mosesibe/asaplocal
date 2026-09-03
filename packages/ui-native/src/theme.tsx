@@ -3,6 +3,7 @@ import { useColorScheme } from "react-native";
 import { getPalette, Radius, Spacing, FontFamily, type AppName, type ColorScheme, type Palette } from "./tokens";
 
 export interface Theme {
+  app: AppName;
   colors: Palette;
   scheme: ColorScheme;
   radius: typeof Radius;
@@ -31,7 +32,7 @@ export function UiNativeThemeProvider({ app, children, schemeOverride }: UiNativ
     schemeOverride && schemeOverride !== "system" ? schemeOverride : systemScheme === "dark" ? "dark" : "light";
 
   const value = useMemo<Theme>(
-    () => ({ colors: getPalette(app, scheme), scheme, radius: Radius, spacing: Spacing, font: FontFamily }),
+    () => ({ app, colors: getPalette(app, scheme), scheme, radius: Radius, spacing: Spacing, font: FontFamily }),
     [app, scheme]
   );
 

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@asaplocal/auth";
 import { prisma } from "@asaplocal/db";
+import { generateQuoteTemplate } from "@asaplocal/core";
 
 // JSON counterpart to the /leads/[id] server-rendered page — the mobile app
 // has no server components, so this mirrors the same queries as plain JSON.
@@ -42,6 +43,16 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     : "the customer";
   const isWon = access.status === "WON";
 
+  const aiSuggestion = !existingQuote
+    ? await generateQuoteTemplate({
+        businessName: business.name,
+        serviceCategory: jobRequest.category.name,
+        jobDescription: jobRequest.description,
+        budgetMinPence: jobRequest.budgetMinPence,
+        budgetMaxPence: jobRequest.budgetMaxPence,
+      })
+    : null;
+
   return NextResponse.json({
     lead: {
       id: lead.id,
@@ -59,10 +70,12 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     },
     access: { id: access.id, status: access.status, refundRequestStatus: access.refundRequest?.status ?? null },
     customer: { name: customerName, phone: isWon ? jobRequest.customer.phone : null },
+    assignedByDispatch: !!dispatchAssignment,
     dispatchNote: dispatchAssignment?.note ?? null,
     existingQuote: existingQuote
       ? { amountPence: existingQuote.amountPence, message: existingQuote.message, status: existingQuote.status }
       : null,
+    aiSuggestion,
     ownBooking: ownBooking ? { id: ownBooking.id, status: ownBooking.status } : null,
   });
 }

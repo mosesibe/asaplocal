@@ -4,20 +4,44 @@ import type { LucideIcon } from "lucide-react-native";
 import { Text } from "./Text";
 import { useAppTheme } from "./theme";
 
-// Matches packages/ui/src/bottom-nav.tsx's actual CSS: `fixed inset-x-0
-// bottom-0 ... border-t ... pb-[env(safe-area-inset-bottom)]` — a flush,
-// full-width sticky bar, not a rounded pill inset from the edges (an
-// earlier version of this file described that pill as "matching web",
-// which it never did). Self-positions and pads for the safe area itself,
-// same as web bakes both into the one component, so callers just render
-// <BottomNav> with no placement style of their own.
+// The two apps' web navs genuinely differ, not just cosmetically:
+// apps/web/components/web-bottom-nav.tsx overrides the shared
+// packages/ui/src/bottom-nav.tsx base (a flush `fixed inset-x-0 bottom-0`
+// bar) into a rounded pill inset from the edges — apps/provider's own
+// ProviderBottomNav applies no such override, so it keeps the flush base.
+// An earlier pass here missed that WebBottomNav override and shipped
+// provider's flush look on both apps. Theme already knows which app is
+// rendering (UiNativeThemeProvider app="customer"|"provider"), so this
+// branches on that directly — no variant prop for every call site to
+// remember to pass.
 export function BottomNav({ children, style }: { children: React.ReactNode; style?: StyleProp<ViewStyle> }) {
-  const { colors } = useAppTheme();
+  const { app, colors } = useAppTheme();
   const insets = useSafeAreaInsets();
+
+  if (app === "customer") {
+    return (
+      <View
+        style={StyleSheet.flatten([
+          styles.pillNav,
+          {
+            left: 16,
+            right: 16,
+            bottom: 16 + insets.bottom,
+            backgroundColor: colors.surface,
+            borderColor: colors.border,
+          },
+          style,
+        ])}
+      >
+        {children}
+      </View>
+    );
+  }
+
   return (
     <View
       style={StyleSheet.flatten([
-        styles.nav,
+        styles.flushNav,
         {
           backgroundColor: colors.surface,
           borderTopColor: colors.border,
@@ -71,7 +95,7 @@ export function BottomNavItem({ icon: Icon, label, active, emphasized, onPress }
 }
 
 const styles = StyleSheet.create({
-  nav: {
+  flushNav: {
     position: "absolute",
     left: 0,
     right: 0,
@@ -81,6 +105,21 @@ const styles = StyleSheet.create({
     justifyContent: "space-around",
     height: 64,
     borderTopWidth: StyleSheet.hairlineWidth,
+  },
+  pillNav: {
+    position: "absolute",
+    flexDirection: "row",
+    alignItems: "stretch",
+    justifyContent: "space-around",
+    height: 64,
+    paddingHorizontal: 8,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: 28,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 20,
+    elevation: 10,
   },
   item: {
     flex: 1,
