@@ -8,7 +8,15 @@ import { api } from '@/lib/api';
 import { useSession } from '@/lib/session';
 import { ApiError } from '@asaplocal/api-client';
 
-const WEB_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:3000';
+async function openWebPage(path: string) {
+  // Goes through the same base-URL resolution every request in this app
+  // uses (production URL, or a dev override set from the Account screen)
+  // rather than an ad-hoc process.env read with its own separate fallback
+  // to localhost, out of sync with whatever the app was actually
+  // configured to hit.
+  const baseUrl = await api.getBaseUrl();
+  WebBrowser.openBrowserAsync(`${baseUrl}${path}`);
+}
 
 // Ports apps/web/app/register/page.tsx. Terms/Privacy stay a single source
 // of truth on web (opened in an in-app browser) rather than duplicated here
@@ -102,11 +110,11 @@ export default function RegisterScreen() {
             <View style={[styles.checkbox, { borderColor: colors.border, backgroundColor: termsAccepted ? colors.brand[600] : 'transparent' }]} />
             <Text variant="small" color="muted" style={styles.checkboxLabel}>
               I agree to the{' '}
-              <Text variant="smallMedium" color="brand" onPress={() => WebBrowser.openBrowserAsync(`${WEB_URL}/terms`)}>
+              <Text variant="smallMedium" color="brand" onPress={() => openWebPage('/terms')}>
                 Terms
               </Text>{' '}
               &{' '}
-              <Text variant="smallMedium" color="brand" onPress={() => WebBrowser.openBrowserAsync(`${WEB_URL}/privacy`)}>
+              <Text variant="smallMedium" color="brand" onPress={() => openWebPage('/privacy')}>
                 Privacy Policy
               </Text>
             </Text>

@@ -6,8 +6,6 @@ import { KeyRound, Fingerprint } from 'lucide-react-native';
 import { api } from '@/lib/api';
 import { SectionCard, SectionRow } from './SectionRow';
 
-const WEB_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:3000';
-
 // Ports apps/web/components/account/security-section.tsx. Passkey
 // *registration* is deliberately not implemented here: web's version drives
 // @simplewebauthn/browser's startRegistration() against a cookie-session
@@ -23,7 +21,13 @@ export function SecuritySection({ signInMethods, hasPasskey, onChanged }: { sign
 
   async function handleToggle(next: boolean) {
     if (next) {
-      WebBrowser.openBrowserAsync(`${WEB_URL}/dashboard`);
+      // Goes through the same base-URL resolution every other request in
+      // this app uses (production URL, or a dev override if one's set from
+      // the Account screen) — a separate ad-hoc `process.env` read here had
+      // its own independent fallback to localhost, out of sync with
+      // whatever the rest of the app was actually configured to hit.
+      const baseUrl = await api.getBaseUrl();
+      WebBrowser.openBrowserAsync(`${baseUrl}/dashboard`);
       return;
     }
     setLoading(true);

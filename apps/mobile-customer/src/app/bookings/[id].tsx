@@ -11,8 +11,6 @@ import { usePhotoPicker } from '@/lib/photo-picker';
 import { TrackingMap } from '@/components/TrackingMap';
 import { ApiError } from '@asaplocal/api-client';
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:3000';
-
 interface Balance {
   basePence: number;
   extrasPence: number;
@@ -132,8 +130,14 @@ export default function BookingDetailScreen() {
     }
   }
 
-  function openCheckout() {
-    WebBrowser.openBrowserAsync(`${API_URL}/bookings/${id}/checkout`);
+  async function openCheckout() {
+    // Goes through the same base-URL resolution every request in this app
+    // uses (production URL, or a dev override set from the Account screen)
+    // rather than an ad-hoc process.env read with its own separate
+    // fallback to localhost, out of sync with whatever the app was
+    // actually configured to hit.
+    const baseUrl = await api.getBaseUrl();
+    WebBrowser.openBrowserAsync(`${baseUrl}/bookings/${id}/checkout`);
   }
 
   if (loading) {
