@@ -22,6 +22,7 @@ export interface MobileUser {
   isPhoneVerified: boolean;
   isProvider: boolean;
   hasBusiness?: boolean;
+  onboardingCompleted?: boolean;
 }
 
 // Concurrent 401s must not each fire their own refresh — the refresh token

@@ -109,7 +109,7 @@ export function OnboardingForm({ categories, contactEmail, contactPhone }: { cat
       }),
     });
     setLoading(false);
-    if (res.ok) router.push("/dashboard");
+    if (res.ok) router.push("/services?onboarding=1");
     else setError((await res.json().catch(() => ({}))).message ?? "Something went wrong");
   }
 

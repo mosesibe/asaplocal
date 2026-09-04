@@ -39,6 +39,10 @@ export interface MobileTokenUser {
   // mobile-provider app uses this to gate into /onboarding, mirroring
   // apps/provider's own server-component redirect (`!business → /onboarding`).
   hasBusiness: boolean;
+  // Whether the provider has stepped through the post-signup wizard
+  // (business profile → services → verification) — false while a Business
+  // exists but the guided flow hasn't been finished/dismissed yet.
+  onboardingCompleted: boolean;
 }
 
 export interface MobileAccessTokenPayload {
@@ -78,7 +82,7 @@ export async function verifyAccessToken(token: string): Promise<MobileAccessToke
 async function userToTokenUser(userId: string): Promise<MobileTokenUser | null> {
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    include: { business: { select: { id: true } } },
+    include: { business: { select: { id: true, onboardingCompletedAt: true } } },
   });
   if (!user || user.status === "SUSPENDED" || user.status === "DEACTIVATED") return null;
   return {
@@ -92,6 +96,7 @@ async function userToTokenUser(userId: string): Promise<MobileTokenUser | null> 
     isPhoneVerified: !!user.phoneVerifiedAt,
     isProvider: user.role === "PROVIDER" || !!user.business || !!user.providerSince,
     hasBusiness: !!user.business,
+    onboardingCompleted: !!user.business?.onboardingCompletedAt,
   };
 }
 

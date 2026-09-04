@@ -8,7 +8,10 @@
     "scheme": "asaplocalbusiness",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "bundleIdentifier": "pro.asaplocal.provider"
+      "bundleIdentifier": "pro.asaplocal.provider",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "package": "pro.asaplocal.provider",

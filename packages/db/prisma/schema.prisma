@@ -701,6 +701,15 @@ model Business {
   targetResponseMins         Int? // self-declared target, distinct from computed avgResponseMins
   profileCompletedAt         DateTime?
 
+  // ── Onboarding wizard: business profile → services → verification ─────
+  // Set once the provider has stepped through all three screens after
+  // signup (see apps/provider/app/onboarding). Distinct from
+  // businessInfoCompletedAt/profileCompletedAt above, which just track
+  // whether their respective forms were ever submitted — this tracks
+  // whether the guided first-run wizard itself has been dismissed, so it
+  // doesn't force a returning provider back through it.
+  onboardingCompletedAt DateTime?
+
   // ── Trust tier (computed — see packages/core/src/trust-tier.ts) ───────
   trustTier          TrustTier @default(BRONZE)
   trustTierUpdatedAt DateTime?

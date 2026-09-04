@@ -5,6 +5,7 @@ import { ChevronRight, X } from 'lucide-react-native';
 import { Screen, Card, Text, Badge, useAppTheme, useBottomNavInset } from '@asaplocal/ui-native';
 
 import { api } from '@/lib/api';
+import { useSession } from '@/lib/session';
 import { RadarMap } from '@/components/RadarMap';
 
 interface DailyEarning {
@@ -58,6 +59,7 @@ function localIsoDate(d: Date): string {
 
 export default function DashboardScreen() {
   const router = useRouter();
+  const { user } = useSession();
   const { colors, radius, spacing } = useAppTheme();
   const bottomInset = useBottomNavInset();
   const [data, setData] = useState<DashboardData | null>(null);
@@ -82,6 +84,17 @@ export default function DashboardScreen() {
     useCallback(() => {
       load();
     }, [load])
+  );
+
+  // Safety net mirroring apps/provider's dashboard redirect: a provider with
+  // a business but an unfinished wizard (e.g. app was killed and relaunched
+  // mid-onboarding) shouldn't land on the home tab — send them back into it.
+  useFocusEffect(
+    useCallback(() => {
+      if (user?.hasBusiness && !user?.onboardingCompleted) {
+        router.replace('/services?onboarding=1');
+      }
+    }, [user, router])
   );
 
   const handleRefresh = useCallback(async () => {

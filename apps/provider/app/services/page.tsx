@@ -3,8 +3,13 @@ import { auth } from "@asaplocal/auth";
 import { prisma } from "@asaplocal/db";
 import { ServicesManager } from "./services-manager";
 import { PageHeading } from "@/components/page-heading";
+import { OnboardingProgress } from "@/components/onboarding-progress";
+import { OnboardingContinueBar } from "@/components/onboarding-continue-bar";
 
-export default async function ServicesPage() {
+export default async function ServicesPage({ searchParams }: { searchParams: Promise<{ onboarding?: string }> }) {
+  const { onboarding } = await searchParams;
+  const isOnboarding = onboarding === "1";
+
   const session = await auth();
   if (!session?.user) redirect("/login");
 
@@ -24,10 +29,20 @@ export default async function ServicesPage() {
 
   return (
     <div>
+      {isOnboarding && <OnboardingProgress current={2} />}
       <PageHeading>Services</PageHeading>
       <p className="mt-1 text-muted-foreground">
         The work you offer. Pause anything you're not taking on right now and it stops appearing in your lead marketplace.
       </p>
+      {isOnboarding && (
+        <div className="mt-6">
+          <OnboardingContinueBar
+            label="Continue to verification"
+            hint="We've pre-filled a service for each category you picked — adjust pricing now or later."
+            nextHref="/verification?onboarding=1"
+          />
+        </div>
+      )}
       <div className="mt-6">
         <ServicesManager
           services={business.services.map((s) => ({

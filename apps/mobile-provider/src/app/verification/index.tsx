@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
-import { useFocusEffect, useRouter, type Href } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams, useRouter, type Href } from 'expo-router';
 import { Fingerprint, Building2, GraduationCap, ShieldCheck, Landmark, User, Images, ClipboardCheck, ChevronRight } from 'lucide-react-native';
 import { Screen, Card, Text, Badge, useAppTheme, type BadgeVariant } from '@asaplocal/ui-native';
 
 import { api } from '@/lib/api';
+import { OnboardingProgress } from '@/components/OnboardingProgress';
+import { OnboardingContinueBar } from '@/components/OnboardingContinueBar';
 
 interface Section {
   key: string;
@@ -46,6 +48,8 @@ function statusBadge(status: string | null): { variant: BadgeVariant; label: str
 // sub-screen (identity/banking built by another agent in parallel;
 // profile/portfolio/references already exist or are being built elsewhere).
 export default function VerificationCenterScreen() {
+  const { onboarding } = useLocalSearchParams<{ onboarding?: string }>();
+  const isOnboarding = onboarding === '1';
   const router = useRouter();
   const { colors, radius, spacing } = useAppTheme();
   const [data, setData] = useState<VerificationSummary | null>(null);
@@ -94,6 +98,8 @@ export default function VerificationCenterScreen() {
   return (
     <Screen>
       <ScrollView contentContainerStyle={[styles.scroll, { padding: spacing.four }]}>
+        {isOnboarding && <OnboardingProgress current={3} />}
+
         <Card style={styles.banner}>
           <Text variant="small" color="muted">
             Current trust tier
@@ -105,6 +111,15 @@ export default function VerificationCenterScreen() {
             Complete more sections below to unlock higher tiers.
           </Text>
         </Card>
+
+        {isOnboarding && (
+          <OnboardingContinueBar
+            label="Finish and go to dashboard"
+            hint="These can all be completed later from your dashboard — verifying sooner just unlocks higher trust tiers faster."
+            nextHref="/"
+            markComplete
+          />
+        )}
 
         <View style={styles.list}>
           {data.sections.map((s) => {

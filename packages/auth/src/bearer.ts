@@ -24,7 +24,7 @@ export async function auth(): Promise<Session | null> {
 
   const user = await prisma.user.findUnique({
     where: { id: payload.uid },
-    include: { business: { select: { id: true } } },
+    include: { business: { select: { id: true, onboardingCompletedAt: true } } },
   });
   if (!user || user.status === "SUSPENDED" || user.status === "DEACTIVATED") return null;
 
@@ -40,6 +40,7 @@ export async function auth(): Promise<Session | null> {
       isPhoneVerified: !!user.phoneVerifiedAt,
       isProvider: user.role === "PROVIDER" || !!user.business || !!user.providerSince,
       hasBusiness: !!user.business,
+      onboardingCompleted: !!user.business?.onboardingCompletedAt,
     },
     expires: new Date(payload.exp * 1000).toISOString(),
   };

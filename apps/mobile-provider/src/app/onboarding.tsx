@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { useRouter } from 'expo-router';
 import { Screen, Card, Text, Button, TextField, useAppTheme, useBottomNavInset } from '@asaplocal/ui-native';
 import { ApiError } from '@asaplocal/api-client';
 
@@ -31,6 +32,7 @@ type Step = 1 | 2;
 // of a drag slider — same values web's <input type="range"> allows, just a
 // tap instead of a drag.
 export default function OnboardingScreen() {
+  const router = useRouter();
   const { user, refresh } = useSession();
   const { colors, radius, spacing } = useAppTheme();
   const bottomInset = useBottomNavInset();
@@ -112,13 +114,16 @@ export default function OnboardingScreen() {
       });
       await refresh();
       // Root layout's needsOnboarding gate flips to isInApp once
-      // user.hasBusiness is true — no navigation call needed here.
+      // user.hasBusiness is true, but that alone would land the provider on
+      // the dashboard tab — send them into the rest of the wizard (services,
+      // then verification) first, matching apps/provider's own sequencing.
+      router.replace('/services?onboarding=1');
     } catch (e) {
       setError(e instanceof ApiError ? e.message : 'Something went wrong');
     } finally {
       setLoading(false);
     }
-  }, [businessType, categorySlugs, name, tradingName, companyRegistrationNumber, yearsInBusiness, description, website, location, baseRadiusMiles, utrNumber, vatNumber, refresh]);
+  }, [businessType, categorySlugs, name, tradingName, companyRegistrationNumber, yearsInBusiness, description, website, location, baseRadiusMiles, utrNumber, vatNumber, refresh, router]);
 
   return (
     <Screen>

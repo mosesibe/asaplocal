@@ -25,6 +25,10 @@ declare module "next-auth" {
       // components instead of reading this off the session, and the
       // NextAuth JWT/session callbacks never set it.
       hasBusiness?: boolean;
+      // Whether the provider has stepped through the post-signup wizard
+      // (business profile → services → verification). Same freshness
+      // caveat as hasBusiness above.
+      onboardingCompleted?: boolean;
     } & DefaultSession["user"];
   }
   interface User {
@@ -34,6 +38,7 @@ declare module "next-auth" {
     isPhoneVerified: boolean;
     isProvider: boolean;
     hasBusiness?: boolean;
+    onboardingCompleted?: boolean;
   }
 }
 

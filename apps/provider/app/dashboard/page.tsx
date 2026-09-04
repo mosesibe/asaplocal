@@ -27,6 +27,7 @@ export default async function ProviderDashboard() {
     include: { subscription: true, leadCreditWallet: true, serviceAreas: true },
   });
   if (!business) redirect("/onboarding");
+  if (!business.onboardingCompletedAt) redirect("/services?onboarding=1");
 
   const weekStart = startOfWeek(new Date());
   const weekEnd = new Date(weekStart);

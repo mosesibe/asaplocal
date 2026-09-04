@@ -10,7 +10,7 @@ import type { MobileTokenUser } from "./mobile-tokens";
 export async function verifyCredentials(email: string, password: string): Promise<MobileTokenUser | null> {
   const user = await prisma.user.findUnique({
     where: { email },
-    include: { business: { select: { id: true } } },
+    include: { business: { select: { id: true, onboardingCompletedAt: true } } },
   });
   if (!user?.passwordHash) return null;
   if (user.status === "SUSPENDED" || user.status === "DEACTIVATED") return null;
@@ -26,5 +26,6 @@ export async function verifyCredentials(email: string, password: string): Promis
     isPhoneVerified: !!user.phoneVerifiedAt,
     isProvider: user.role === "PROVIDER" || !!user.business || !!user.providerSince,
     hasBusiness: !!user.business,
+    onboardingCompleted: !!user.business?.onboardingCompletedAt,
   };
 }

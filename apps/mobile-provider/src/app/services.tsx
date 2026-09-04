@@ -1,10 +1,13 @@
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { useLocalSearchParams } from 'expo-router';
 import { Pause, Play, Plus, Sparkles, Trash2, X } from 'lucide-react-native';
 import { Screen, Card, Text, Button, Badge, TextField, useAppTheme, useBottomNavInset } from '@asaplocal/ui-native';
 import { ApiError } from '@asaplocal/api-client';
 
 import { api } from '@/lib/api';
+import { OnboardingProgress } from '@/components/OnboardingProgress';
+import { OnboardingContinueBar } from '@/components/OnboardingContinueBar';
 
 interface Category {
   id: string;
@@ -50,6 +53,8 @@ function formatPrice(s: ServiceRow): string {
 // "Add more services" flow reuses onboarding.tsx's parent/child category
 // checkbox-tree toggle logic, shown as a modal instead of an inline card.
 export default function ServicesScreen() {
+  const { onboarding } = useLocalSearchParams<{ onboarding?: string }>();
+  const isOnboarding = onboarding === '1';
   const { colors, radius, spacing } = useAppTheme();
   const bottomInset = useBottomNavInset();
   const [services, setServices] = useState<ServiceRow[]>([]);
@@ -133,10 +138,20 @@ export default function ServicesScreen() {
   return (
     <Screen>
       <ScrollView contentContainerStyle={[styles.scroll, { padding: spacing.four, paddingBottom: bottomInset }]} keyboardShouldPersistTaps="handled">
+        {isOnboarding && <OnboardingProgress current={2} />}
+
         <Text variant="small" color="muted">
           <Text variant="smallMedium">{activeCount}</Text> active
           {services.length - activeCount > 0 ? ` · ${services.length - activeCount} paused` : ''}
         </Text>
+
+        {isOnboarding && (
+          <OnboardingContinueBar
+            label="Continue to verification"
+            hint="We've pre-filled a service for each category you picked — adjust pricing now or later."
+            nextHref="/verification?onboarding=1"
+          />
+        )}
 
         {error && (
           <Text variant="small" style={styles.error}>

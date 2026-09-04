@@ -5,6 +5,8 @@ import { prisma } from "@asaplocal/db";
 import { Card } from "@asaplocal/ui";
 import { VerificationStatusBadge } from "@/lib/verification-badge";
 import { PageHeading } from "@/components/page-heading";
+import { OnboardingProgress } from "@/components/onboarding-progress";
+import { OnboardingContinueBar } from "@/components/onboarding-continue-bar";
 
 // Rolls up a list of individual VerificationStatus values into one status
 // for the summary row: complete only once everything submitted has been
@@ -19,7 +21,10 @@ function aggregateStatus(statuses: (string | null | undefined)[]): string | null
   return "PENDING";
 }
 
-export default async function VerificationCenterPage() {
+export default async function VerificationCenterPage({ searchParams }: { searchParams: Promise<{ onboarding?: string }> }) {
+  const { onboarding } = await searchParams;
+  const isOnboarding = onboarding === "1";
+
   const session = await auth();
   if (!session?.user) redirect("/login");
 
@@ -53,10 +58,21 @@ export default async function VerificationCenterPage() {
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-10 sm:px-6">
+      {isOnboarding && <OnboardingProgress current={3} />}
       <PageHeading>Verification Center</PageHeading>
       <p className="mt-1 text-muted-foreground">
         Current trust tier: <span className="font-medium">{business.trustTier}</span>. Complete more sections to unlock higher tiers.
       </p>
+      {isOnboarding && (
+        <div className="mt-6">
+          <OnboardingContinueBar
+            label="Finish and go to dashboard"
+            hint="These can all be completed later from your dashboard — verifying sooner just unlocks higher trust tiers faster."
+            nextHref="/dashboard"
+            markComplete
+          />
+        </div>
+      )}
       <div className="mt-6 space-y-2">
         {sections.map((s) => (
           <Link key={s.href} href={s.href}>
