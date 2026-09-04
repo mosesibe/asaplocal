@@ -32,3 +32,5 @@ export * from "./referral";
 export * from "./account-stats";
 export * from "./account-deletion";
 export * from "./business-type";
+export * from "./duplicate-check";
+export * from "./background-check";

@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@asaplocal/db";
 import { Badge, Card } from "@asaplocal/ui";
+import { BACKGROUND_CHECK_LABEL } from "@asaplocal/core";
 import { DecisionActions } from "../decision-actions";
 import { SuspendOwnerButton } from "./suspend-owner-button";
 
@@ -24,6 +25,7 @@ export default async function BusinessVerificationDetailPage({ params }: { param
       portfolioItems: true,
       references: true,
       services: { include: { category: true } },
+      backgroundChecks: true,
     },
   });
   if (!business) notFound();
@@ -71,7 +73,11 @@ export default async function BusinessVerificationDetailPage({ params }: { param
               {business.companiesHouseCheckedAt && (
                 <p className="text-muted-foreground">
                   Companies House checked {business.companiesHouseCheckedAt.toLocaleString("en-GB")} — director match: {business.companiesHouseDirectorMatch ? "yes" : "no"}
+                  {business.companyIncorporatedAt && ` · incorporated ${business.companyIncorporatedAt.toLocaleDateString("en-GB")}`}
                 </p>
+              )}
+              {business.possibleDirectorDisqualification && (
+                <p className="font-medium text-red-600">⚠ Possible match on the Companies House disqualified-officers register — verify manually before approving.</p>
               )}
             </div>
           ) : (
@@ -83,6 +89,18 @@ export default async function BusinessVerificationDetailPage({ params }: { param
                   {d.docType.replace(/_/g, " ")}
                 </a>
               ))}
+            </div>
+          )}
+          {business.duplicateCheckFlag && (
+            <div className="mt-2 text-sm font-medium text-red-600">
+              <p>⚠ Matches a previously rejected or suspended business — verify before approving:</p>
+              <ul className="ml-4 list-disc font-normal">
+                {(business.duplicateCheckMatches as { businessId: string; matchedField: string; reason: string }[] | null)?.map((m, i) => (
+                  <li key={i}>
+                    {m.matchedField} matches business {m.businessId} ({m.reason.replace(/_/g, " ").toLowerCase()})
+                  </li>
+                ))}
+              </ul>
             </div>
           )}
           {["PENDING", "MORE_INFO_REQUESTED"].includes(business.verificationStatus) && (
@@ -123,6 +141,23 @@ export default async function BusinessVerificationDetailPage({ params }: { param
                 {q.issuingBody && <p className="mt-1 text-sm text-muted-foreground">{q.issuingBody}</p>}
                 {q.documentUrl && <a href={q.documentUrl} target="_blank" rel="noreferrer" className="text-sm text-brand-700 hover:underline">View document</a>}
                 {["PENDING", "MORE_INFO_REQUESTED"].includes(q.status) && <DecisionActions endpoint={`/api/verification/qualification/${q.id}/decide`} />}
+              </div>
+            ))}
+          </div>
+        </Card>
+
+        {/* Background checks — CCJ / financial / adverse-media; scaffolding until a vendor is contracted (see packages/core/src/background-check.ts) */}
+        <Card className="p-4">
+          <h2 className="font-semibold">Background checks</h2>
+          <div className="mt-2 space-y-3">
+            {business.backgroundChecks.map((c) => (
+              <div key={c.id} className="rounded-lg border border-border p-3">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-medium">{BACKGROUND_CHECK_LABEL[c.type]}</p>
+                  <Badge variant={statusVariant(c.status)}>{c.status}</Badge>
+                </div>
+                <p className="mt-1 text-sm text-muted-foreground">{c.provider ? `Provider: ${c.provider}` : "No provider configured yet"}</p>
+                {["PENDING", "MORE_INFO_REQUESTED"].includes(c.status) && <DecisionActions endpoint={`/api/verification/background/${c.id}/decide`} />}
               </div>
             ))}
           </div>

@@ -24,8 +24,11 @@ export async function POST(req: NextRequest) {
 
   // Auto-verify only when every check passes; otherwise leave it PENDING for
   // a human admin — never auto-reject a real company over e.g. a name-format
-  // mismatch (Companies House returns "SURNAME, Forename").
-  const passed = result.isActive && result.notDissolved && result.directorMatch;
+  // mismatch (Companies House returns "SURNAME, Forename"). A possible
+  // disqualification match always forces PENDING, even if everything else
+  // passes — name-only matching has false positives, so it must always get
+  // a human look rather than being an auto-block.
+  const passed = result.isActive && result.notDissolved && result.directorMatch && !result.possibleDirectorDisqualification;
 
   await prisma.business.update({
     where: { id: business.id },
@@ -35,6 +38,8 @@ export async function POST(req: NextRequest) {
       companiesHouseSnapshot: result.snapshot as any,
       companiesHouseCheckedAt: new Date(),
       companiesHouseDirectorMatch: result.directorMatch,
+      companyIncorporatedAt: result.companyIncorporatedAt ? new Date(result.companyIncorporatedAt) : null,
+      possibleDirectorDisqualification: result.possibleDirectorDisqualification,
       verificationStatus: passed ? "VERIFIED" : "PENDING",
       verifiedAt: passed ? new Date() : null,
     },
@@ -45,6 +50,7 @@ export async function POST(req: NextRequest) {
     isActive: result.isActive,
     notDissolved: result.notDissolved,
     directorMatch: result.directorMatch,
+    possibleDirectorDisqualification: result.possibleDirectorDisqualification,
     companyStatus: result.companyStatus,
     verified: passed,
   });

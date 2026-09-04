@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@asaplocal/auth";
 import { prisma } from "@asaplocal/db";
-import { geocodeAddress, stripHtml } from "@asaplocal/core";
+import { geocodeAddress, stripHtml, checkForDuplicateBusiness, ensureBackgroundChecks } from "@asaplocal/core";
 import { z } from "zod";
 
 const schema = z.object({
@@ -73,6 +73,20 @@ export async function POST(req: NextRequest) {
   });
 
   await prisma.user.update({ where: { id: session.user.id }, data: { status: "ACTIVE" } });
+
+  const duplicateMatches = await checkForDuplicateBusiness({
+    excludeBusinessId: business.id,
+    email: user.email,
+    phone: user.phone,
+    companyRegistrationNumber: data.companyRegistrationNumber,
+  });
+  if (duplicateMatches.length > 0) {
+    await prisma.business.update({
+      where: { id: business.id },
+      data: { duplicateCheckFlag: true, duplicateCheckMatches: duplicateMatches as any },
+    });
+  }
+  await ensureBackgroundChecks(business.id);
 
   return NextResponse.json({ id: business.id, slug: business.slug }, { status: 201 });
 }

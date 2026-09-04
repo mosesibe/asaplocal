@@ -30,6 +30,7 @@ export default async function VerificationQueuePage({
             { identityVerification: { status: { in: ["PENDING", "MORE_INFO_REQUESTED"] } } },
             { insurancePolicies: { some: { status: { in: ["PENDING", "MORE_INFO_REQUESTED"] } } } },
             { qualifications: { some: { status: { in: ["PENDING", "MORE_INFO_REQUESTED"] } } } },
+            { backgroundChecks: { some: { status: { in: ["PENDING", "MORE_INFO_REQUESTED"] } } } },
           ],
         }),
   };
@@ -37,7 +38,7 @@ export default async function VerificationQueuePage({
   const [businesses, totalCount] = await Promise.all([
     prisma.business.findMany({
       where,
-      include: { identityVerification: true, insurancePolicies: true, qualifications: true },
+      include: { identityVerification: true, insurancePolicies: true, qualifications: true, backgroundChecks: true },
       orderBy: { createdAt: "desc" },
       skip: (page - 1) * PAGE_SIZE,
       take: PAGE_SIZE,
@@ -74,6 +75,7 @@ export default async function VerificationQueuePage({
             b.identityVerification && ["PENDING", "MORE_INFO_REQUESTED"].includes(b.identityVerification.status) && "Identity",
             b.insurancePolicies.some((p) => ["PENDING", "MORE_INFO_REQUESTED"].includes(p.status)) && "Insurance",
             b.qualifications.some((q) => ["PENDING", "MORE_INFO_REQUESTED"].includes(q.status)) && "Qualifications",
+            b.backgroundChecks.some((c) => ["PENDING", "MORE_INFO_REQUESTED"].includes(c.status)) && "Background checks",
           ].filter(Boolean) as string[];
 
           return (

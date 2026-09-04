@@ -577,22 +577,22 @@ model Address {
 // ── Categories & Businesses ─────────────────────────────────────────────
 
 model Category {
-  id                      String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name                    String   @unique
-  slug                    String   @unique
+  id                      String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                    String          @unique
+  slug                    String          @unique
   icon                    String?
-  description             String?  @db.Text
-  parentId                String?  @db.Uuid
-  isActive                Boolean  @default(true)
-  isFeatured              Boolean  @default(false)
-  isEmergency             Boolean  @default(false)
-  sortOrder               Int      @default(0)
-  createdAt               DateTime @default(now())
+  description             String?         @db.Text
+  parentId                String?         @db.Uuid
+  isActive                Boolean         @default(true)
+  isFeatured              Boolean         @default(false)
+  isEmergency             Boolean         @default(false)
+  sortOrder               Int             @default(0)
+  createdAt               DateTime        @default(now())
   // Regulated-trade guidance shown on the qualifications verification step
   // (e.g. Electrician -> ["NICEIC","NAPIT","ECA"]). Advisory only — not
   // enforced; Qualification.name stays free text.
-  isRegulatedTrade        Boolean  @default(false)
-  suggestedQualifications String[] @default([])
+  isRegulatedTrade        Boolean         @default(false)
+  suggestedQualifications String[]        @default([])
   // Gated categories (e.g. Builders & Renovation): a provider must satisfy all
   // of these before they can offer services here, be matched to its leads, or
   // appear in its search results. Enforced by canProvideInCategory() in
@@ -606,6 +606,11 @@ model Category {
   requiredBusinessTypes   BusinessType[]  @default([])
   requiresInsuranceTypes  InsuranceType[] @default([])
   minTrustTier            TrustTier?
+  // Minimum time since incorporation (limited companies) or account
+  // creation (everyone else, as the best available proxy — see
+  // Business.companyIncorporatedAt) before a provider may offer this
+  // category. Enforced alongside the other gate fields above.
+  minTradingMonths        Int?
 
   parent         Category?       @relation("CategoryChildren", fields: [parentId], references: [id], onDelete: SetNull)
   children       Category[]      @relation("CategoryChildren")
@@ -668,9 +673,21 @@ model Business {
   // Overall pass/fail for this phase reuses verificationStatus/verifiedAt
   // above — both the Ltd auto-check and the sole-trader manual-document
   // path drive that same field, so there's no duplicate status column here.
-  companiesHouseSnapshot      Json?
-  companiesHouseCheckedAt     DateTime?
-  companiesHouseDirectorMatch Boolean?
+  companiesHouseSnapshot           Json?
+  companiesHouseCheckedAt          DateTime?
+  companiesHouseDirectorMatch      Boolean?
+  companyIncorporatedAt            DateTime? // date_of_creation from the Companies House profile
+  // Plausible name match against the free Companies House disqualified-
+  // officers search — never used to auto-verify, always forces a human
+  // review since name-only matching has false positives.
+  possibleDirectorDisqualification Boolean?
+
+  // Cross-business duplicate/blocklist check, run at onboarding: does this
+  // registrant's email/phone/company number match a REJECTED business or a
+  // SUSPENDED/DEACTIVATED owner elsewhere? Informational — never blocks
+  // signup — surfaced to admin for manual review.
+  duplicateCheckFlag    Boolean @default(false)
+  duplicateCheckMatches Json?
 
   // ── Phase 9: Banking (Stripe Connect) ──────────────────────────────────
   payoutsEnabled           Boolean   @default(false)
@@ -711,6 +728,7 @@ model Business {
   payouts               Payout[]
   addresses             BusinessAddress[]
   supplies              Supply[]
+  backgroundChecks      BackgroundCheck[]
 
   @@index([city])
   @@index([verificationStatus])
@@ -931,6 +949,37 @@ model BusinessReference {
 
   business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
 
+  @@index([businessId])
+}
+
+enum BackgroundCheckType {
+  PERSONAL_CCJ
+  BUSINESS_CCJ
+  FINANCIAL
+  ADVERSE_MEDIA
+}
+
+// Third-party CCJ/credit/adverse-media checks. Status tracking, admin
+// review, and audit logging are fully wired up (see
+// packages/core/src/background-check.ts and the admin decide routes under
+// apps/admin/app/api/verification/background/[type]/[id]/decide); the
+// vendor call itself is a stub until a provider (Creditsafe, Experian,
+// Equifax, etc.) is contracted — `provider` stays null until then.
+model BackgroundCheck {
+  id            String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  businessId    String              @db.Uuid
+  type          BackgroundCheckType
+  provider      String?
+  status        VerificationStatus  @default(UNVERIFIED)
+  externalRef   String?
+  resultSummary Json?
+  reviewNote    String?
+  requestedAt   DateTime            @default(now())
+  completedAt   DateTime?
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@unique([businessId, type])
   @@index([businessId])
 }
 

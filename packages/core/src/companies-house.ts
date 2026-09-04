@@ -9,6 +9,7 @@ function authHeader() {
 interface CompanyProfile {
   company_name: string;
   company_status: string; // "active" | "dissolved" | ...
+  date_of_creation?: string; // YYYY-MM-DD
   registered_office_address?: Record<string, string>;
 }
 
@@ -16,6 +17,10 @@ interface Officer {
   name: string; // Companies House format: "SURNAME, Forename Middlename"
   officer_role: string;
   resigned_on?: string;
+}
+
+interface DisqualifiedOfficerSearchItem {
+  title: string; // indexed name, same "SURNAME, Forename" shape as Officer.name
 }
 
 async function getCompanyProfile(companyNumber: string): Promise<CompanyProfile> {
@@ -37,6 +42,20 @@ async function getCompanyOfficers(companyNumber: string): Promise<Officer[]> {
   if (!res.ok) return [];
   const data = await res.json();
   return data.items ?? [];
+}
+
+/**
+ * Free-text search against the Companies House disqualified-officers
+ * register. Fails open (returns false on a non-OK response) — this is a
+ * supplementary flag that forces a human review, not the primary pass/fail
+ * gate, so an API hiccup here shouldn't itself block verification.
+ */
+async function searchDisqualifiedOfficers(name: string): Promise<boolean> {
+  const res = await fetch(`${BASE_URL}/search/disqualified-officers?q=${encodeURIComponent(name)}`, { headers: { Authorization: authHeader() } });
+  if (!res.ok) return false;
+  const data = await res.json();
+  const items: DisqualifiedOfficerSearchItem[] = data.items ?? [];
+  return items.some((item) => namesLikelyMatch(item.title, name));
 }
 
 /** Normalizes a name into a token set for fuzzy matching — CH returns "SURNAME, Forename", self-reported names are free text. */
@@ -62,7 +81,10 @@ export interface CompaniesHouseCheckResult {
   isActive: boolean;
   notDissolved: boolean;
   directorMatch: boolean;
+  /** Plausible name match against the free disqualified-officers register — always forces a human review, never used to auto-verify. */
+  possibleDirectorDisqualification: boolean;
   companyStatus: string;
+  companyIncorporatedAt: string | null;
   registeredAddress?: Record<string, string>;
   snapshot: { profile: CompanyProfile; officers: Officer[] };
 }
@@ -73,12 +95,15 @@ export async function verifyLimitedCompany(companyNumber: string, selfReportedDi
 
   const activeDirectors = officers.filter((o) => o.officer_role === "director" && !o.resigned_on);
   const directorMatch = activeDirectors.some((o) => namesLikelyMatch(o.name, selfReportedDirectorName));
+  const possibleDirectorDisqualification = await searchDisqualifiedOfficers(selfReportedDirectorName);
 
   return {
     isActive: profile.company_status === "active",
     notDissolved: profile.company_status !== "dissolved",
     directorMatch,
+    possibleDirectorDisqualification,
     companyStatus: profile.company_status,
+    companyIncorporatedAt: profile.date_of_creation ?? null,
     registeredAddress: profile.registered_office_address,
     snapshot: { profile, officers },
   };

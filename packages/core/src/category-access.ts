@@ -26,6 +26,13 @@ export interface CategoryGate {
   requiredBusinessTypes: BusinessType[];
   requiresInsuranceTypes: InsuranceType[];
   minTrustTier: TrustTier | null;
+  minTradingMonths: number | null;
+}
+
+/** Months between a trading-start date and now — companyIncorporatedAt for limited companies, createdAt (account creation) as the best available proxy otherwise. */
+function tradingMonths(since: Date): number {
+  const now = new Date();
+  return (now.getFullYear() - since.getFullYear()) * 12 + (now.getMonth() - since.getMonth());
 }
 
 export interface CategoryAccessResult {
@@ -50,7 +57,7 @@ const BUSINESS_TYPE_LABEL: Record<string, string> = {
 
 /** True when the category imposes no extra requirements at all. */
 export function isGated(gate: CategoryGate): boolean {
-  return gate.requiredBusinessTypes.length > 0 || gate.requiresInsuranceTypes.length > 0 || !!gate.minTrustTier;
+  return gate.requiredBusinessTypes.length > 0 || gate.requiresInsuranceTypes.length > 0 || !!gate.minTrustTier || !!gate.minTradingMonths;
 }
 
 /**
@@ -62,7 +69,7 @@ export async function canProvideInCategory(businessId: string, categoryId: strin
   const [category, business] = await Promise.all([
     prisma.category.findUnique({
       where: { id: categoryId },
-      select: { requiredBusinessTypes: true, requiresInsuranceTypes: true, minTrustTier: true },
+      select: { requiredBusinessTypes: true, requiresInsuranceTypes: true, minTrustTier: true, minTradingMonths: true },
     }),
     prisma.business.findUnique({
       where: { id: businessId },
@@ -70,6 +77,8 @@ export async function canProvideInCategory(businessId: string, categoryId: strin
         businessType: true,
         trustTier: true,
         verificationStatus: true,
+        companyIncorporatedAt: true,
+        createdAt: true,
         insurancePolicies: { select: { type: true, status: true, expiryDate: true } },
       },
     }),
@@ -81,6 +90,7 @@ export async function canProvideInCategory(businessId: string, categoryId: strin
     requiredBusinessTypes: category.requiredBusinessTypes,
     requiresInsuranceTypes: category.requiresInsuranceTypes,
     minTrustTier: category.minTrustTier,
+    minTradingMonths: category.minTradingMonths,
   };
   if (!isGated(gate)) return { allowed: true, reasons: [] };
 
@@ -113,6 +123,13 @@ export async function canProvideInCategory(businessId: string, categoryId: strin
     reasons.push(`A ${gate.minTrustTier.toLowerCase()} trust tier or above is required.`);
   }
 
+  if (gate.minTradingMonths) {
+    const since = business.companyIncorporatedAt ?? business.createdAt;
+    if (tradingMonths(since) < gate.minTradingMonths) {
+      reasons.push(`This category requires at least ${gate.minTradingMonths} months of trading history.`);
+    }
+  }
+
   return { allowed: reasons.length === 0, reasons };
 }
 
@@ -129,7 +146,7 @@ export async function filterEligibleForCategory<T extends { id: string }>(
 
   const category = await prisma.category.findUnique({
     where: { id: categoryId },
-    select: { requiredBusinessTypes: true, requiresInsuranceTypes: true, minTrustTier: true },
+    select: { requiredBusinessTypes: true, requiresInsuranceTypes: true, minTrustTier: true, minTradingMonths: true },
   });
   if (!category) return businesses;
 
@@ -137,10 +154,16 @@ export async function filterEligibleForCategory<T extends { id: string }>(
     requiredBusinessTypes: category.requiredBusinessTypes,
     requiresInsuranceTypes: category.requiresInsuranceTypes,
     minTrustTier: category.minTrustTier,
+    minTradingMonths: category.minTradingMonths,
   };
   if (!isGated(gate)) return businesses;
 
   const minRank = gate.minTrustTier ? TRUST_TIER_RANK[gate.minTrustTier] : 0;
+  // Cutoff for minTradingMonths: since it's a fixed value for this category,
+  // compute the cutoff date once rather than per-row date arithmetic —
+  // companyIncorporatedAt if set, else createdAt (account creation) as the
+  // best available proxy for non-limited-company businesses.
+  const tradingCutoff = gate.minTradingMonths ? new Date(new Date().setMonth(new Date().getMonth() - gate.minTradingMonths)) : null;
   const eligible = await prisma.business.findMany({
     where: {
       id: { in: businesses.map((b) => b.id) },
@@ -153,6 +176,14 @@ export async function filterEligibleForCategory<T extends { id: string }>(
             AND: gate.requiresInsuranceTypes.map((type) => ({
               insurancePolicies: { some: { type, status: "VERIFIED" as const, expiryDate: { gt: new Date() } } },
             })),
+          }
+        : {}),
+      ...(tradingCutoff
+        ? {
+            OR: [
+              { companyIncorporatedAt: { lte: tradingCutoff } },
+              { companyIncorporatedAt: null, createdAt: { lte: tradingCutoff } },
+            ],
           }
         : {}),
     },
