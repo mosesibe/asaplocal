@@ -1,33 +1,36 @@
 import { useCallback, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, TextInput, View } from 'react-native';
 import { useLocalSearchParams, useRouter, type Href } from 'expo-router';
-import { Eye, EyeOff } from 'lucide-react-native';
-import { Screen, Card, Text, Button, TextField, useAppTheme } from '@asaplocal/ui-native';
+import { Eye, EyeOff, Check } from 'lucide-react-native';
+import { Screen, Text } from '@asaplocal/ui-native';
 
 import { useSession } from '@/lib/session';
+import { AuthHero } from '@/components/AuthHero';
+import { authStyles as s } from '@/components/auth-styles';
 
-// Ports apps/web/app/login/page.tsx: a plain top-aligned "Log in" heading
-// (no logo lockup — the web page doesn't have one either) over a card with
-// labeled fields, matching apps/mobile-provider/src/app/login.tsx's already-
-// rebuilt structure/style. Web also offers "Continue with Google" — not
-// ported here, since native Google Sign-In needs its own OAuth client setup
-// this pass didn't touch.
+// Ports Claude Design variant "2c — Full-bleed photo, card lifts over it":
+// photo hero + card lifting over it, replacing the previous plain light
+// card. Auth logic unchanged (useSession().login()). Native Google Sign-In
+// needs its own OAuth client setup this pass doesn't touch, so — same as
+// before this redesign — this screen stays password-only, unlike web's
+// login which also offers "Continue with Google".
 export default function LoginScreen() {
   const router = useRouter();
   const { callbackUrl } = useLocalSearchParams<{ callbackUrl?: string }>();
   const { login } = useSession();
-  const { colors, radius, spacing } = useAppTheme();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [done, setDone] = useState(false);
 
   const handleLogin = useCallback(async () => {
     setError(null);
     setSubmitting(true);
     try {
       await login(email.trim(), password);
+      setDone(true);
       router.replace((callbackUrl as Href) ?? '/');
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Something went wrong.');
@@ -37,65 +40,77 @@ export default function LoginScreen() {
   }, [email, password, login, callbackUrl, router]);
 
   return (
-    <Screen>
-      <ScrollView contentContainerStyle={[styles.scroll, { padding: spacing.four }]} keyboardShouldPersistTaps="handled">
-        <Text variant="title" style={styles.heading}>
-          Log in
-        </Text>
+    <Screen style={s.screen}>
+      <ScrollView contentContainerStyle={s.scroll} keyboardShouldPersistTaps="handled">
+        <AuthHero headline="Help, booked by this afternoon." />
 
-        <Card style={[styles.card, { borderRadius: radius.xl }]}>
-          <View>
-            <Text variant="smallMedium" style={styles.label}>
-              Email
-            </Text>
-            <TextField autoCapitalize="none" keyboardType="email-address" value={email} onChangeText={setEmail} />
-          </View>
-          <View>
-            <Text variant="smallMedium" style={styles.label}>
-              Password
-            </Text>
-            <View style={styles.passwordWrap}>
-              <TextField style={styles.passwordField} secureTextEntry={!showPassword} value={password} onChangeText={setPassword} />
-              <Pressable onPress={() => setShowPassword((v) => !v)} style={styles.eyeButton} hitSlop={8}>
-                {showPassword ? <EyeOff size={18} color={colors.mutedForeground} /> : <Eye size={18} color={colors.mutedForeground} />}
+        <View style={s.card}>
+          {!done ? (
+            <View style={s.form}>
+              <TextInput
+                style={s.input}
+                placeholder="Email"
+                placeholderTextColor="rgba(32,30,29,.4)"
+                autoCapitalize="none"
+                autoComplete="email"
+                keyboardType="email-address"
+                value={email}
+                onChangeText={setEmail}
+              />
+              <View style={s.passwordWrap}>
+                <TextInput
+                  style={[s.input, s.passwordInput]}
+                  placeholder="Password"
+                  placeholderTextColor="rgba(32,30,29,.4)"
+                  secureTextEntry={!showPassword}
+                  autoComplete="current-password"
+                  value={password}
+                  onChangeText={setPassword}
+                />
+                <Pressable onPress={() => setShowPassword((v) => !v)} style={s.eyeButton} hitSlop={8}>
+                  {showPassword ? <EyeOff size={20} color="rgba(32,30,29,.6)" /> : <Eye size={20} color="rgba(32,30,29,.6)" />}
+                </Pressable>
+              </View>
+              {error && <Text style={s.error}>{error}</Text>}
+              <Pressable style={({ pressed }) => [s.submitButton, pressed && s.submitButtonPressed]} onPress={handleLogin} disabled={submitting}>
+                {submitting && <ActivityIndicator size="small" color="#fff9f2" />}
+                <Text style={s.submitButtonText}>{submitting ? 'Logging in…' : 'Log in'}</Text>
+              </Pressable>
+              <Pressable onPress={() => router.push('/forgot-password')} style={{ alignSelf: 'center' }}>
+                <Text style={s.footerLink}>Forgot password?</Text>
               </Pressable>
             </View>
-          </View>
-          {error && (
-            <Text variant="small" style={styles.error}>
-              {error}
-            </Text>
+          ) : (
+            <View style={s.doneWrap}>
+              <View style={s.doneIcon}>
+                <Check size={24} strokeWidth={2.75} color="#f9f4ed" />
+              </View>
+              <View>
+                <Text style={s.doneTitle}>You&apos;re in</Text>
+                <Text style={s.doneSubtitle}>Opening your bookings…</Text>
+              </View>
+            </View>
           )}
-          <Button onPress={handleLogin} loading={submitting}>
-            Log in
-          </Button>
+        </View>
 
-          <Pressable onPress={() => router.push('/forgot-password')}>
-            <Text variant="small" color="muted" style={styles.centerText}>
-              Forgot password?
-            </Text>
-          </Pressable>
-          <Pressable
-            onPress={() => router.push({ pathname: '/register', params: callbackUrl ? { callbackUrl } : undefined })}
-          >
-            <Text variant="small" color="muted" style={styles.centerText}>
-              No account? <Text variant="smallMedium" color="brand">Sign up</Text>
-            </Text>
-          </Pressable>
-        </Card>
+        <View style={s.trustRow}>
+          <View style={s.avatarStack}>
+            <View style={[s.avatar, { backgroundColor: '#ffe1d0' }]} />
+            <View style={[s.avatar, { backgroundColor: '#e1eecc', marginLeft: -12 }]} />
+            <View style={[s.avatar, { backgroundColor: '#dcd3c4', marginLeft: -12 }]} />
+          </View>
+          <Text style={s.trustText}>Vetted, reviewed and paid securely through AsapLocal.</Text>
+        </View>
+
+        <Pressable
+          style={{ paddingHorizontal: 26, paddingTop: 20, paddingBottom: 30 }}
+          onPress={() => router.push({ pathname: '/register', params: callbackUrl ? { callbackUrl } : undefined })}
+        >
+          <Text style={s.footerText}>
+            New here? <Text style={s.footerLinkAccent}>Create an account</Text>
+          </Text>
+        </Pressable>
       </ScrollView>
     </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  scroll: { flexGrow: 1 },
-  heading: { marginTop: 12, fontSize: 22, lineHeight: 28 },
-  card: { marginTop: 20, gap: 12 },
-  label: { marginBottom: 6 },
-  passwordWrap: { justifyContent: 'center' },
-  passwordField: { paddingRight: 44 },
-  eyeButton: { position: 'absolute', right: 14, height: '100%', justifyContent: 'center' },
-  centerText: { textAlign: 'center', marginTop: 4 },
-  error: { color: '#dc2626' },
-});

@@ -3,6 +3,11 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useColorScheme, View } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { useFonts, Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold } from '@expo-google-fonts/inter';
+// Scoped to the login/register hero screens only (Claude Design variant "2c")
+// — the rest of the app is Inter throughout; loaded here because useFonts
+// only runs once, at the root.
+import { Caprasimo_400Regular } from '@expo-google-fonts/caprasimo';
+import { Figtree_400Regular, Figtree_600SemiBold, Figtree_700Bold } from '@expo-google-fonts/figtree';
 import { UiNativeThemeProvider, useAppTheme } from '@asaplocal/ui-native';
 
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
@@ -113,6 +118,10 @@ export default function RootLayout() {
     Inter_500Medium,
     Inter_600SemiBold,
     Inter_700Bold,
+    Caprasimo_400Regular,
+    Figtree_400Regular,
+    Figtree_600SemiBold,
+    Figtree_700Bold,
   });
 
   return (

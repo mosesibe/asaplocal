@@ -1,12 +1,15 @@
 import { useCallback, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, TextInput, View } from 'react-native';
 import { useLocalSearchParams, useRouter, type Href } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
-import { Screen, Card, Text, Button, TextField, useAppTheme, useBottomNavInset } from '@asaplocal/ui-native';
+import { Eye, EyeOff } from 'lucide-react-native';
+import { Screen, Text } from '@asaplocal/ui-native';
 
 import { api } from '@/lib/api';
 import { useSession } from '@/lib/session';
 import { ApiError } from '@asaplocal/api-client';
+import { AuthHero } from '@/components/AuthHero';
+import { authStyles as s } from '@/components/auth-styles';
 
 async function openWebPage(path: string) {
   // Goes through the same base-URL resolution every request in this app
@@ -18,22 +21,19 @@ async function openWebPage(path: string) {
   WebBrowser.openBrowserAsync(`${baseUrl}${path}`);
 }
 
-// Ports apps/web/app/register/page.tsx. Terms/Privacy stay a single source
-// of truth on web (opened in an in-app browser) rather than duplicated here
-// — the current copy is explicitly a placeholder ("full legal terms are
-// being finalised"), so copying it natively would just be another place for
-// it to drift out of sync when it's rewritten for real.
+// Ports Claude Design variant "2c", same photo hero as /login. Terms/Privacy
+// stay a single source of truth on web (opened in an in-app browser) rather
+// than duplicated here.
 export default function RegisterScreen() {
   const router = useRouter();
   const { callbackUrl } = useLocalSearchParams<{ callbackUrl?: string }>();
   const { login } = useSession();
-  const { colors, spacing } = useAppTheme();
-  const bottomInset = useBottomNavInset();
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [marketingEmail, setMarketingEmail] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -65,101 +65,113 @@ export default function RegisterScreen() {
     }
   }, [firstName, lastName, email, phone, password, termsAccepted, marketingEmail, login]);
 
-  if (done) {
-    return (
-      <Screen style={styles.centered}>
-        <View style={styles.doneBlock}>
-          <Text variant="title" style={styles.doneTitle}>
-            Check your inbox
-          </Text>
-          <Text variant="body" color="muted" style={styles.doneBody}>
-            We've sent a verification link to {email}. You can confirm it anytime — no need to wait, let's get you
-            started.
-          </Text>
-          <Button style={styles.continueButton} onPress={() => router.replace((callbackUrl as Href) ?? '/')}>
-            Continue
-          </Button>
-        </View>
-      </Screen>
-    );
-  }
-
   return (
-    <Screen>
-      <ScrollView contentContainerStyle={[styles.scroll, { padding: spacing.four, paddingBottom: bottomInset }]} keyboardShouldPersistTaps="handled">
-        <Text variant="title" style={styles.h1}>
-          Create your account
-        </Text>
+    <Screen style={s.screen}>
+      <ScrollView contentContainerStyle={s.scroll} keyboardShouldPersistTaps="handled">
+        <AuthHero headline="Get help, booked in minutes." />
 
-        <Card style={styles.card}>
-          <View style={styles.row}>
-            <TextField style={styles.half} placeholder="First name" value={firstName} onChangeText={setFirstName} />
-            <TextField style={styles.half} placeholder="Last name" value={lastName} onChangeText={setLastName} />
-          </View>
-          <TextField placeholder="Email" autoCapitalize="none" keyboardType="email-address" value={email} onChangeText={setEmail} />
-          <TextField placeholder="Phone number" keyboardType="phone-pad" value={phone} onChangeText={setPhone} />
-          <TextField placeholder="Password (min 8 characters)" secureTextEntry value={password} onChangeText={setPassword} />
+        <View style={s.card}>
+          {done ? (
+            <View style={s.doneWrap}>
+              <View>
+                <Text style={s.doneTitle}>Check your inbox</Text>
+                <Text style={s.doneSubtitle}>We&apos;ve sent a verification link to {email}.</Text>
+              </View>
+              <Pressable
+                style={({ pressed }) => [s.submitButton, { marginLeft: 'auto', height: 44, paddingHorizontal: 20 }, pressed && s.submitButtonPressed]}
+                onPress={() => router.replace((callbackUrl as Href) ?? '/')}
+              >
+                <Text style={[s.submitButtonText, { fontSize: 14 }]}>Continue</Text>
+              </Pressable>
+            </View>
+          ) : (
+            <View style={s.form}>
+              <View style={s.row}>
+                <TextInput style={[s.input, s.half]} placeholder="First name" placeholderTextColor="rgba(32,30,29,.4)" value={firstName} onChangeText={setFirstName} />
+                <TextInput style={[s.input, s.half]} placeholder="Last name" placeholderTextColor="rgba(32,30,29,.4)" value={lastName} onChangeText={setLastName} />
+              </View>
+              <TextInput
+                style={s.input}
+                placeholder="Email"
+                placeholderTextColor="rgba(32,30,29,.4)"
+                autoCapitalize="none"
+                autoComplete="email"
+                keyboardType="email-address"
+                value={email}
+                onChangeText={setEmail}
+              />
+              <TextInput
+                style={s.input}
+                placeholder="Phone number"
+                placeholderTextColor="rgba(32,30,29,.4)"
+                keyboardType="phone-pad"
+                autoComplete="tel"
+                value={phone}
+                onChangeText={setPhone}
+              />
+              <View style={s.passwordWrap}>
+                <TextInput
+                  style={[s.input, s.passwordInput]}
+                  placeholder="Password (min 8 characters)"
+                  placeholderTextColor="rgba(32,30,29,.4)"
+                  secureTextEntry={!showPassword}
+                  autoComplete="new-password"
+                  value={password}
+                  onChangeText={setPassword}
+                />
+                <Pressable onPress={() => setShowPassword((v) => !v)} style={s.eyeButton} hitSlop={8}>
+                  {showPassword ? <EyeOff size={20} color="rgba(32,30,29,.6)" /> : <Eye size={20} color="rgba(32,30,29,.6)" />}
+                </Pressable>
+              </View>
 
-          {error && (
-            <Text variant="small" style={styles.error}>
-              {error}
-            </Text>
+              <Pressable style={s.checkboxRow} onPress={() => setTermsAccepted((v) => !v)}>
+                <View style={[s.checkbox, termsAccepted && s.checkboxChecked]} />
+                <Text style={s.checkboxLabel}>
+                  I agree to the{' '}
+                  <Text style={s.checkboxLink} onPress={() => openWebPage('/terms')}>
+                    Terms
+                  </Text>{' '}
+                  &{' '}
+                  <Text style={s.checkboxLink} onPress={() => openWebPage('/privacy')}>
+                    Privacy Policy
+                  </Text>
+                </Text>
+              </Pressable>
+
+              <Pressable style={s.checkboxRow} onPress={() => setMarketingEmail((v) => !v)}>
+                <View style={[s.checkbox, marketingEmail && s.checkboxChecked]} />
+                <Text style={s.checkboxLabel}>
+                  Email me occasional tips and offers. Optional — you can change this any time, and it never affects booking updates.
+                </Text>
+              </Pressable>
+
+              {error && <Text style={s.error}>{error}</Text>}
+              <Pressable style={({ pressed }) => [s.submitButton, pressed && s.submitButtonPressed]} onPress={handleSubmit} disabled={submitting}>
+                {submitting && <ActivityIndicator size="small" color="#fff9f2" />}
+                <Text style={s.submitButtonText}>{submitting ? 'Creating account…' : 'Sign up'}</Text>
+              </Pressable>
+            </View>
           )}
+        </View>
 
-          <Pressable style={styles.checkboxRow} onPress={() => setTermsAccepted((v) => !v)}>
-            <View style={[styles.checkbox, { borderColor: colors.border, backgroundColor: termsAccepted ? colors.brand[600] : 'transparent' }]} />
-            <Text variant="small" color="muted" style={styles.checkboxLabel}>
-              I agree to the{' '}
-              <Text variant="smallMedium" color="brand" onPress={() => openWebPage('/terms')}>
-                Terms
-              </Text>{' '}
-              &{' '}
-              <Text variant="smallMedium" color="brand" onPress={() => openWebPage('/privacy')}>
-                Privacy Policy
-              </Text>
-            </Text>
-          </Pressable>
-
-          <Pressable style={styles.checkboxRow} onPress={() => setMarketingEmail((v) => !v)}>
-            <View style={[styles.checkbox, { borderColor: colors.border, backgroundColor: marketingEmail ? colors.brand[600] : 'transparent' }]} />
-            <Text variant="small" color="muted" style={styles.checkboxLabel}>
-              Email me occasional tips and offers. Optional — you can change this any time, and it never affects
-              booking updates.
-            </Text>
-          </Pressable>
-
-          <Button onPress={handleSubmit} loading={submitting}>
-            Sign up
-          </Button>
-        </Card>
+        <View style={s.trustRow}>
+          <View style={s.avatarStack}>
+            <View style={[s.avatar, { backgroundColor: '#ffe1d0' }]} />
+            <View style={[s.avatar, { backgroundColor: '#e1eecc', marginLeft: -12 }]} />
+            <View style={[s.avatar, { backgroundColor: '#dcd3c4', marginLeft: -12 }]} />
+          </View>
+          <Text style={s.trustText}>Vetted, reviewed and paid securely through AsapLocal.</Text>
+        </View>
 
         <Pressable
-          style={styles.footerLink}
+          style={{ paddingHorizontal: 26, paddingTop: 20, paddingBottom: 30 }}
           onPress={() => router.replace({ pathname: '/login', params: callbackUrl ? { callbackUrl } : undefined })}
         >
-          <Text variant="small" color="muted">
-            Already have an account? <Text variant="smallMedium" color="brand">Log in</Text>
+          <Text style={s.footerText}>
+            Already have an account? <Text style={s.footerLinkAccent}>Log in</Text>
           </Text>
         </Pressable>
       </ScrollView>
     </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  centered: { alignItems: 'center', justifyContent: 'center' },
-  scroll: { gap: 16 },
-  h1: { fontSize: 24, lineHeight: 30 },
-  card: { gap: 12 },
-  row: { flexDirection: 'row', gap: 8 },
-  half: { flex: 1 },
-  checkboxRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
-  checkbox: { width: 18, height: 18, borderRadius: 4, borderWidth: StyleSheet.hairlineWidth, marginTop: 2 },
-  checkboxLabel: { flex: 1 },
-  error: { color: '#dc2626' },
-  footerLink: { alignItems: 'center', marginTop: 4 },
-  doneBlock: { maxWidth: 340, alignItems: 'center', gap: 12 },
-  doneTitle: { textAlign: 'center' },
-  doneBody: { textAlign: 'center' },
-  continueButton: { marginTop: 12, alignSelf: 'stretch' },
-});
