@@ -43,6 +43,10 @@ export interface MobileTokenUser {
   // (business profile → services → verification) — false while a Business
   // exists but the guided flow hasn't been finished/dismissed yet.
   onboardingCompleted: boolean;
+  // Lets the mobile /verify screen show (and let the provider correct) the
+  // number a code was texted to — it has no server component of its own to
+  // fetch this via Prisma the way web's /verify page does.
+  phone: string | null;
 }
 
 export interface MobileAccessTokenPayload {
@@ -97,6 +101,7 @@ async function userToTokenUser(userId: string): Promise<MobileTokenUser | null> 
     isProvider: user.role === "PROVIDER" || !!user.business || !!user.providerSince,
     hasBusiness: !!user.business,
     onboardingCompleted: !!user.business?.onboardingCompletedAt,
+    phone: user.phone,
   };
 }
 

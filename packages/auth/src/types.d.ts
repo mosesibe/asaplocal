@@ -29,6 +29,10 @@ declare module "next-auth" {
       // (business profile → services → verification). Same freshness
       // caveat as hasBusiness above.
       onboardingCompleted?: boolean;
+      // Only populated on the bearer.ts (mobile) path, same as hasBusiness —
+      // the mobile /verify screen has no server component of its own to
+      // fetch this via Prisma, unlike web's /verify (see apps/provider/app/verify/page.tsx).
+      phone?: string | null;
     } & DefaultSession["user"];
   }
   interface User {
@@ -39,6 +43,7 @@ declare module "next-auth" {
     isProvider: boolean;
     hasBusiness?: boolean;
     onboardingCompleted?: boolean;
+    phone?: string | null;
   }
 }
 

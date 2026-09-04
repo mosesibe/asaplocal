@@ -25,6 +25,11 @@ export default function VerifyScreen() {
   const emailVerified = user?.isEmailVerified ?? false;
   const phoneVerified = user?.isPhoneVerified ?? false;
 
+  const [editingPhone, setEditingPhone] = useState(false);
+  const [phoneInput, setPhoneInput] = useState('');
+  const [savingPhone, setSavingPhone] = useState(false);
+  const [phoneError, setPhoneError] = useState<string | null>(null);
+
   useEffect(() => {
     if (emailVerified) return;
     pollRef.current = setInterval(refresh, 4000);
@@ -72,6 +77,29 @@ export default function VerifyScreen() {
     }
   }
 
+  function onStartEditPhone() {
+    setPhoneInput(user?.phone ?? '');
+    setPhoneError(null);
+    setEditingPhone(true);
+  }
+
+  async function onSavePhone() {
+    setPhoneError(null);
+    setSavingPhone(true);
+    try {
+      await api.request('/api/auth/phone/resend-code', { method: 'POST', body: JSON.stringify({ phone: phoneInput }) });
+      await refresh();
+      setCode('');
+      setVerifyError(null);
+      setEditingPhone(false);
+      setNotice('Phone number updated — new code sent.');
+    } catch (e) {
+      setPhoneError(e instanceof Error ? e.message : 'Something went wrong');
+    } finally {
+      setSavingPhone(false);
+    }
+  }
+
   return (
     <Screen>
       <View style={[styles.container, { padding: spacing.four }]}>
@@ -106,6 +134,36 @@ export default function VerifyScreen() {
           </View>
           {!phoneVerified && (
             <>
+              {editingPhone ? (
+                <>
+                  <Text variant="small" color="muted">
+                    Made a typo when you signed up? Fix it here.
+                  </Text>
+                  <TextField placeholder="Phone number" keyboardType="phone-pad" value={phoneInput} onChangeText={setPhoneInput} />
+                  {phoneError && (
+                    <Text variant="small" style={styles.error}>
+                      {phoneError}
+                    </Text>
+                  )}
+                  <View style={styles.codeRow}>
+                    <Button size="sm" onPress={onSavePhone} loading={savingPhone} disabled={phoneInput.trim().length === 0}>
+                      Save & resend code
+                    </Button>
+                    <Button variant="outline" size="sm" onPress={() => setEditingPhone(false)} disabled={savingPhone}>
+                      Cancel
+                    </Button>
+                  </View>
+                </>
+              ) : (
+                <View style={styles.row}>
+                  <Text variant="small" color="muted" style={styles.flex1}>
+                    We texted a code to {user?.phone || 'your phone'}.
+                  </Text>
+                  <Text variant="link" color="brand" onPress={onStartEditPhone}>
+                    Not right?
+                  </Text>
+                </View>
+              )}
               <Text variant="small" color="muted">
                 Enter the 6-digit code we texted you.
               </Text>
@@ -151,5 +209,6 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   codeRow: { flexDirection: 'row', gap: 8, alignItems: 'center' },
   codeInput: { flex: 1 },
+  flex1: { flex: 1 },
   error: { color: '#dc2626' },
 });
