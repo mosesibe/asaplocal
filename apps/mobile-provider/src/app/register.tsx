@@ -1,32 +1,41 @@
 import { useCallback, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, TextInput, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
-import { Screen, Card, Text, Button, TextField, useAppTheme, useBottomNavInset } from '@asaplocal/ui-native';
+import { Eye, EyeOff } from 'lucide-react-native';
+import { Screen, Text } from '@asaplocal/ui-native';
 
 import { api } from '@/lib/api';
 import { useSession } from '@/lib/session';
 import { ApiError } from '@asaplocal/api-client';
+import { AuthHero } from '@/components/AuthHero';
+import { authStyles as s } from '@/components/auth-styles';
 
-const WEB_URL = process.env.EXPO_PUBLIC_WEB_URL ?? 'http://localhost:3000';
+async function openWebPage(path: string) {
+  // Goes through the same base-URL resolution every request in this app
+  // uses (production URL, or a dev override set from the Account screen)
+  // rather than an ad-hoc process.env read with its own separate fallback.
+  const baseUrl = await api.getBaseUrl();
+  WebBrowser.openBrowserAsync(`${baseUrl}${path}`);
+}
 
-// Ports apps/provider/app/register/page.tsx, including the two-phase
-// existing-customer merge: if the email already belongs to a customer
-// account, the server responds 409 with code "EXISTING_CUSTOMER" instead of
-// creating a new user, and the form re-submits with the account's existing
-// password to add provider access to it (role stays CUSTOMER; see
-// User.providerSince).
+// Ports Claude Design variant "1a", same dark hero as /login. Includes the
+// two-phase existing-customer merge: if the email already belongs to a
+// customer account, the server responds 409 with code "EXISTING_CUSTOMER"
+// instead of creating a new user, and the form re-submits with the
+// account's existing password to add provider access to it (role stays
+// CUSTOMER; see User.providerSince).
 export default function RegisterScreen() {
   const router = useRouter();
   const { login } = useSession();
-  const { colors, spacing } = useAppTheme();
-  const bottomInset = useBottomNavInset();
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [existingCustomer, setExistingCustomer] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [marketingEmail, setMarketingEmail] = useState(false);
@@ -75,90 +84,149 @@ export default function RegisterScreen() {
   }, [existingCustomer, firstName, lastName, email, phone, password, confirmPassword, termsAccepted, marketingEmail, login]);
 
   return (
-    <Screen>
-      <ScrollView contentContainerStyle={[styles.scroll, { padding: spacing.four, paddingBottom: bottomInset }]} keyboardShouldPersistTaps="handled">
-        <Text variant="title" style={styles.h1}>
-          {existingCustomer ? 'Add business access' : 'Create your business account'}
-        </Text>
-        {existingCustomer && (
-          <Text variant="small" color="muted">
-            You already have a customer account with {email}. Confirm your password to add provider access to it.
+    <Screen style={s.screen}>
+      <ScrollView contentContainerStyle={s.scroll} keyboardShouldPersistTaps="handled">
+        <AuthHero />
+
+        <View style={s.body}>
+          <Text style={s.h1}>{existingCustomer ? 'Welcome back.' : 'List your business.'}</Text>
+          <Text style={s.subtitle}>
+            {existingCustomer
+              ? `You already have a customer account with ${email}. Confirm your password to add provider access to it.`
+              : 'Get booked by your neighbours — join AsapLocal Business.'}
           </Text>
-        )}
 
-        <Card style={styles.card}>
-          {!existingCustomer ? (
-            <>
-              <View style={styles.row}>
-                <TextField style={styles.half} placeholder="First name" value={firstName} onChangeText={setFirstName} />
-                <TextField style={styles.half} placeholder="Last name" value={lastName} onChangeText={setLastName} />
-              </View>
-              <TextField placeholder="Email" autoCapitalize="none" keyboardType="email-address" value={email} onChangeText={setEmail} />
-              <TextField placeholder="Phone number" keyboardType="phone-pad" value={phone} onChangeText={setPhone} />
-              <TextField placeholder="Password (min 8 characters)" secureTextEntry value={password} onChangeText={setPassword} />
+          <View style={s.form}>
+            {!existingCustomer ? (
+              <>
+                <View style={s.row}>
+                  <View style={s.half}>
+                    <Text style={s.label}>First name</Text>
+                    <TextInput style={s.input} placeholder="First name" placeholderTextColor="rgba(249,244,237,.35)" value={firstName} onChangeText={setFirstName} />
+                  </View>
+                  <View style={s.half}>
+                    <Text style={s.label}>Last name</Text>
+                    <TextInput style={s.input} placeholder="Last name" placeholderTextColor="rgba(249,244,237,.35)" value={lastName} onChangeText={setLastName} />
+                  </View>
+                </View>
+                <View>
+                  <Text style={s.label}>Email</Text>
+                  <TextInput
+                    style={s.input}
+                    placeholder="you@yourbusiness.co.uk"
+                    placeholderTextColor="rgba(249,244,237,.35)"
+                    autoCapitalize="none"
+                    autoComplete="email"
+                    keyboardType="email-address"
+                    value={email}
+                    onChangeText={setEmail}
+                  />
+                </View>
+                <View>
+                  <Text style={s.label}>Phone number</Text>
+                  <TextInput
+                    style={s.input}
+                    placeholder="07…"
+                    placeholderTextColor="rgba(249,244,237,.35)"
+                    keyboardType="phone-pad"
+                    autoComplete="tel"
+                    value={phone}
+                    onChangeText={setPhone}
+                  />
+                </View>
+                <View>
+                  <Text style={s.label}>Password</Text>
+                  <View style={s.passwordWrap}>
+                    <TextInput
+                      style={[s.input, s.passwordInput]}
+                      placeholder="Min 8 characters"
+                      placeholderTextColor="rgba(249,244,237,.35)"
+                      secureTextEntry={!showPassword}
+                      autoComplete="new-password"
+                      value={password}
+                      onChangeText={setPassword}
+                    />
+                    <Pressable onPress={() => setShowPassword((v) => !v)} style={s.eyeButton} hitSlop={8}>
+                      {showPassword ? <EyeOff size={20} color="rgba(249,244,237,.6)" /> : <Eye size={20} color="rgba(249,244,237,.6)" />}
+                    </Pressable>
+                  </View>
+                </View>
 
-              {error && (
-                <Text variant="small" style={styles.error}>
-                  {error}
-                </Text>
-              )}
+                {error && <Text style={s.error}>{error}</Text>}
 
-              <Pressable style={styles.checkboxRow} onPress={() => setTermsAccepted((v) => !v)}>
-                <View style={[styles.checkbox, { borderColor: colors.border, backgroundColor: termsAccepted ? colors.brand[600] : 'transparent' }]} />
-                <Text variant="small" color="muted" style={styles.checkboxLabel}>
-                  I agree to the{' '}
-                  <Text variant="smallMedium" color="brand" onPress={() => WebBrowser.openBrowserAsync(`${WEB_URL}/terms`)}>
-                    Terms
-                  </Text>{' '}
-                  &{' '}
-                  <Text variant="smallMedium" color="brand" onPress={() => WebBrowser.openBrowserAsync(`${WEB_URL}/privacy`)}>
-                    Privacy Policy
+                <Pressable style={s.checkboxRow} onPress={() => setTermsAccepted((v) => !v)}>
+                  <View style={[s.checkbox, termsAccepted && s.checkboxChecked]} />
+                  <Text style={s.checkboxLabel}>
+                    I agree to the{' '}
+                    <Text style={s.checkboxLink} onPress={() => openWebPage('/terms')}>
+                      Terms
+                    </Text>{' '}
+                    &{' '}
+                    <Text style={s.checkboxLink} onPress={() => openWebPage('/privacy')}>
+                      Privacy Policy
+                    </Text>
                   </Text>
-                </Text>
-              </Pressable>
+                </Pressable>
 
-              <Pressable style={styles.checkboxRow} onPress={() => setMarketingEmail((v) => !v)}>
-                <View style={[styles.checkbox, { borderColor: colors.border, backgroundColor: marketingEmail ? colors.brand[600] : 'transparent' }]} />
-                <Text variant="small" color="muted" style={styles.checkboxLabel}>
-                  Email me occasional tips and offers. Optional — never affects booking updates.
-                </Text>
-              </Pressable>
-            </>
+                <Pressable style={s.checkboxRow} onPress={() => setMarketingEmail((v) => !v)}>
+                  <View style={[s.checkbox, marketingEmail && s.checkboxChecked]} />
+                  <Text style={s.checkboxLabel}>
+                    Email me product news, lead-generation tips and offers. Optional — job and payout emails are unaffected.
+                  </Text>
+                </Pressable>
+              </>
+            ) : (
+              <>
+                <View>
+                  <Text style={s.label}>Password</Text>
+                  <View style={s.passwordWrap}>
+                    <TextInput
+                      style={[s.input, s.passwordInput]}
+                      placeholder="Your existing password"
+                      placeholderTextColor="rgba(249,244,237,.35)"
+                      secureTextEntry={!showConfirmPassword}
+                      autoComplete="current-password"
+                      value={confirmPassword}
+                      onChangeText={setConfirmPassword}
+                    />
+                    <Pressable onPress={() => setShowConfirmPassword((v) => !v)} style={s.eyeButton} hitSlop={8}>
+                      {showConfirmPassword ? <EyeOff size={20} color="rgba(249,244,237,.6)" /> : <Eye size={20} color="rgba(249,244,237,.6)" />}
+                    </Pressable>
+                  </View>
+                </View>
+                {error && <Text style={s.error}>{error}</Text>}
+              </>
+            )}
+
+            <Pressable style={({ pressed }) => [s.submitButton, pressed && s.submitButtonPressed]} onPress={handleSubmit} disabled={submitting}>
+              {submitting && <ActivityIndicator size="small" color="#fff9f2" />}
+              <Text style={s.submitButtonText}>
+                {submitting ? (existingCustomer ? 'Confirming…' : 'Creating account…') : existingCustomer ? 'Confirm and continue' : 'Sign up as a provider'}
+              </Text>
+            </Pressable>
+          </View>
+
+          {existingCustomer ? (
+            <Pressable
+              style={{ marginTop: 16, alignItems: 'center' }}
+              onPress={() => {
+                setExistingCustomer(false);
+                setError(null);
+              }}
+            >
+              <Text style={s.footerLink}>Use a different email instead</Text>
+            </Pressable>
           ) : (
-            <>
-              <TextField placeholder="Existing password" secureTextEntry value={confirmPassword} onChangeText={setConfirmPassword} />
-              {error && (
-                <Text variant="small" style={styles.error}>
-                  {error}
+            <View style={s.footer}>
+              <Pressable onPress={() => router.replace('/login')}>
+                <Text style={s.footerText}>
+                  Already listed? <Text style={s.footerLinkAccent}>Log in</Text>
                 </Text>
-              )}
-            </>
+              </Pressable>
+            </View>
           )}
-
-          <Button onPress={handleSubmit} loading={submitting}>
-            {existingCustomer ? 'Confirm & continue' : 'Sign up'}
-          </Button>
-        </Card>
-
-        <Pressable style={styles.footerLink} onPress={() => router.replace('/login')}>
-          <Text variant="small" color="muted">
-            Already have an account? <Text variant="smallMedium" color="brand">Log in</Text>
-          </Text>
-        </Pressable>
+        </View>
       </ScrollView>
     </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  scroll: { gap: 16 },
-  h1: { fontSize: 24, lineHeight: 30 },
-  card: { gap: 12 },
-  row: { flexDirection: 'row', gap: 8 },
-  half: { flex: 1 },
-  checkboxRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
-  checkbox: { width: 18, height: 18, borderRadius: 4, borderWidth: StyleSheet.hairlineWidth, marginTop: 2 },
-  checkboxLabel: { flex: 1 },
-  error: { color: '#dc2626' },
-  footerLink: { alignItems: 'center', marginTop: 4 },
-});

@@ -3,8 +3,12 @@ import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
-import { Button, Card, Input, PasswordInput } from "@asaplocal/ui";
-import { AuthBrand } from "@/components/auth-brand";
+import { Caprasimo, Figtree } from "next/font/google";
+import { Eye, EyeOff } from "lucide-react";
+import { AuthHero, authInputClass, authInputStyle, authLabelClass, authLabelStyle } from "@/components/auth-hero";
+
+const caprasimo = Caprasimo({ subsets: ["latin"], weight: "400", variable: "--font-caprasimo" });
+const figtree = Figtree({ subsets: ["latin"], weight: ["400", "600", "700"], variable: "--font-figtree" });
 
 type Phase = "form" | "confirm-existing";
 
@@ -13,10 +17,12 @@ export default function RegisterPage() {
   const ref = useSearchParams().get("ref");
   const [phase, setPhase] = useState<Phase>("form");
   const [form, setForm] = useState({ firstName: "", lastName: "", email: "", phone: "", password: "" });
+  const [showPassword, setShowPassword] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
   // Separate and unticked — must not be bundled with the terms checkbox.
   const [marketingEmail, setMarketingEmail] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -62,82 +68,248 @@ export default function RegisterPage() {
     submit({ ...form, confirmPassword, termsAccepted, marketingEmail }, confirmPassword);
   }
 
-  if (phase === "confirm-existing") {
-    return (
-      <div className="mx-auto max-w-sm px-4 py-16 sm:px-6">
-        <AuthBrand />
-        <h1 className="mt-6 text-2xl font-bold">Welcome back</h1>
-        <Card className="mt-6 p-6">
-          <p className="text-sm text-muted-foreground">
-            You already have a customer account with <span className="font-medium">{form.email}</span>. Confirm your password to add
-            provider access to it.
-          </p>
-          <form onSubmit={onSubmitConfirm} className="mt-4 space-y-4">
-            <PasswordInput
-              required
-              placeholder="Your existing password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-            />
-            {error && <p className="text-sm text-red-600">{error}</p>}
-            <Button type="submit" className="w-full" disabled={loading}>{loading ? "Confirming…" : "Confirm and continue"}</Button>
-          </form>
-          <button type="button" className="mt-4 text-sm text-muted-foreground underline" onClick={() => { setPhase("form"); setError(null); }}>
-            Use a different email instead
-          </button>
-        </Card>
-      </div>
-    );
-  }
-
   return (
-    <div className="mx-auto max-w-sm px-4 py-16 sm:px-6">
-      <AuthBrand />
-      <h1 className="mt-6 text-2xl font-bold">List your business</h1>
-      <Card className="mt-6 p-6">
-        <form onSubmit={onSubmitForm} className="space-y-4">
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <Input required placeholder="First name" value={form.firstName} onChange={(e) => setForm({ ...form, firstName: e.target.value })} />
-            <Input required placeholder="Last name" value={form.lastName} onChange={(e) => setForm({ ...form, lastName: e.target.value })} />
-          </div>
-          <Input required type="email" placeholder="Email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
-          <Input required type="tel" placeholder="Phone number" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
-          <PasswordInput required placeholder="Password (min 8 characters)" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
-          <label className="flex items-start gap-2 text-sm text-muted-foreground">
-            <input
-              type="checkbox"
-              required
-              checked={termsAccepted}
-              onChange={(e) => setTermsAccepted(e.target.checked)}
-              className="mt-0.5"
-            />
-            <span>
-              I agree to the{" "}
-              <a href={`${process.env.NEXT_PUBLIC_WEB_URL}/terms`} target="_blank" rel="noreferrer" className="font-medium text-brand-700 hover:underline">
-                Terms
-              </a>{" "}
-              &{" "}
-              <a href={`${process.env.NEXT_PUBLIC_WEB_URL}/privacy`} target="_blank" rel="noreferrer" className="font-medium text-brand-700 hover:underline">
-                Privacy Policy
-              </a>
-            </span>
-          </label>
-          <label className="flex items-start gap-2 text-sm text-muted-foreground">
-            <input
-              type="checkbox"
-              checked={marketingEmail}
-              onChange={(e) => setMarketingEmail(e.target.checked)}
-              className="mt-0.5"
-            />
-            <span>Email me product news, lead-generation tips and offers. Optional — job and payout emails are unaffected.</span>
-          </label>
-          {error && <p className="text-sm text-red-600">{error}</p>}
-          <Button type="submit" className="w-full" disabled={loading}>{loading ? "Creating account…" : "Sign up as a provider"}</Button>
-        </form>
-        <p className="mt-4 text-center text-sm text-muted-foreground">
-          Already listed? <Link href="/login" className="font-medium text-brand-700 hover:underline">Log in</Link>
-        </p>
-      </Card>
+    <div
+      className={`${caprasimo.variable} ${figtree.variable} min-h-screen`}
+      style={{ background: "#17161a", fontFamily: "var(--font-figtree)" }}
+    >
+      <div className="mx-auto w-full max-w-[420px]">
+        <AuthHero />
+
+        <div className="px-6 pb-10" style={{ marginTop: -26, position: "relative" }}>
+          {phase === "confirm-existing" ? (
+            <>
+              <h1 style={{ fontFamily: "var(--font-caprasimo)", fontSize: 32, lineHeight: 1.08, margin: "0 0 6px", color: "#f9f4ed" }}>
+                Welcome back.
+              </h1>
+              <p className="mb-5 text-sm" style={{ color: "rgba(249,244,237,.62)" }}>
+                You already have a customer account with <span className="font-semibold">{form.email}</span>. Confirm your password to
+                add provider access to it.
+              </p>
+              <form onSubmit={onSubmitConfirm} className="flex flex-col gap-3">
+                <label className="block">
+                  <span className={authLabelClass} style={authLabelStyle}>
+                    Password
+                  </span>
+                  <span className="relative block">
+                    <input
+                      type={showConfirmPassword ? "text" : "password"}
+                      required
+                      autoComplete="current-password"
+                      placeholder="Your existing password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      className={`${authInputClass} pr-[54px]`}
+                      style={authInputStyle}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword((v) => !v)}
+                      aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                      className="absolute right-1.5 top-[5px] flex h-11 w-11 items-center justify-center rounded-full hover:bg-white/[.08] hover:text-[#f6a06b]"
+                      style={{ color: "rgba(249,244,237,.6)" }}
+                    >
+                      {showConfirmPassword ? <EyeOff size={20} strokeWidth={2.75} /> : <Eye size={20} strokeWidth={2.75} />}
+                    </button>
+                  </span>
+                </label>
+                {error && (
+                  <p className="ml-[18px] mt-0.5 text-[12.5px] font-semibold" style={{ color: "#f6a06b" }}>
+                    {error}
+                  </p>
+                )}
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="mt-1.5 flex h-14 items-center justify-center gap-2.5 rounded-full text-[17px] disabled:opacity-70"
+                  style={{ background: "#c67139", color: "#fff9f2", fontFamily: "var(--font-caprasimo)" }}
+                >
+                  {loading && (
+                    <span className="h-[17px] w-[17px] animate-spin rounded-full border-[2.5px] border-white/40" style={{ borderTopColor: "#fff9f2" }} />
+                  )}
+                  {loading ? "Confirming…" : "Confirm and continue"}
+                </button>
+              </form>
+              <button
+                type="button"
+                className="mt-4 text-[13.5px] font-semibold underline"
+                style={{ color: "rgba(249,244,237,.7)" }}
+                onClick={() => {
+                  setPhase("form");
+                  setError(null);
+                }}
+              >
+                Use a different email instead
+              </button>
+            </>
+          ) : (
+            <>
+              <h1 style={{ fontFamily: "var(--font-caprasimo)", fontSize: 32, lineHeight: 1.08, margin: "0 0 6px", color: "#f9f4ed" }}>
+                List your business.
+              </h1>
+              <p className="mb-5 text-sm" style={{ color: "rgba(249,244,237,.62)" }}>
+                Get booked by your neighbours — join AsapLocal Business.
+              </p>
+
+              <form onSubmit={onSubmitForm} className="flex flex-col gap-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <label className="block">
+                    <span className={authLabelClass} style={authLabelStyle}>
+                      First name
+                    </span>
+                    <input
+                      required
+                      placeholder="First name"
+                      value={form.firstName}
+                      onChange={(e) => setForm({ ...form, firstName: e.target.value })}
+                      className={authInputClass}
+                      style={authInputStyle}
+                    />
+                  </label>
+                  <label className="block">
+                    <span className={authLabelClass} style={authLabelStyle}>
+                      Last name
+                    </span>
+                    <input
+                      required
+                      placeholder="Last name"
+                      value={form.lastName}
+                      onChange={(e) => setForm({ ...form, lastName: e.target.value })}
+                      className={authInputClass}
+                      style={authInputStyle}
+                    />
+                  </label>
+                </div>
+                <label className="block">
+                  <span className={authLabelClass} style={authLabelStyle}>
+                    Email
+                  </span>
+                  <input
+                    required
+                    type="email"
+                    autoComplete="email"
+                    placeholder="you@yourbusiness.co.uk"
+                    value={form.email}
+                    onChange={(e) => setForm({ ...form, email: e.target.value })}
+                    className={authInputClass}
+                    style={authInputStyle}
+                  />
+                </label>
+                <label className="block">
+                  <span className={authLabelClass} style={authLabelStyle}>
+                    Phone number
+                  </span>
+                  <input
+                    required
+                    type="tel"
+                    autoComplete="tel"
+                    placeholder="07…"
+                    value={form.phone}
+                    onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                    className={authInputClass}
+                    style={authInputStyle}
+                  />
+                </label>
+                <label className="block">
+                  <span className={authLabelClass} style={authLabelStyle}>
+                    Password
+                  </span>
+                  <span className="relative block">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      required
+                      autoComplete="new-password"
+                      placeholder="Min 8 characters"
+                      value={form.password}
+                      onChange={(e) => setForm({ ...form, password: e.target.value })}
+                      className={`${authInputClass} pr-[54px]`}
+                      style={authInputStyle}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((v) => !v)}
+                      aria-label={showPassword ? "Hide password" : "Show password"}
+                      className="absolute right-1.5 top-[5px] flex h-11 w-11 items-center justify-center rounded-full hover:bg-white/[.08] hover:text-[#f6a06b]"
+                      style={{ color: "rgba(249,244,237,.6)" }}
+                    >
+                      {showPassword ? <EyeOff size={20} strokeWidth={2.75} /> : <Eye size={20} strokeWidth={2.75} />}
+                    </button>
+                  </span>
+                </label>
+
+                <label className="flex items-start gap-2 text-[13px]" style={{ color: "rgba(249,244,237,.6)" }}>
+                  <input
+                    type="checkbox"
+                    required
+                    checked={termsAccepted}
+                    onChange={(e) => setTermsAccepted(e.target.checked)}
+                    className="mt-0.5"
+                    style={{ accentColor: "#c67139" }}
+                  />
+                  <span>
+                    I agree to the{" "}
+                    <a
+                      href={`${process.env.NEXT_PUBLIC_WEB_URL}/terms`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="font-semibold hover:underline"
+                      style={{ color: "#f6a06b" }}
+                    >
+                      Terms
+                    </a>{" "}
+                    &{" "}
+                    <a
+                      href={`${process.env.NEXT_PUBLIC_WEB_URL}/privacy`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="font-semibold hover:underline"
+                      style={{ color: "#f6a06b" }}
+                    >
+                      Privacy Policy
+                    </a>
+                  </span>
+                </label>
+                <label className="flex items-start gap-2 text-[13px]" style={{ color: "rgba(249,244,237,.6)" }}>
+                  <input
+                    type="checkbox"
+                    checked={marketingEmail}
+                    onChange={(e) => setMarketingEmail(e.target.checked)}
+                    className="mt-0.5"
+                    style={{ accentColor: "#c67139" }}
+                  />
+                  <span>Email me product news, lead-generation tips and offers. Optional — job and payout emails are unaffected.</span>
+                </label>
+
+                {error && (
+                  <p className="ml-[18px] mt-0.5 text-[12.5px] font-semibold" style={{ color: "#f6a06b" }}>
+                    {error}
+                  </p>
+                )}
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="mt-1.5 flex h-14 items-center justify-center gap-2.5 rounded-full text-[17px] disabled:opacity-70"
+                  style={{ background: "#c67139", color: "#fff9f2", fontFamily: "var(--font-caprasimo)" }}
+                >
+                  {loading && (
+                    <span className="h-[17px] w-[17px] animate-spin rounded-full border-[2.5px] border-white/40" style={{ borderTopColor: "#fff9f2" }} />
+                  )}
+                  {loading ? "Creating account…" : "Sign up as a provider"}
+                </button>
+              </form>
+
+              <div className="mt-5 flex flex-col items-center gap-3">
+                <p className="text-[13.5px]" style={{ color: "rgba(249,244,237,.55)" }}>
+                  Already listed?{" "}
+                  <Link href="/login" className="font-bold hover:underline" style={{ color: "#f6a06b" }}>
+                    Log in
+                  </Link>
+                </p>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

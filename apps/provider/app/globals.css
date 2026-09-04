@@ -282,3 +282,18 @@ html[data-splash] .asl-splash {
 @media (prefers-reduced-motion: reduce) {
   html[data-splash] .asl-splash { display: none; }
 }
+
+/* ---------------------------------------------------------------------------
+   Login hero (variant "1a" from design/AsapLocal-Login) — the floating
+   "N new jobs nearby" pill above the pulsing map dot.
+--------------------------------------------------------------------------- */
+.asl-float {
+  animation: asl-float 5s ease-in-out infinite;
+}
+@keyframes asl-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .asl-float { animation: none; }
+}

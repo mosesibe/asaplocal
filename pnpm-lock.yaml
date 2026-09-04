@@ -234,6 +234,12 @@ importers:
       '@asaplocal/ui-native':
         specifier: workspace:^
         version: link:../../packages/ui-native
+      '@expo-google-fonts/caprasimo':
+        specifier: ^0.4.0
+        version: 0.4.0
+      '@expo-google-fonts/figtree':
+        specifier: ^0.4.1
+        version: 0.4.1
       '@expo-google-fonts/inter':
         specifier: ^0.4.2
         version: 0.4.2
@@ -1468,6 +1474,12 @@ packages:
   '@eslint/plugin-kit@0.4.1':
     resolution: {integrity: sha512-43/qtrDUokr7LJqoF2c3+RInu/t4zfrpYdoSDfYyhg52rwLV6TnOvdG4fXm7IkSB3wErkcmJS9iEhjVtOSEjjA==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+
+  '@expo-google-fonts/caprasimo@0.4.0':
+    resolution: {integrity: sha512-rqD2czxcU20yT49A9h+QJUYCrcHD50Pp5USynATJxms3Knxx/83LgjnjwbvH567lg1O85FsGpLG7U6BprwTsnw==}
+
+  '@expo-google-fonts/figtree@0.4.1':
+    resolution: {integrity: sha512-6IQQddGeR3yZBSwiIjy2kd1gA+5s2esF8JAFw6M1qqU4RUlj4Zxkw9J+gixAtZFgd+QIS875EPHqeYlpaRcCRw==}
 
   '@expo-google-fonts/inter@0.4.2':
     resolution: {integrity: sha512-syfiImMaDmq7cFi0of+waE2M4uSCyd16zgyWxdPOY7fN2VBmSLKEzkfbZgeOjJq61kSqPBNNtXjggiQiSD6gMQ==}
@@ -7283,6 +7295,10 @@ snapshots:
     dependencies:
       '@eslint/core': 0.17.0
       levn: 0.4.1
+
+  '@expo-google-fonts/caprasimo@0.4.0': {}
+
+  '@expo-google-fonts/figtree@0.4.1': {}
 
   '@expo-google-fonts/inter@0.4.2': {}
 
