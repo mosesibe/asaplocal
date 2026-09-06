@@ -12,8 +12,8 @@
       },
       "env": {
         "EXPO_PUBLIC_API_URL": "http://localhost:3001",
-        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "REPLACE_WITH_WEB_CLIENT_ID",
-        "EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID": "REPLACE_WITH_IOS_CLIENT_ID"
+        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "1019476571786-3ig545qhracft07oc4te01ao6m6egocr.apps.googleusercontent.com",
+        "EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID": "1019476571786-ksg5cm62dksdq8givi2vocuea063rhgh.apps.googleusercontent.com"
       },
       "channel": "development"
     },
@@ -25,8 +25,8 @@
       },
       "env": {
         "EXPO_PUBLIC_API_URL": "https://provider.asaplocal.pro",
-        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "REPLACE_WITH_WEB_CLIENT_ID",
-        "EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID": "REPLACE_WITH_IOS_CLIENT_ID"
+        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "1019476571786-3ig545qhracft07oc4te01ao6m6egocr.apps.googleusercontent.com",
+        "EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID": "1019476571786-ksg5cm62dksdq8givi2vocuea063rhgh.apps.googleusercontent.com"
       }
     },
     "production": {
@@ -34,8 +34,8 @@
       "autoIncrement": true,
       "env": {
         "EXPO_PUBLIC_API_URL": "https://provider.asaplocal.pro",
-        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "REPLACE_WITH_WEB_CLIENT_ID",
-        "EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID": "REPLACE_WITH_IOS_CLIENT_ID"
+        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "1019476571786-3ig545qhracft07oc4te01ao6m6egocr.apps.googleusercontent.com",
+        "EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID": "1019476571786-ksg5cm62dksdq8givi2vocuea063rhgh.apps.googleusercontent.com"
       }
     }
   },

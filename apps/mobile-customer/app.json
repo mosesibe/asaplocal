@@ -63,13 +63,13 @@
       [
         "react-native-maps",
         {
-          "iosGoogleMapsApiKey": "AIzaSyCigTdR363LL5JG0I8cgY8yDXndQsgmDhA"
+          "iosGoogleMapsApiKey": "AIzaSyCF7kEAMVNV8hEs4SUtwegCxVHsycqMmtg"
         }
       ],
       [
         "@react-native-google-signin/google-signin",
         {
-          "iosUrlScheme": "com.googleusercontent.apps.REPLACE_WITH_IOS_CLIENT_ID"
+          "iosUrlScheme": "com.googleusercontent.apps.1019476571786-mj6a39r3tjkap9ckmr18vt7di9aiqcpn"
         }
       ],
       "expo-apple-authentication"

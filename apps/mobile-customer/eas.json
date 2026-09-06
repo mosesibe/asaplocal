@@ -10,8 +10,8 @@
       "android": { "buildType": "apk" },
       "env": {
         "EXPO_PUBLIC_API_URL": "https://c1be-88-97-174-182.ngrok-free.app",
-        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "REPLACE_WITH_WEB_CLIENT_ID",
-        "EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID": "REPLACE_WITH_IOS_CLIENT_ID"
+        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "1019476571786-3ig545qhracft07oc4te01ao6m6egocr.apps.googleusercontent.com",
+        "EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID": "1019476571786-mj6a39r3tjkap9ckmr18vt7di9aiqcpn.apps.googleusercontent.com"
       }
     },
     "preview": {
@@ -20,8 +20,8 @@
       "android": { "buildType": "apk" },
       "env": {
         "EXPO_PUBLIC_API_URL": "https://app.asaplocal.pro",
-        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "REPLACE_WITH_WEB_CLIENT_ID",
-        "EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID": "REPLACE_WITH_IOS_CLIENT_ID"
+        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "1019476571786-3ig545qhracft07oc4te01ao6m6egocr.apps.googleusercontent.com",
+        "EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID": "1019476571786-mj6a39r3tjkap9ckmr18vt7di9aiqcpn.apps.googleusercontent.com"
       }
     },
     "production": {
@@ -29,8 +29,8 @@
       "autoIncrement": true,
       "env": {
         "EXPO_PUBLIC_API_URL": "https://app.asaplocal.pro",
-        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "REPLACE_WITH_WEB_CLIENT_ID",
-        "EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID": "REPLACE_WITH_IOS_CLIENT_ID"
+        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "1019476571786-3ig545qhracft07oc4te01ao6m6egocr.apps.googleusercontent.com",
+        "EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID": "1019476571786-mj6a39r3tjkap9ckmr18vt7di9aiqcpn.apps.googleusercontent.com"
       }
     }
   },

@@ -45,6 +45,13 @@ export function BottomNav({ children, style }: { children: React.ReactNode; styl
         {
           backgroundColor: colors.surface,
           borderTopColor: colors.border,
+          // The bar's fixed 64 height is just the icon/label content area —
+          // insets.bottom (the home-indicator strip) has to be *added* on
+          // top of that and absorbed by paddingBottom, not carved out of
+          // the 64. Carving it out (paddingBottom alone, no extra height)
+          // squeezed the icon+label into a shorter box than they need,
+          // pushing them up and out over the page content above the bar.
+          height: 64 + insets.bottom,
           paddingBottom: insets.bottom,
         },
         style,
