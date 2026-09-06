@@ -8,18 +8,30 @@
       "developmentClient": true,
       "distribution": "internal",
       "android": { "buildType": "apk" },
-      "env": { "EXPO_PUBLIC_API_URL": "https://c1be-88-97-174-182.ngrok-free.app" }
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://c1be-88-97-174-182.ngrok-free.app",
+        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "REPLACE_WITH_WEB_CLIENT_ID",
+        "EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID": "REPLACE_WITH_IOS_CLIENT_ID"
+      }
     },
     "preview": {
       "distribution": "internal",
       "channel": "preview",
       "android": { "buildType": "apk" },
-      "env": { "EXPO_PUBLIC_API_URL": "https://app.asaplocal.pro" }
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://app.asaplocal.pro",
+        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "REPLACE_WITH_WEB_CLIENT_ID",
+        "EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID": "REPLACE_WITH_IOS_CLIENT_ID"
+      }
     },
     "production": {
       "channel": "production",
       "autoIncrement": true,
-      "env": { "EXPO_PUBLIC_API_URL": "https://app.asaplocal.pro" }
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://app.asaplocal.pro",
+        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "REPLACE_WITH_WEB_CLIENT_ID",
+        "EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID": "REPLACE_WITH_IOS_CLIENT_ID"
+      }
     }
   },
   "submit": {

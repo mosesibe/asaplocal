@@ -11,7 +11,9 @@
     "bcryptjs": "^2.4.3",
     "@simplewebauthn/server": "^9.0.3",
     "@asaplocal/db": "workspace:*",
-    "@prisma/client": "^5.20.0"
+    "@prisma/client": "^5.20.0",
+    "google-auth-library": "^9.14.1",
+    "jose": "^5.9.6"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",

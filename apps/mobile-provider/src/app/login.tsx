@@ -2,18 +2,20 @@ import { useCallback, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Eye, EyeOff, Check } from 'lucide-react-native';
+import * as AppleAuthentication from 'expo-apple-authentication';
 import { Screen, Text } from '@asaplocal/ui-native';
 
 import { useSession } from '@/lib/session';
 import { AuthHero } from '@/components/AuthHero';
 import { authStyles as s } from '@/components/auth-styles';
+import { signInWithGoogle, isGoogleSignInCancelled, signInWithApple, isAppleSignInAvailable } from '@/lib/social-auth';
 
 // Ports Claude Design variant "1a — Dark, cleaned up — live job map":
 // stylized map hero + pill-input form, replacing the previous plain light
 // card. Auth logic is unchanged (useSession().login() + Stack.Protected
 // auto-navigation in the root layout) — only the visuals are new.
 export default function LoginScreen() {
-  const { login } = useSession();
+  const { login, loginWithGoogle, loginWithApple } = useSession();
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -36,6 +38,36 @@ export default function LoginScreen() {
       setSubmitting(false);
     }
   }, [email, password, login]);
+
+  const handleGoogleLogin = useCallback(async () => {
+    setError(null);
+    setSubmitting(true);
+    try {
+      const idToken = await signInWithGoogle();
+      if (!idToken) return; // cancelled
+      await loginWithGoogle(idToken);
+      setDone(true);
+    } catch (e) {
+      if (!isGoogleSignInCancelled(e)) setError(e instanceof Error ? e.message : 'Google sign-in failed.');
+    } finally {
+      setSubmitting(false);
+    }
+  }, [loginWithGoogle]);
+
+  const handleAppleLogin = useCallback(async () => {
+    setError(null);
+    setSubmitting(true);
+    try {
+      const result = await signInWithApple();
+      if (!result) return; // cancelled
+      await loginWithApple(result.identityToken, result.fullName);
+      setDone(true);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Apple sign-in failed.');
+    } finally {
+      setSubmitting(false);
+    }
+  }, [loginWithApple]);
 
   return (
     <Screen style={s.screen}>
@@ -83,6 +115,22 @@ export default function LoginScreen() {
                 {submitting && <ActivityIndicator size="small" color="#fff9f2" />}
                 <Text style={s.submitButtonText}>{submitting ? 'Logging in…' : 'Log in'}</Text>
               </Pressable>
+              <Pressable
+                style={({ pressed }) => [s.outlineButton, pressed && s.outlineButtonPressed]}
+                onPress={handleGoogleLogin}
+                disabled={submitting}
+              >
+                <Text style={s.outlineButtonText}>Continue with Google</Text>
+              </Pressable>
+              {isAppleSignInAvailable && (
+                <AppleAuthentication.AppleAuthenticationButton
+                  buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
+                  buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.WHITE}
+                  cornerRadius={999}
+                  style={s.appleButton}
+                  onPress={handleAppleLogin}
+                />
+              )}
             </View>
           ) : (
             <View style={s.doneWrap}>

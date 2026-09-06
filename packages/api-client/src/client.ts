@@ -110,6 +110,38 @@ export function createApiClient(defaultBaseUrl: string) {
       return body.user as MobileUser;
     },
 
+    async loginWithGoogle(idToken: string, deviceInfo?: string): Promise<MobileUser> {
+      const baseUrl = await resolveBaseUrl();
+      const res = await fetch(`${baseUrl}/api/mobile/auth/google`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ idToken, deviceInfo }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new ApiError(body.message ?? "Google sign-in failed", res.status);
+
+      await setStoredTokens({ accessToken: body.accessToken, refreshToken: body.refreshToken });
+      return body.user as MobileUser;
+    },
+
+    async loginWithApple(
+      identityToken: string,
+      fullName?: { givenName?: string | null; familyName?: string | null } | null,
+      deviceInfo?: string
+    ): Promise<MobileUser> {
+      const baseUrl = await resolveBaseUrl();
+      const res = await fetch(`${baseUrl}/api/mobile/auth/apple`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ identityToken, fullName, deviceInfo }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new ApiError(body.message ?? "Apple sign-in failed", res.status);
+
+      await setStoredTokens({ accessToken: body.accessToken, refreshToken: body.refreshToken });
+      return body.user as MobileUser;
+    },
+
     async logout(): Promise<void> {
       const baseUrl = await resolveBaseUrl();
       const tokens = await getStoredTokens();

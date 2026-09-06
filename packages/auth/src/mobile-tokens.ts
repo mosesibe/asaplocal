@@ -83,7 +83,8 @@ export async function verifyAccessToken(token: string): Promise<MobileAccessToke
   return payload as unknown as MobileAccessTokenPayload;
 }
 
-async function userToTokenUser(userId: string): Promise<MobileTokenUser | null> {
+/** Loads a user by id and maps it to the shape createMobileSession/mintAccessToken need — shared with the OAuth mobile routes so they don't duplicate the business/onboarding lookup. */
+export async function loadMobileTokenUser(userId: string): Promise<MobileTokenUser | null> {
   const user = await prisma.user.findUnique({
     where: { id: userId },
     include: { business: { select: { id: true, onboardingCompletedAt: true } } },
@@ -131,7 +132,7 @@ export async function rotateMobileSession(refreshToken: string): Promise<MobileS
   const existing = await prisma.mobileSession.findUnique({ where: { refreshTokenHash: hash } });
   if (!existing || existing.revokedAt || existing.expiresAt < new Date()) return null;
 
-  const tokenUser = await userToTokenUser(existing.userId);
+  const tokenUser = await loadMobileTokenUser(existing.userId);
   if (!tokenUser) return null;
 
   await prisma.mobileSession.update({ where: { id: existing.id }, data: { revokedAt: new Date() } });

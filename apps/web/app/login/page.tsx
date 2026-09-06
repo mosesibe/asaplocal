@@ -101,6 +101,14 @@ export default function LoginPage() {
               >
                 Continue with Google
               </button>
+              <button
+                type="button"
+                onClick={() => signIn("apple", { callbackUrl: params.get("callbackUrl") ?? "/dashboard" })}
+                className="flex h-12 items-center justify-center rounded-full border text-[14px] font-semibold"
+                style={{ borderColor: "#dcd3c4", color: "#201e1d" }}
+              >
+                Continue with Apple
+              </button>
               <Link href="/forgot-password" className="self-center text-[13.5px] font-semibold hover:underline" style={{ color: "#8c491a" }}>
                 Forgot password?
               </Link>

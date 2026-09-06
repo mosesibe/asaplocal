@@ -8,6 +8,8 @@ interface SessionContextValue {
   user: MobileUser | null;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
+  loginWithGoogle: (idToken: string) => Promise<void>;
+  loginWithApple: (identityToken: string, fullName?: { givenName?: string | null; familyName?: string | null } | null) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -44,12 +46,28 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     setUser(loggedInUser);
   }, []);
 
+  const loginWithGoogle = useCallback(async (idToken: string) => {
+    const loggedInUser = await api.loginWithGoogle(idToken);
+    setUser(loggedInUser);
+  }, []);
+
+  const loginWithApple = useCallback(
+    async (identityToken: string, fullName?: { givenName?: string | null; familyName?: string | null } | null) => {
+      const loggedInUser = await api.loginWithApple(identityToken, fullName);
+      setUser(loggedInUser);
+    },
+    []
+  );
+
   const logout = useCallback(async () => {
     await api.logout();
     setUser(null);
   }, []);
 
-  const value = useMemo(() => ({ user, isLoading, login, logout }), [user, isLoading, login, logout]);
+  const value = useMemo(
+    () => ({ user, isLoading, login, loginWithGoogle, loginWithApple, logout }),
+    [user, isLoading, login, loginWithGoogle, loginWithApple, logout]
+  );
 
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;
 }

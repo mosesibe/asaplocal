@@ -8,6 +8,8 @@ interface SessionContextValue {
   user: MobileUser | null;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
+  loginWithGoogle: (idToken: string) => Promise<void>;
+  loginWithApple: (identityToken: string, fullName?: { givenName?: string | null; familyName?: string | null } | null) => Promise<void>;
   logout: () => Promise<void>;
   /** Re-fetches the current user — e.g. after onboarding creates a Business,
    * so `user.hasBusiness` flips without requiring a fresh login. */
@@ -49,12 +51,28 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     setUser(loggedInUser);
   }, []);
 
+  const loginWithGoogle = useCallback(async (idToken: string) => {
+    const loggedInUser = await api.loginWithGoogle(idToken);
+    setUser(loggedInUser);
+  }, []);
+
+  const loginWithApple = useCallback(
+    async (identityToken: string, fullName?: { givenName?: string | null; familyName?: string | null } | null) => {
+      const loggedInUser = await api.loginWithApple(identityToken, fullName);
+      setUser(loggedInUser);
+    },
+    []
+  );
+
   const logout = useCallback(async () => {
     await api.logout();
     setUser(null);
   }, []);
 
-  const value = useMemo(() => ({ user, isLoading, login, logout, refresh }), [user, isLoading, login, logout, refresh]);
+  const value = useMemo(
+    () => ({ user, isLoading, login, loginWithGoogle, loginWithApple, logout, refresh }),
+    [user, isLoading, login, loginWithGoogle, loginWithApple, logout, refresh]
+  );
 
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;
 }

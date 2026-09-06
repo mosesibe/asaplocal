@@ -114,6 +114,22 @@ export default function LoginPage() {
                 {loading && <span className="h-[17px] w-[17px] animate-spin rounded-full border-[2.5px] border-white/40" style={{ borderTopColor: "#fff9f2" }} />}
                 {loading ? "Logging in…" : "Log in"}
               </button>
+              <button
+                type="button"
+                onClick={() => signIn("google", { callbackUrl: params.get("callbackUrl") ?? "/dashboard" })}
+                className="flex h-12 items-center justify-center rounded-full border text-[14px] font-semibold hover:bg-white/[.05]"
+                style={{ borderColor: "rgba(249,244,237,.22)", color: "#f9f4ed" }}
+              >
+                Continue with Google
+              </button>
+              <button
+                type="button"
+                onClick={() => signIn("apple", { callbackUrl: params.get("callbackUrl") ?? "/dashboard" })}
+                className="flex h-12 items-center justify-center rounded-full border text-[14px] font-semibold hover:bg-white/[.05]"
+                style={{ borderColor: "rgba(249,244,237,.22)", color: "#f9f4ed" }}
+              >
+                Continue with Apple
+              </button>
             </form>
           ) : (
             <div className="flex flex-col items-center gap-3.5 py-8 text-center">
