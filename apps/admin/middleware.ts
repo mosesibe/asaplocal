@@ -1,5 +1,12 @@
 import { NextResponse } from "next/server";
-import { authMiddleware as auth } from "@asaplocal/auth";
+// Deliberately NOT imported from "@asaplocal/auth" (the package root): that
+// barrel unconditionally re-exports auth.ts too, which eagerly constructs
+// the Apple provider (crypto.createSign-based client-secret JWT) at module
+// load — Node's crypto.createSign isn't available in the Edge runtime this
+// middleware bundles into, and this pulls it in even though nothing here
+// uses it. authMiddleware is fully self-contained in auth.config.ts, so
+// import it directly to keep auth.ts out of this bundle entirely.
+import { authMiddleware as auth } from "@asaplocal/auth/src/auth.config";
 
 const PUBLIC_PREFIXES = ["/login", "/forgot-password", "/reset-password", "/api/auth"];
 
