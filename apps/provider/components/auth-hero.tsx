@@ -46,8 +46,14 @@ export function AuthHero() {
 
       <div className="absolute left-6 top-6 flex items-center gap-2.5">
         <LogoMark className="h-[30px] w-[30px]" srcLight="/logo-mark-dark.png" srcDark="/logo-mark-dark.png" />
-        <span style={{ fontFamily: "var(--font-caprasimo)", fontSize: 19, letterSpacing: "-0.01em", color: "#f9f4ed" }}>
-          Asap<span style={{ color: "#f6a06b" }}>Local</span>
+        {/* Matches the header wordmark's actual typography (provider-shell.tsx's <Logo>,
+            via packages/ui/src/logo.tsx): font-extrabold tracking-tight, not the Caprasimo
+            display face used for other headline text — that stays app-specific to this
+            hero. text-espresso-50/text-brand-300 are this app's dark-mode brand tokens
+            (provider never overrides the shared preset, unlike apps/web), used unconditionally
+            since this hero's backdrop is effectively always "dark". */}
+        <span className="font-extrabold tracking-tight text-espresso-50" style={{ fontSize: 19 }}>
+          Asap<span className="text-brand-300">Local</span>
         </span>
         <span
           className="rounded-full border px-2 py-[3px] text-[11px] font-bold uppercase tracking-[0.1em]"
