@@ -13,11 +13,27 @@ export async function POST(req: NextRequest) {
   const sig = req.headers.get("stripe-signature");
   const rawBody = await req.text();
 
-  let event: Stripe.Event;
-  try {
-    event = stripe.webhooks.constructEvent(rawBody, sig ?? "", process.env.STRIPE_WEBHOOK_SECRET ?? "");
-  } catch (err) {
-    console.error("[stripe webhook:provider] signature verification failed", err);
+  // Two Stripe webhook endpoints deliver here, each with its own signing
+  // secret: the platform endpoint (checkout/subscription/identity events)
+  // and a separate Connect-scoped endpoint (connect:true, required for
+  // account.updated on *connected* provider accounts — a platform endpoint
+  // never receives those). Try both secrets before rejecting.
+  const secrets = [process.env.STRIPE_WEBHOOK_SECRET, process.env.STRIPE_CONNECT_WEBHOOK_SECRET].filter(
+    (s): s is string => !!s
+  );
+
+  let event: Stripe.Event | undefined;
+  let lastErr: unknown;
+  for (const secret of secrets) {
+    try {
+      event = stripe.webhooks.constructEvent(rawBody, sig ?? "", secret);
+      break;
+    } catch (err) {
+      lastErr = err;
+    }
+  }
+  if (!event) {
+    console.error("[stripe webhook:provider] signature verification failed", lastErr);
     return NextResponse.json({ message: "Invalid signature" }, { status: 400 });
   }
 
