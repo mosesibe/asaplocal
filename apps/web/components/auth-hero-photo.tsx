@@ -26,8 +26,14 @@ export function AuthHeroPhoto({ headline, photoSrc }: { headline: string; photoS
       <div className="pointer-events-none absolute inset-0 flex flex-col px-6 pt-4" style={{ color: "#f9f4ed" }}>
         <div className="mt-[22px] flex items-center gap-2.5">
           <LogoMark className="h-[30px] w-[30px]" srcLight="/logo-mark-dark.png" srcDark="/logo-mark-dark.png" />
-          <span style={{ fontFamily: "var(--font-caprasimo)", fontSize: 19, color: "#f9f4ed" }}>
-            Asap<span style={{ color: "#f6a06b" }}>Local</span>
+          {/* Matches the header wordmark's actual typography (site-header.tsx's <Logo>, via
+              packages/ui/src/logo.tsx): font-extrabold tracking-tight, not the Caprasimo
+              display face used for the headline below — that stays app-specific to this
+              hero. Colors are this app's own dark-mode brand tokens (apps/web/tailwind.config.ts
+              overrides the shared preset's brand/espresso scale), since the photo backdrop
+              here is effectively always "dark". */}
+          <span className="font-extrabold tracking-tight text-espresso-50" style={{ fontSize: 19 }}>
+            Asap<span className="text-brand-300">Local</span>
           </span>
         </div>
         <h1

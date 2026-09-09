@@ -112,8 +112,13 @@ const styles = StyleSheet.create({
   hero: { height: HERO_HEIGHT, overflow: 'hidden', backgroundColor: '#1b1a20' },
   brandRow: { position: 'absolute', left: 26, top: 22, flexDirection: 'row', alignItems: 'center', gap: 9 },
   mark: { width: 30, height: 30 },
-  wordmark: { fontFamily: 'Caprasimo_400Regular', fontSize: 19, letterSpacing: -0.2, color: '#f9f4ed' },
-  wordmarkAccent: { fontFamily: 'Caprasimo_400Regular', color: '#f6a06b' },
+  // Matches the app's actual header wordmark typography/color (Inter bold,
+  // "Local" in the brand accent) rather than the Caprasimo display face
+  // used for other headline text — that stays specific to this hero.
+  // #c15f2a is BRAND_PROVIDER[500] from packages/ui-native/src/tokens.ts,
+  // hardcoded since it's the same value regardless of light/dark scheme.
+  wordmark: { fontFamily: 'Inter_700Bold', fontSize: 19, letterSpacing: -0.3, color: '#f9f4ed' },
+  wordmarkAccent: { fontFamily: 'Inter_700Bold', color: '#c15f2a' },
   businessPill: {
     borderWidth: 1,
     borderColor: 'rgba(143,160,115,.45)',
