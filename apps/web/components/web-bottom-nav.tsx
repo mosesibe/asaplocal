@@ -11,6 +11,11 @@ export function WebBottomNav({ session }: { session: Session | null }) {
   const accountHref = session?.user ? "/dashboard" : "/login";
   const activityHref = session?.user ? "/activity" : "/login?callbackUrl=/activity";
 
+  // /design/* is an internal-only design-review sandbox (see
+  // app/design/nav-preview) that renders its own demo nav bars fixed at the
+  // same position — without this, the real nav stacks on top of them.
+  if (pathname.startsWith("/design")) return null;
+
   return (
     <BottomNav className="md:hidden inset-x-4 bottom-[calc(1rem+env(safe-area-inset-bottom))] rounded-[28px] border-t-0 border border-border/30 bg-surface/80 px-2 pb-0 shadow-xl backdrop-blur-xl">
       <BottomNavItem as={Link} href="/" icon={Home} label="Home" active={pathname === "/"} />
