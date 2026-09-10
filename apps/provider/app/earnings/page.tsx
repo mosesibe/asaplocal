@@ -6,6 +6,7 @@ import { prisma } from "@asaplocal/db";
 import { computeProviderBalance } from "@asaplocal/core";
 import { Badge, Card, formatPence } from "@asaplocal/ui";
 import { PageHeading } from "@/components/page-heading";
+import { WithdrawButton } from "./withdraw-button";
 
 export const metadata = { title: "Earnings" };
 
@@ -65,6 +66,19 @@ export default async function EarningsOverviewPage() {
           <Link href="/verification/banking" className="mt-2 inline-block text-sm font-medium text-brand-700 hover:underline dark:text-brand-300">
             Connect bank account →
           </Link>
+        </Card>
+      )}
+
+      {balance.availablePence > 0 && business.payoutsEnabled && (
+        <Card className="mt-4 p-4">
+          <p className="text-sm font-medium">Withdraw</p>
+          <p className="mt-0.5 text-sm text-muted-foreground">
+            Completed jobs are normally paid out automatically. Withdraw any amount up to your available balance
+            now, or leave the rest for later.
+          </p>
+          <div className="mt-3">
+            <WithdrawButton availablePence={balance.availablePence} />
+          </div>
         </Card>
       )}
 
