@@ -7,4 +7,5 @@ export * from "./Badge";
 export * from "./TextField";
 export * from "./Screen";
 export * from "./BottomNav";
+export * from "./BottomNavWave";
 export * from "./useBottomNavInset";

@@ -1,6 +1,6 @@
 import { usePathname, useRouter } from 'expo-router';
 import { Home, Activity, PlusCircle, Wrench, User } from 'lucide-react-native';
-import { BottomNav, BottomNavItem } from '@asaplocal/ui-native';
+import { BottomNavWave } from '@asaplocal/ui-native';
 
 import { useRequireAuth } from '@/lib/auth-guard';
 
@@ -19,28 +19,35 @@ export function FloatingBottomNav() {
   const requireAuth = useRequireAuth();
 
   return (
-    <BottomNav>
-      <BottomNavItem icon={Home} label="Home" active={pathname === '/'} onPress={() => router.navigate('/')} />
-      <BottomNavItem
-        icon={Activity}
-        label="Activity"
-        active={pathname.startsWith('/activity')}
-        onPress={() => requireAuth('/activity', () => router.navigate('/activity'))}
-      />
-      <BottomNavItem
-        icon={PlusCircle}
-        label="Post a job"
-        emphasized
-        active={pathname.startsWith('/jobs/new')}
-        onPress={() => requireAuth('/jobs/new', () => router.push('/jobs/new'))}
-      />
-      <BottomNavItem icon={Wrench} label="Services" active={pathname.startsWith('/search')} onPress={() => router.navigate('/search')} />
-      <BottomNavItem
-        icon={User}
-        label="Account"
-        active={pathname.startsWith('/account')}
-        onPress={() => requireAuth('/account', () => router.navigate('/account'))}
-      />
-    </BottomNav>
+    <BottomNavWave
+      items={[
+        { icon: Home, label: 'Home', active: pathname === '/', onPress: () => router.navigate('/') },
+        {
+          icon: Activity,
+          label: 'Activity',
+          active: pathname.startsWith('/activity'),
+          onPress: () => requireAuth('/activity', () => router.navigate('/activity')),
+        },
+        {
+          icon: PlusCircle,
+          label: 'Post a job',
+          emphasized: true,
+          active: pathname.startsWith('/jobs/new'),
+          onPress: () => requireAuth('/jobs/new', () => router.push('/jobs/new')),
+        },
+        {
+          icon: Wrench,
+          label: 'Services',
+          active: pathname.startsWith('/search'),
+          onPress: () => router.navigate('/search'),
+        },
+        {
+          icon: User,
+          label: 'Account',
+          active: pathname.startsWith('/account'),
+          onPress: () => requireAuth('/account', () => router.navigate('/account')),
+        },
+      ]}
+    />
   );
 }
