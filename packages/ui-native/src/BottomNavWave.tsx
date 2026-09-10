@@ -71,7 +71,7 @@ export function BottomNavWave({ items }: { items: WaveNavItem[] }) {
             viewBox={`0 ${-BUMP_HEIGHT} ${BAR_WIDTH} ${BAR_HEIGHT + BUMP_HEIGHT}`}
             preserveAspectRatio="none"
           >
-            <Path d={WAVE_PATH} fill="#ffffff" />
+            <Path d={WAVE_PATH} fill={colors.surface} />
           </Svg>
         </View>
 
@@ -102,8 +102,8 @@ export function BottomNavWave({ items }: { items: WaveNavItem[] }) {
           </Pressable>
         )}
       </View>
-      {/* Flush white filler absorbing the home-indicator safe area, so the bar's background reaches the true screen edge instead of stopping at the icon row. */}
-      <View style={{ height: insets.bottom, backgroundColor: "#ffffff" }} />
+      {/* Flush filler absorbing the home-indicator safe area, so the bar's background reaches the true screen edge instead of stopping at the icon row. */}
+      <View style={{ height: insets.bottom, backgroundColor: colors.surface }} />
     </View>
   );
 }
