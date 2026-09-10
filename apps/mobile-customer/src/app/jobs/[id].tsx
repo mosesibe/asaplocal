@@ -15,10 +15,14 @@ interface JobDetail {
     title: string;
     description: string;
     categoryName: string;
+    addressLine: string | null;
     city: string;
+    postcode: string | null;
     status: string;
     budgetMinPence: number | null;
     budgetMaxPence: number | null;
+    preferredDate: string | null;
+    flexibleDate: boolean;
   };
   quotes: { id: string; businessName: string; amountPence: number; message: string | null; status: string }[];
   booking: { id: string; status: string } | null;
@@ -37,6 +41,32 @@ const STATUS_COPY: Record<string, string> = {
 
 function formatPence(pence: number): string {
   return `£${(pence / 100).toFixed(0)}`;
+}
+
+/** Mirrors apps/web/lib/job-format.ts — same three fields, same wording, ported for mobile's formatPence. */
+function formatBudget(minPence: number | null, maxPence: number | null): string {
+  if (minPence && maxPence) return `${formatPence(minPence)}–${formatPence(maxPence)}`;
+  if (minPence) return `From ${formatPence(minPence)}`;
+  if (maxPence) return `Up to ${formatPence(maxPence)}`;
+  return 'No budget set';
+}
+
+function formatJobLocation(job: { addressLine: string | null; city: string; postcode: string | null }): string {
+  const line = job.addressLine?.trim();
+  const parts = line ? [line] : [];
+  const seen = (line ?? '').toLowerCase();
+  if (!seen.includes(job.city.toLowerCase())) parts.push(job.city);
+  if (job.postcode && !seen.includes(job.postcode.toLowerCase())) parts.push(job.postcode);
+  return parts.join(', ');
+}
+
+function formatNeededBy(preferredDate: string | null, flexibleDate: boolean): string {
+  if (!preferredDate) return 'As soon as possible';
+  const date = new Date(preferredDate);
+  const dateLabel = date.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+  if (flexibleDate) return `${dateLabel} · flexible on time`;
+  const timeLabel = date.toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit' });
+  return `${dateLabel} at ${timeLabel}`;
 }
 
 export default function JobDetailScreen() {
@@ -163,9 +193,27 @@ export default function JobDetailScreen() {
             {job.categoryName} · {job.city}
           </Text>
           <Text style={styles.description}>{job.description}</Text>
-          <Text variant="small" color="muted">
-            Budget: {job.budgetMinPence ? formatPence(job.budgetMinPence) : '?'}–{job.budgetMaxPence ? formatPence(job.budgetMaxPence) : '?'}
-          </Text>
+
+          <View style={[styles.detailsBlock, { borderTopColor: colors.border }]}>
+            <View style={styles.detailRow}>
+              <Text variant="small" color="muted">
+                Expected cost
+              </Text>
+              <Text variant="smallMedium">{formatBudget(job.budgetMinPence, job.budgetMaxPence)}</Text>
+            </View>
+            <View style={styles.detailRow}>
+              <Text variant="small" color="muted">
+                Needed by
+              </Text>
+              <Text variant="smallMedium">{formatNeededBy(job.preferredDate, job.flexibleDate)}</Text>
+            </View>
+            <View style={styles.detailRow}>
+              <Text variant="small" color="muted">
+                Service location
+              </Text>
+              <Text variant="smallMedium">{formatJobLocation(job)}</Text>
+            </View>
+          </View>
         </Card>
 
         {error && (
@@ -258,6 +306,8 @@ const styles = StyleSheet.create({
   flex1: { flex: 1 },
   card: { gap: 4, marginVertical: 4 },
   description: { lineHeight: 22 },
+  detailsBlock: { marginTop: 12, paddingTop: 12, borderTopWidth: StyleSheet.hairlineWidth, gap: 8 },
+  detailRow: { gap: 1 },
   sectionHeading: { marginTop: 24 },
   quoteHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   quoteBusiness: { flexShrink: 1 },
