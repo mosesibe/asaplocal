@@ -1,5 +1,5 @@
 import { Resend } from "resend";
-import { docket, letter, type EmailBody } from "./email-layout";
+import { card, type EmailBody } from "./email-layout";
 
 export * from "./email-layout";
 
@@ -55,95 +55,74 @@ export function formatPence(pence: number, currency = "GBP") {
 /**
  * Every template returns { html, text } — spread it into sendEmail:
  *   sendEmail({ to, subject, ...emailTemplates.verifyEmail(link) })
- *
- * Auth mail (verify / reset / invite) uses the plainer `letter` shell on
- * purpose: heavily-branded security email reads as phishing, and plainer
- * mail lands in the inbox more reliably. Everything else uses `docket`.
  */
 export const emailTemplates = {
   verifyEmail: (link: string): EmailBody =>
-    letter({
+    card({
+      badge: "Account",
       title: "Confirm your email address",
+      preheader: "Confirm your email address to finish setting up your account.",
       greeting: "Welcome to AsapLocal.",
       blocks: [
         {
           kind: "paragraph",
-          text: "You're one step from finishing your account. Use the link below and you're done — it works for the next 24 hours.",
+          text: "You're one step from finishing your account. Use the button below and you're done — it works for the next 24 hours.",
         },
       ],
       cta: { label: "Verify my email address", url: link },
       afterCta: [
         {
           kind: "fallbackLink",
-          intro: "If the link doesn't work, paste this into your browser:",
+          intro: "If the button doesn't work, paste this into your browser:",
           url: link,
         },
       ],
-      footnote:
-        "Didn't create an account? Nothing will happen if you ignore this.",
+      footnote: "Didn't create an account? Nothing will happen if you ignore this.",
     }),
 
   passwordReset: (link: string): EmailBody =>
-    letter({
+    card({
+      badge: "Security",
       title: "Reset your password",
+      preheader: "Your password reset link — valid for 1 hour.",
       blocks: [
         {
           kind: "paragraph",
-          text: "Use the link below to choose a new password. It expires in 1 hour.",
+          text: "Use the button below to choose a new password. It expires in 1 hour.",
         },
       ],
       cta: { label: "Choose a new password", url: link },
       afterCta: [
         {
           kind: "fallbackLink",
-          intro: "If the link doesn't work, paste this into your browser:",
+          intro: "If the button doesn't work, paste this into your browser:",
           url: link,
         },
       ],
-      footnote:
-        "Didn't request this? You can safely ignore this email — your password won't change.",
+      footnote: "Didn't request this? You can safely ignore this email — your password won't change.",
     }),
 
   providerAccountInvite: (link: string): EmailBody =>
-    letter({
+    card({
+      badge: "Account",
       title: "Your AsapLocal Business account is ready",
+      preheader: "Set a password to finish setting up your business profile.",
       greeting: "An account has been created for you.",
       blocks: [
         {
           kind: "paragraph",
-          text: "Set a password using the link below and you'll be taken straight through to finish setting up your business profile. The link expires in 1 hour.",
+          text: "Set a password using the button below and you'll be taken straight through to finish setting up your business profile. The link expires in 1 hour.",
         },
       ],
       cta: { label: "Set my password", url: link },
       afterCta: [
         {
           kind: "fallbackLink",
-          intro: "If the link doesn't work, paste this into your browser:",
+          intro: "If the button doesn't work, paste this into your browser:",
           url: link,
         },
       ],
       footnote: "Not expecting this? Let us know and we'll remove the account.",
-    }),
-
-  /**
-   * Security notice sent whenever a bank account finishes Stripe Connect
-   * onboarding — not an earnings update, so it uses the plainer `letter`
-   * shell like other account-security mail, and always includes an
-   * "wasn't you?" footnote since a bank change is exactly the kind of event
-   * an account-takeover would try to make.
-   */
-  bankAccountConnected: (opts: { businessName: string; link: string }): EmailBody =>
-    letter({
-      title: "Bank account connected",
-      greeting: `Hi ${opts.businessName},`,
-      blocks: [
-        {
-          kind: "paragraph",
-          text: "A bank account was just connected to your AsapLocal Business account, and you're now set up to receive payouts.",
-        },
-      ],
-      cta: { label: "Review your banking details", url: opts.link },
-      footnote: "Didn't do this yourself? Contact us immediately — someone else may have access to your account.",
     }),
 
   newLeadAvailable: (
@@ -152,9 +131,10 @@ export const emailTemplates = {
     city: string,
     link: string,
   ): EmailBody =>
-    docket({
-      eyebrow: "New lead",
+    card({
+      badge: "New lead",
       title: jobTitle,
+      preheader: `${jobTitle} in ${city} — five providers can claim it before it closes.`,
       blocks: [
         {
           kind: "paragraph",
@@ -177,9 +157,10 @@ export const emailTemplates = {
     }),
 
   quoteReceived: (jobTitle: string, link: string): EmailBody =>
-    docket({
-      eyebrow: "Quote received",
+    card({
+      badge: "New bid",
       title: "You've received a new quote",
+      preheader: `A provider has quoted on ${jobTitle}.`,
       blocks: [
         {
           kind: "paragraph",
@@ -191,9 +172,10 @@ export const emailTemplates = {
     }),
 
   bookingConfirmed: (link: string, timeline?: { label: string; at: Date }[]): EmailBody =>
-    docket({
-      eyebrow: "Booking confirmed",
+    card({
+      badge: "Booking confirmed",
       title: "Your booking is confirmed",
+      preheader: "Your payment went through and your provider has been notified.",
       blocks: [
         {
           kind: "paragraph",
@@ -210,9 +192,11 @@ export const emailTemplates = {
     link: string;
     timeline?: { label: string; at: Date }[];
   }): EmailBody =>
-    docket({
-      eyebrow: "Payment received",
+    card({
+      badge: "Payment received",
+      badgeVariant: "success",
       title: "You've been paid — job confirmed",
+      preheader: `The customer has paid for ${opts.jobTitle} — it's on your calendar.`,
       blocks: [
         {
           kind: "paragraph",
@@ -235,9 +219,10 @@ export const emailTemplates = {
     totalPence: number;
     link: string;
   }): EmailBody =>
-    docket({
-      eyebrow: `Invoice ${opts.invoiceRef}`,
+    card({
+      badge: `Invoice ${opts.invoiceRef}`,
       title: "Your job is paid in full",
+      preheader: `Receipt for ${opts.jobTitle} with ${opts.businessName} — ${formatPence(opts.totalPence)}.`,
       blocks: [
         {
           kind: "paragraph",
@@ -275,9 +260,13 @@ export const emailTemplates = {
     transferred: boolean;
     link: string;
   }): EmailBody =>
-    docket({
-      eyebrow: opts.transferred ? "Payout sent" : "Payout pending",
+    card({
+      badge: opts.transferred ? "Payout sent" : "Payout pending",
+      badgeVariant: opts.transferred ? "success" : "neutral",
       title: opts.transferred ? "You've been paid" : "Your earnings are ready",
+      preheader: opts.transferred
+        ? `${formatPence(opts.netPence)} is on its way to your bank for ${opts.jobTitle}.`
+        : `${formatPence(opts.netPence)} is waiting — connect your bank to receive it.`,
       blocks: [
         {
           kind: "paragraph",
@@ -315,9 +304,11 @@ export const emailTemplates = {
    * withdrawal of a chosen amount (bookingsPaid omitted).
    */
   payoutSweepProvider: (opts: { businessName: string; totalPence: number; bookingsPaid?: number; link: string }): EmailBody =>
-    docket({
-      eyebrow: "Payout sent",
+    card({
+      badge: "Payout sent",
+      badgeVariant: "success",
       title: "Your payout is on its way",
+      preheader: `${formatPence(opts.totalPence)} is on its way to your bank.`,
       blocks: [
         {
           kind: "paragraph",
@@ -330,6 +321,28 @@ export const emailTemplates = {
       footnote: "Stripe pays this into your bank on your usual payout schedule.",
     }),
 
+  /**
+   * Security notice sent whenever a bank account finishes Stripe Connect
+   * onboarding — not an earnings update, so it always includes a "wasn't
+   * you?" footnote since a bank change is exactly the kind of event an
+   * account-takeover would try to make.
+   */
+  bankAccountConnected: (opts: { businessName: string; link: string }): EmailBody =>
+    card({
+      badge: "Security",
+      title: "Bank account connected",
+      preheader: "A bank account was just connected to your AsapLocal Business account.",
+      greeting: `Hi ${opts.businessName},`,
+      blocks: [
+        {
+          kind: "paragraph",
+          text: "A bank account was just connected to your AsapLocal Business account, and you're now set up to receive payouts.",
+        },
+      ],
+      cta: { label: "Review your banking details", url: opts.link },
+      footnote: "Didn't do this yourself? Contact us immediately — someone else may have access to your account.",
+    }),
+
   /** Provider proposed extra work mid-job — the customer must accept before it's billable. */
   variationProposedCustomer: (opts: {
     businessName: string;
@@ -339,9 +352,10 @@ export const emailTemplates = {
     newTotalPence: number;
     link: string;
   }): EmailBody =>
-    docket({
-      eyebrow: "Extra work proposed",
+    card({
+      badge: "Extra work proposed",
       title: `${opts.businessName} has proposed extra work`,
+      preheader: `+${formatPence(opts.amountPence)} for ${opts.description} — nothing is charged unless you accept.`,
       blocks: [
         {
           kind: "paragraph",
@@ -370,9 +384,13 @@ export const emailTemplates = {
     accepted: boolean;
     link: string;
   }): EmailBody =>
-    docket({
-      eyebrow: opts.accepted ? "Extra approved" : "Extra declined",
+    card({
+      badge: opts.accepted ? "Extra approved" : "Extra declined",
+      badgeVariant: opts.accepted ? "success" : "neutral",
       title: opts.accepted ? "Your extra work was approved" : "Your extra work was declined",
+      preheader: opts.accepted
+        ? `${opts.description} was approved — ${formatPence(opts.amountPence)} added to the job.`
+        : `${opts.description} was declined — the job stands at the original price.`,
       blocks: [
         {
           kind: "paragraph",
@@ -393,9 +411,10 @@ export const emailTemplates = {
     durationMinutes?: number | null;
     link: string;
   }): EmailBody =>
-    docket({
-      eyebrow: "Job finished",
+    card({
+      badge: "Job finished",
       title: "Your job is marked as done",
+      preheader: `${opts.businessName} has finished ${opts.jobTitle} — review and confirm so they can be paid.`,
       blocks: [
         {
           kind: "paragraph",
@@ -410,9 +429,11 @@ export const emailTemplates = {
 
   /** Customer confirmed completion — the provider's job is signed off. */
   jobCompletedProvider: (opts: { businessName: string; jobTitle: string; link: string }): EmailBody =>
-    docket({
-      eyebrow: "Signed off",
+    card({
+      badge: "Signed off",
+      badgeVariant: "success",
       title: "The customer confirmed the job is complete",
+      preheader: `${opts.jobTitle} is signed off.`,
       blocks: [
         {
           kind: "paragraph",
@@ -425,9 +446,10 @@ export const emailTemplates = {
 
   /** Customer disputed a completed job instead of accepting it. */
   disputeRaisedProvider: (opts: { businessName: string; jobTitle: string; reason: string; link: string }): EmailBody =>
-    docket({
-      eyebrow: "Issue reported",
+    card({
+      badge: "Issue reported",
       title: "The customer reported an issue with this job",
+      preheader: `An issue was raised on ${opts.jobTitle} — respond to move it forward.`,
       blocks: [
         {
           kind: "paragraph",
@@ -441,9 +463,10 @@ export const emailTemplates = {
 
   /** Provider responded to a dispute — customer needs to reconfirm completion. */
   disputeResolvedCustomer: (opts: { businessName: string; jobTitle: string; response: string; link: string }): EmailBody =>
-    docket({
-      eyebrow: "Response received",
+    card({
+      badge: "Response received",
       title: `${opts.businessName} responded to your issue`,
+      preheader: `${opts.businessName} responded on ${opts.jobTitle} — review and confirm if it's sorted.`,
       blocks: [
         {
           kind: "paragraph",
@@ -462,9 +485,11 @@ export const emailTemplates = {
     comment?: string | null;
     link: string;
   }): EmailBody =>
-    docket({
-      eyebrow: "New review",
+    card({
+      badge: "New review",
+      badgeVariant: "success",
       title: `You've received a ${opts.rating}-star review`,
+      preheader: `A customer left a ${opts.rating}-star review for ${opts.jobTitle}.`,
       blocks: [
         { kind: "paragraph", text: `Hi ${opts.businessName} — a customer has reviewed your work.` },
         {
@@ -483,9 +508,10 @@ export const emailTemplates = {
     refereeName: string,
     link: string,
   ): EmailBody =>
-    docket({
-      eyebrow: "Reference request",
+    card({
+      badge: "Reference request",
       title: `${businessName} listed you as a reference`,
+      preheader: `${businessName} asked you to vouch for their work on AsapLocal.`,
       blocks: [
         {
           kind: "paragraph",
@@ -497,8 +523,7 @@ export const emailTemplates = {
         },
       ],
       cta: { label: "Confirm reference", url: link },
-      footnote:
-        "Don't know this business? Ignore this email and nothing will be recorded.",
+      footnote: "Don't know this business? Ignore this email and nothing will be recorded.",
     }),
 
   insuranceExpiring: (
@@ -507,9 +532,10 @@ export const emailTemplates = {
     expiryDate: string,
     link: string,
   ): EmailBody =>
-    docket({
-      eyebrow: "Action needed",
+    card({
+      badge: "Action needed",
       title: "Your insurance is expiring",
+      preheader: `Your ${policyType} policy expires ${expiryDate} — renew to keep your trust tier.`,
       blocks: [
         {
           kind: "paragraph",
@@ -533,9 +559,10 @@ export const emailTemplates = {
     steps: string[];
     ctaUrl: string;
   }): EmailBody =>
-    docket({
-      eyebrow: "Fix guide",
+    card({
+      badge: "Fix guide",
       title: "Your fix guide from AI Buddy",
+      preheader: opts.summary,
       blocks: [
         { kind: "paragraph", text: opts.summary },
         ...(opts.toolkit.length
