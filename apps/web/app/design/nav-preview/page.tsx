@@ -58,10 +58,10 @@ export default function NavPreviewPage() {
           items={[
             { icon: Home, label: "Home", href: "#home", active: true },
             { icon: Activity, label: "Activity", href: "#activity" },
+            { icon: PlusCircle, label: "Post a job", href: "#post-a-job", emphasized: true },
             { icon: Wrench, label: "Services", href: "#services" },
             { icon: User, label: "Account", href: "#account" },
           ]}
-          center={{ icon: PlusCircle, href: "#post-a-job" }}
         />
       )}
     </div>
