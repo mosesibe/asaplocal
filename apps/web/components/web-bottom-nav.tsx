@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Home, Activity, PlusCircle, Wrench, User } from "lucide-react";
-import { BottomNav, BottomNavItem } from "@asaplocal/ui";
+import { BottomNavNotched } from "@asaplocal/ui";
 import type { Session } from "next-auth";
 
 export function WebBottomNav({ session }: { session: Session | null }) {
@@ -11,31 +11,22 @@ export function WebBottomNav({ session }: { session: Session | null }) {
   const accountHref = session?.user ? "/dashboard" : "/login";
   const activityHref = session?.user ? "/activity" : "/login?callbackUrl=/activity";
 
-  // /design/* is an internal-only design-review sandbox (see
-  // app/design/nav-preview) that renders its own demo nav bars fixed at the
-  // same position — without this, the real nav stacks on top of them.
-  if (pathname.startsWith("/design")) return null;
-
   return (
-    <BottomNav className="md:hidden inset-x-4 bottom-[calc(1rem+env(safe-area-inset-bottom))] rounded-[28px] border-t-0 border border-border/30 bg-surface/80 px-2 pb-0 shadow-xl backdrop-blur-xl">
-      <BottomNavItem as={Link} href="/" icon={Home} label="Home" active={pathname === "/"} />
-      <BottomNavItem as={Link} href={activityHref} icon={Activity} label="Activity" active={pathname.startsWith("/activity")} />
-      <BottomNavItem
-        as={Link}
-        href="/jobs/new"
-        icon={PlusCircle}
-        label="Post a job"
-        emphasized
-        active={pathname.startsWith("/jobs/new")}
-      />
-      <BottomNavItem as={Link} href="/search" icon={Wrench} label="Services" active={pathname.startsWith("/search")} />
-      <BottomNavItem
-        as={Link}
-        href={accountHref}
-        icon={User}
-        label="Account"
-        active={pathname.startsWith("/dashboard") || pathname.startsWith("/login")}
-      />
-    </BottomNav>
+    <BottomNavNotched
+      as={Link}
+      className="md:hidden"
+      items={[
+        { icon: Home, label: "Home", href: "/", active: pathname === "/" },
+        { icon: Activity, label: "Activity", href: activityHref, active: pathname.startsWith("/activity") },
+        { icon: PlusCircle, label: "Post a job", href: "/jobs/new", emphasized: true, active: pathname.startsWith("/jobs/new") },
+        { icon: Wrench, label: "Services", href: "/search", active: pathname.startsWith("/search") },
+        {
+          icon: User,
+          label: "Account",
+          href: accountHref,
+          active: pathname.startsWith("/dashboard") || pathname.startsWith("/login"),
+        },
+      ]}
+    />
   );
 }
