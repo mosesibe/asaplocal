@@ -4,6 +4,7 @@ export * from "./button";
 export * from "./card";
 export * from "./star-rating";
 export * from "./input";
+export * from "./bottom-nav-notched";
 export * from "./password-input";
 export * from "./textarea";
 export * from "./select";
