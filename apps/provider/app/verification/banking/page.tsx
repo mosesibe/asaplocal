@@ -44,7 +44,8 @@ export default async function BankingVerificationPage() {
           business.payoutsEnabled ? (
             <>
               <p className="text-sm text-muted-foreground">
-                Completed jobs are normally paid out automatically. Anything still sitting here can be sent now.
+                Completed jobs are normally paid out automatically. Withdraw any amount up to your available
+                balance now, or leave the rest for later.
               </p>
               <WithdrawButton availablePence={balance.availablePence} />
             </>

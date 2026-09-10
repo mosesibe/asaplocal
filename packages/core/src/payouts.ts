@@ -2,7 +2,7 @@ import { prisma } from "@asaplocal/db";
 import { stripe } from "./stripe";
 import { computeBookingBalance } from "./booking-balance";
 import { notify } from "./notify";
-import { sendEmail, emailTemplates } from "./email";
+import { sendEmail, emailTemplates, formatPence } from "./email";
 
 /**
  * Platform commission on job value, as a percentage. Configurable so the rate
@@ -65,7 +65,7 @@ export async function sweepOutstandingPayouts(businessId: string): Promise<{
   failures: number;
   reason?: string;
 }> {
-  const business = await prisma.business.findUnique({ where: { id: businessId } });
+  const business = await prisma.business.findUnique({ where: { id: businessId }, include: { owner: true } });
   if (!business?.stripeAccountId || !business.payoutsEnabled) {
     return { transferredPence: 0, bookingsPaid: 0, failures: 0, reason: "no connected account" };
   }
@@ -116,9 +116,89 @@ export async function sweepOutstandingPayouts(businessId: string): Promise<{
       `${bookingsPaid} job${bookingsPaid > 1 ? "s" : ""} paid out to your bank.`,
       "/verification/banking"
     );
+    await sendEmail({
+      to: business.owner.email,
+      subject: "Payout sent",
+      ...emailTemplates.payoutSweepProvider({
+        businessName: business.name,
+        totalPence: transferredPence,
+        bookingsPaid,
+        link: `${process.env.NEXT_PUBLIC_PROVIDER_URL}/verification/banking`,
+      }),
+    }).catch(() => {});
   }
 
   return { transferredPence, bookingsPaid, failures };
+}
+
+/**
+ * Sends a provider-chosen amount (up to their available balance) to their
+ * connected account in a single transfer — unlike sweepOutstandingPayouts,
+ * which always pays out everything outstanding, this lets a provider leave
+ * some balance for later. Recorded as an ad-hoc Payout (bookingId: null,
+ * per the schema's own "ad-hoc/bulk manual payouts" allowance) since it
+ * isn't tied to a specific booking's entitlement.
+ */
+export async function withdrawAvailableBalance(
+  businessId: string,
+  amountPence: number
+): Promise<{ ok: true; transferredPence: number; stripeTransferId: string } | { ok: false; reason: string }> {
+  if (!Number.isInteger(amountPence) || amountPence <= 0) {
+    return { ok: false, reason: "Enter an amount greater than zero" };
+  }
+
+  const business = await prisma.business.findUnique({ where: { id: businessId }, include: { owner: true } });
+  if (!business?.stripeAccountId || !business.payoutsEnabled) {
+    return { ok: false, reason: "Connect your bank account first" };
+  }
+
+  const balance = await computeProviderBalance(businessId);
+  if (amountPence > balance.availablePence) {
+    return { ok: false, reason: `You can withdraw up to ${formatPence(balance.availablePence)}` };
+  }
+
+  let transfer;
+  try {
+    transfer = await stripe.transfers.create({
+      amount: amountPence,
+      currency: "gbp",
+      destination: business.stripeAccountId,
+      transfer_group: `withdrawal_${businessId}_${Date.now()}`,
+      metadata: { businessId, type: "manual_withdrawal" },
+    });
+  } catch (err) {
+    console.error("[settlement] manual withdrawal transfer failed", businessId, err);
+    return { ok: false, reason: "Couldn't send your payout — please try again shortly." };
+  }
+
+  await prisma.payout.create({
+    data: {
+      businessId,
+      amountPence,
+      method: "STRIPE_CONNECT",
+      stripeTransferId: transfer.id,
+      reference: "Manual withdrawal",
+    },
+  });
+
+  await notify(
+    business.ownerId,
+    "PAYMENT_RECEIVED",
+    "Withdrawal sent",
+    `${formatPence(amountPence)} sent to your bank.`,
+    "/verification/banking"
+  );
+  await sendEmail({
+    to: business.owner.email,
+    subject: "Withdrawal sent",
+    ...emailTemplates.payoutSweepProvider({
+      businessName: business.name,
+      totalPence: amountPence,
+      link: `${process.env.NEXT_PUBLIC_PROVIDER_URL}/verification/banking`,
+    }),
+  }).catch(() => {});
+
+  return { ok: true, transferredPence: amountPence, stripeTransferId: transfer.id };
 }
 
 /**

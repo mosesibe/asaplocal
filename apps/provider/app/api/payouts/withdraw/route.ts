@@ -1,10 +1,10 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@asaplocal/auth";
 import { prisma } from "@asaplocal/db";
-import { sweepOutstandingPayouts, computeProviderBalance } from "@asaplocal/core";
+import { withdrawAvailableBalance, computeProviderBalance } from "@asaplocal/core";
 
-/** Releases any settled-but-untransferred earnings to the provider's connected account. */
-export async function POST() {
+/** Sends a chosen amount (up to the provider's available balance) to their connected account. */
+export async function POST(req: NextRequest) {
   const session = await auth();
   if (!session?.user || !session.user.isProvider) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
 
@@ -14,12 +14,19 @@ export async function POST() {
     return NextResponse.json({ message: "Connect your bank account first" }, { status: 400 });
   }
 
+  const body = await req.json().catch(() => ({}));
+  const amountPence = Number(body.amountPence);
+  if (!Number.isFinite(amountPence) || !Number.isInteger(amountPence) || amountPence <= 0) {
+    return NextResponse.json({ message: "Enter a valid amount" }, { status: 400 });
+  }
+
   const before = await computeProviderBalance(business.id);
   if (before.availablePence <= 0) return NextResponse.json({ message: "Nothing to withdraw" }, { status: 400 });
-
-  const result = await sweepOutstandingPayouts(business.id);
-  if (result.bookingsPaid === 0) {
-    return NextResponse.json({ message: "Couldn't send your payout — please try again shortly." }, { status: 502 });
+  if (amountPence > before.availablePence) {
+    return NextResponse.json({ message: "You can't withdraw more than your available balance" }, { status: 400 });
   }
+
+  const result = await withdrawAvailableBalance(business.id, amountPence);
+  if (!result.ok) return NextResponse.json({ message: result.reason }, { status: 502 });
   return NextResponse.json(result);
 }
