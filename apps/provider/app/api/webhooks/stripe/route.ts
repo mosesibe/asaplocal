@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import type Stripe from "stripe";
-import { stripe, grantPurchasedLeadAccess, grantMonthlyAllowance, notify, retrieveIdentityVerificationSession, recomputeTrustTier, sweepOutstandingPayouts } from "@asaplocal/core";
+import { stripe, grantPurchasedLeadAccess, grantMonthlyAllowance, notify, retrieveIdentityVerificationSession, recomputeTrustTier, sweepOutstandingPayouts, sendEmail, emailTemplates } from "@asaplocal/core";
 import { prisma } from "@asaplocal/db";
 
 /**
@@ -166,7 +166,7 @@ export async function POST(req: NextRequest) {
 
     case "account.updated": {
       const account = event.data.object as Stripe.Account;
-      const business = await prisma.business.findFirst({ where: { stripeAccountId: account.id } });
+      const business = await prisma.business.findFirst({ where: { stripeAccountId: account.id }, include: { owner: true } });
       if (business) {
         const payoutsEnabled = !!account.charges_enabled && !!account.payouts_enabled;
         await prisma.business.update({
@@ -178,6 +178,16 @@ export async function POST(req: NextRequest) {
         });
         if (payoutsEnabled && !business.payoutsEnabled) {
           await notify(business.ownerId, "VERIFICATION_UPDATE", "Bank account connected", "You're all set up to receive payouts.", "/verification/banking");
+          // Security notice, not an earnings update — sent regardless of whether
+          // there's a backlog to sweep, so an unauthorized change is always flagged.
+          await sendEmail({
+            to: business.owner.email,
+            subject: "Bank account connected to your AsapLocal Business account",
+            ...emailTemplates.bankAccountConnected({
+              businessName: business.name,
+              link: `${process.env.NEXT_PUBLIC_PROVIDER_URL}/verification/banking`,
+            }),
+          }).catch(() => {});
           // Jobs they completed before connecting a bank accrued an unpaid
           // entitlement — release the backlog now that there's somewhere to send it.
           await sweepOutstandingPayouts(business.id).catch((err) =>

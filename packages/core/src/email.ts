@@ -44,9 +44,11 @@ export async function sendEmail(opts: {
 
 /**
  * Local money formatter — packages/ui owns the app-facing formatPence(), but
- * core must not depend on a React package just to render an email.
+ * core must not depend on a React package just to render an email. Exported
+ * so other core modules (e.g. payouts.ts, for notify() body text) can reuse
+ * it instead of duplicating an Intl formatter.
  */
-function formatPence(pence: number, currency = "GBP") {
+export function formatPence(pence: number, currency = "GBP") {
   return new Intl.NumberFormat("en-GB", { style: "currency", currency }).format(pence / 100);
 }
 
@@ -121,6 +123,27 @@ export const emailTemplates = {
         },
       ],
       footnote: "Not expecting this? Let us know and we'll remove the account.",
+    }),
+
+  /**
+   * Security notice sent whenever a bank account finishes Stripe Connect
+   * onboarding — not an earnings update, so it uses the plainer `letter`
+   * shell like other account-security mail, and always includes an
+   * "wasn't you?" footnote since a bank change is exactly the kind of event
+   * an account-takeover would try to make.
+   */
+  bankAccountConnected: (opts: { businessName: string; link: string }): EmailBody =>
+    letter({
+      title: "Bank account connected",
+      greeting: `Hi ${opts.businessName},`,
+      blocks: [
+        {
+          kind: "paragraph",
+          text: "A bank account was just connected to your AsapLocal Business account, and you're now set up to receive payouts.",
+        },
+      ],
+      cta: { label: "Review your banking details", url: opts.link },
+      footnote: "Didn't do this yourself? Contact us immediately — someone else may have access to your account.",
     }),
 
   newLeadAvailable: (
@@ -284,6 +307,27 @@ export const emailTemplates = {
       footnote: opts.transferred
         ? "Stripe pays this into your bank on your usual payout schedule."
         : "Your earnings are held safely until your bank details are set up.",
+    }),
+
+  /**
+   * A lump-sum transfer to the provider's bank — either the automatic backlog
+   * sweep on completing Connect onboarding (bookingsPaid set), or a manual
+   * withdrawal of a chosen amount (bookingsPaid omitted).
+   */
+  payoutSweepProvider: (opts: { businessName: string; totalPence: number; bookingsPaid?: number; link: string }): EmailBody =>
+    docket({
+      eyebrow: "Payout sent",
+      title: "Your payout is on its way",
+      blocks: [
+        {
+          kind: "paragraph",
+          text: `Hi ${opts.businessName} — ${formatPence(opts.totalPence)} has been sent to your connected bank account${
+            opts.bookingsPaid ? ` across ${opts.bookingsPaid} job${opts.bookingsPaid > 1 ? "s" : ""}` : ""
+          }.`,
+        },
+      ],
+      cta: { label: "View your banking page", url: opts.link },
+      footnote: "Stripe pays this into your bank on your usual payout schedule.",
     }),
 
   /** Provider proposed extra work mid-job — the customer must accept before it's billable. */
