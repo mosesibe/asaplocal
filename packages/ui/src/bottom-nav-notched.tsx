@@ -82,7 +82,7 @@ export function BottomNavNotched({ items, className, as = "a" }: BottomNavNotche
           className="absolute inset-x-0 top-0"
           style={{ filter: "drop-shadow(0 -6px 20px rgba(15, 23, 42, 0.12))" }}
         >
-          <path d={WAVE_PATH} fill="white" />
+          <path d={WAVE_PATH} fill="hsl(var(--surface))" />
         </svg>
 
         <div
@@ -116,7 +116,7 @@ export function BottomNavNotched({ items, className, as = "a" }: BottomNavNotche
         )}
       </div>
       {/* Flush white filler absorbing the home-indicator safe area, so the bar's background reaches the true screen edge instead of stopping at the icon row. */}
-      <div className="bg-white" style={{ height: "env(safe-area-inset-bottom)" }} />
+      <div className="bg-surface" style={{ height: "env(safe-area-inset-bottom)" }} />
     </nav>
   );
 }
