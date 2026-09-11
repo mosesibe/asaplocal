@@ -1,360 +1,372 @@
+import { LegalDocNav } from "@/components/legal-doc-nav";
+
 export const metadata = { title: "Privacy Policy — ASAP Local" };
 
 export default function PrivacyPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
       <h1 className="text-2xl font-bold">ASAP Local — Privacy Policy</h1>
-      <p className="mt-2 text-sm text-muted-foreground">Last updated: 11 September 2026</p>
+      <p className="mt-2 text-sm text-muted-foreground">
+        Effective date: 11 September 2026
+        <br />
+        Last updated: 11 September 2026
+      </p>
 
-      <div className="prose prose-sm mt-6 max-w-none text-muted-foreground">
-        <h2>1. Who we are</h2>
-        <p>ASAP Local is a local services marketplace operated by:</p>
+      <LegalDocNav current="/privacy" />
+
+      <div className="prose prose-sm max-w-none text-muted-foreground">
+        <h2>1. About this Privacy Policy</h2>
         <p>
-          Asap Local ltd
-          <br />
-          trading as ASAP Local
+          ASAP Local is a UK-based marketplace that connects customers looking for local services with independent
+          professionals and businesses able to provide those services.
+        </p>
+        <p>
+          This Privacy Policy explains how Asap Local Ltd, trading as ASAP Local, collects, uses, stores and shares
+          personal information when you use our website, mobile application, marketplace or related services.
+        </p>
+        <p>In this Privacy Policy:</p>
+        <ul>
+          <li>&ldquo;ASAP Local&rdquo;, &ldquo;we&rdquo;, &ldquo;us&rdquo; and &ldquo;our&rdquo; means Asap Local Ltd.</li>
+          <li>&ldquo;you&rdquo; means anyone using ASAP Local.</li>
+          <li>&ldquo;Customer&rdquo; means a person or organisation looking to obtain services.</li>
+          <li>&ldquo;Professional&rdquo; means a tradesperson, service provider, sole trader, company or other business offering services through ASAP Local.</li>
+        </ul>
+        <p>Data controller:</p>
+        <p>
+          Asap Local Ltd
           <br />
           Company number: 17360048
           <br />
           Registered office: 30 The Green, Evelyn Grove, Bordon, United Kingdom, GU35 9GZ
           <br />
-          Email: privacy@asaplocal.pro
-        </p>
-        <p>
-          In this Privacy Policy, &ldquo;ASAP Local&rdquo;, &ldquo;we&rdquo;, &ldquo;us&rdquo; and &ldquo;our&rdquo;
-          means the company above.
-        </p>
-        <p>
-          This Privacy Policy explains how we collect, use, store and share personal information when you use the
-          ASAP Local website, mobile application or services.
+          Email: <a href="mailto:privacy@asaplocal.pro">privacy@asaplocal.pro</a>
         </p>
 
         <h2>2. Information we collect</h2>
-        <p>Depending on how you use ASAP Local, we may collect:</p>
+        <p>We collect information necessary to operate a safe and useful marketplace.</p>
 
-        <h3>Account information</h3>
+        <h3>2.1 Account information</h3>
+        <p>This may include:</p>
         <ul>
           <li>Name</li>
           <li>Email address</li>
-          <li>Telephone/mobile number</li>
-          <li>Password or authentication information</li>
-          <li>Account preferences</li>
+          <li>Mobile number</li>
+          <li>Password/authentication information</li>
           <li>Profile photograph</li>
+          <li>Account preferences</li>
+          <li>Communication preferences</li>
         </ul>
 
-        <h3>Customer information</h3>
+        <h3>2.2 Customer information</h3>
+        <p>If you use ASAP Local as a customer, we may collect:</p>
         <ul>
           <li>Job descriptions</li>
-          <li>Photos and videos uploaded to jobs</li>
-          <li>Service address or approximate location</li>
+          <li>Photographs and videos</li>
+          <li>Property/service location</li>
           <li>Preferred dates and times</li>
-          <li>Budget information</li>
-          <li>Messages with professionals</li>
+          <li>Budget</li>
+          <li>Service requirements</li>
+          <li>Messages with Professionals</li>
           <li>Booking information</li>
+          <li>Payment and transaction information</li>
           <li>Reviews and ratings</li>
         </ul>
 
-        <h3>Professional information</h3>
-        <p>If you register as a professional, we may collect:</p>
+        <h3>2.3 Professional information</h3>
+        <p>Professionals may be required to provide:</p>
         <ul>
           <li>Legal name</li>
-          <li>Trading/business name</li>
-          <li>Date of birth where required for verification</li>
+          <li>Trading name</li>
           <li>Business type</li>
+          <li>Date of birth where required</li>
           <li>Company number</li>
-          <li>Trading address</li>
-          <li>Business contact details</li>
-          <li>Service areas</li>
+          <li>Business/trading address</li>
+          <li>Contact information</li>
           <li>Services offered</li>
-          <li>Qualifications and professional registrations</li>
+          <li>Service areas</li>
+          <li>Years of experience</li>
+          <li>Qualifications</li>
+          <li>Professional registrations</li>
           <li>Insurance information</li>
           <li>Portfolio photographs and videos</li>
           <li>Pricing information</li>
           <li>Business history</li>
           <li>Banking and payout information</li>
-          <li>Identity verification information</li>
-          <li>Verification results</li>
         </ul>
 
-        <h3>Verification and vetting information</h3>
+        <h2>3. Identity and professional verification</h2>
         <p>
-          Where appropriate to the services you offer, we may conduct or obtain verification checks including:
+          To protect customers and the integrity of the marketplace, we may conduct verification checks on
+          Professionals. Depending on the services offered, these may include:
         </p>
         <ul>
           <li>Identity verification</li>
           <li>Address verification</li>
           <li>Business registration checks</li>
+          <li>Companies House checks</li>
           <li>Professional registration checks</li>
           <li>Qualification checks</li>
           <li>Insurance checks</li>
           <li>Insolvency checks</li>
-          <li>Financial-risk checks</li>
-          <li>County Court Judgment or similar public-record checks</li>
           <li>Director and company checks</li>
           <li>Disqualification checks</li>
-          <li>Duplicate-account and fraud checks</li>
-          <li>Open-source and adverse-media checks</li>
-          <li>Other checks reasonably necessary to protect users and the integrity of the marketplace</li>
+          <li>Fraud and duplicate-account checks</li>
+          <li>Public-record checks</li>
+          <li>Adverse-media checks</li>
+          <li>Other proportionate risk checks</li>
         </ul>
         <p>
-          Not every check applies to every professional. We only conduct checks that are relevant, proportionate and
-          legally permitted. Where a third-party verification provider performs a check, that provider may process
-          your information under its own privacy documentation as well as on our instructions or for its own legal
-          purposes where applicable.
+          Not every Professional will be subject to every check. The checks required may depend on the type and risk
+          level of the services offered. Where possible, ASAP Local will retain the verification result and relevant
+          reference information rather than unnecessary copies of underlying documents.
         </p>
 
-        <h2>3. Payment information</h2>
-        <p>Payments may be processed by third-party payment providers. ASAP Local may receive information such as:</p>
-        <ul>
-          <li>Payment status</li>
-          <li>Transaction amount</li>
-          <li>Transaction reference</li>
-          <li>Payment method type</li>
-          <li>Refund information</li>
-          <li>Payout information</li>
-        </ul>
-        <p>
-          We do not intend to store complete payment-card details on our own systems where a specialist payment
-          provider can securely process them.
-        </p>
-
-        <h2>4. How we use your information</h2>
+        <h2>4. How we use personal information</h2>
         <p>We may use personal information to:</p>
         <ul>
-          <li>Create and manage your account</li>
-          <li>Connect customers with professionals</li>
-          <li>Publish and manage jobs</li>
-          <li>Allow professionals to submit quotes</li>
-          <li>Facilitate bookings</li>
-          <li>Process payments and payouts</li>
-          <li>Send service-related communications</li>
-          <li>Provide customer support</li>
-          <li>Process reviews and ratings</li>
-          <li>Verify professional identities and businesses</li>
-          <li>Verify qualifications and insurance</li>
-          <li>Detect fraud, duplicate accounts and misuse</li>
-          <li>Protect users and the marketplace</li>
-          <li>Investigate complaints and disputes</li>
-          <li>Prevent prohibited or unlawful activity</li>
-          <li>Improve our website, application and services</li>
-          <li>Maintain security and technical systems</li>
-          <li>Meet legal and regulatory obligations</li>
-          <li>Establish, exercise or defend legal claims</li>
-          <li>Send marketing communications where legally permitted</li>
+          <li>Create and administer accounts.</li>
+          <li>Connect Customers with Professionals.</li>
+          <li>Publish and manage jobs.</li>
+          <li>Allow Professionals to submit quotes.</li>
+          <li>Facilitate bookings.</li>
+          <li>Process payments and payouts.</li>
+          <li>Provide customer support.</li>
+          <li>Verify Professionals.</li>
+          <li>Check qualifications, registrations and insurance.</li>
+          <li>Prevent fraud and duplicate accounts.</li>
+          <li>Protect users and the marketplace.</li>
+          <li>Investigate complaints.</li>
+          <li>Manage reviews and ratings.</li>
+          <li>Improve our services.</li>
+          <li>Maintain platform security.</li>
+          <li>Send service-related communications.</li>
+          <li>Send marketing where legally permitted.</li>
+          <li>Meet legal and regulatory obligations.</li>
+          <li>Establish, exercise or defend legal claims.</li>
+          <li>Detect and prevent prohibited activity.</li>
         </ul>
-        <p>We do not sell personal information to third parties.</p>
 
-        <h2>5. Legal bases</h2>
-        <p>Depending on the circumstances, we may process personal information because:</p>
-        <ul>
-          <li>It is necessary to perform a contract with you;</li>
-          <li>It is necessary to take steps at your request before entering into a contract;</li>
-          <li>We have a legal obligation to process it;</li>
-          <li>
-            We have a legitimate interest in operating, securing and improving ASAP Local, provided that interest is
-            not overridden by your rights;
-          </li>
-          <li>You have given consent where consent is required;</li>
-          <li>Another lawful basis permitted by applicable data protection law applies.</li>
-        </ul>
+        <h2>5. Our lawful bases</h2>
+        <p>We process personal information using one or more lawful bases under applicable UK data protection law. These may include:</p>
+        <h3>Contract</h3>
         <p>
-          We do not rely on consent where another lawful basis is more appropriate. Where we rely on legitimate
-          interests, we consider the purpose, necessity and potential impact on individuals.
+          Where processing is necessary to provide the services you have requested. For example, processing your
+          address so a Professional can quote for a job.
         </p>
-
-        <h2>6. Professional verification</h2>
-        <p>ASAP Local may verify professionals before allowing them to offer particular services.</p>
-        <p>The checks required can depend on:</p>
+        <h3>Legal obligation</h3>
+        <p>Where we are required to process information to comply with the law.</p>
+        <h3>Legitimate interests</h3>
+        <p>We may rely on legitimate interests for purposes including:</p>
         <ul>
-          <li>The type of professional;</li>
-          <li>The services offered;</li>
-          <li>The risks associated with those services;</li>
-          <li>Applicable legal or industry requirements;</li>
-          <li>The information available to us.</li>
+          <li>Marketplace security</li>
+          <li>Fraud prevention</li>
+          <li>Account security</li>
+          <li>Professional verification</li>
+          <li>Service improvement</li>
+          <li>Customer and Professional protection</li>
+          <li>Network integrity</li>
+          <li>Preventing abuse</li>
+          <li>Enforcing our Terms</li>
         </ul>
         <p>
-          For example, certain regulated services may require evidence of appropriate professional registration or
-          qualifications.
+          Where we rely on legitimate interests, we consider whether the processing is necessary and balance our
+          interests against your rights and freedoms. The ICO&rsquo;s current guidance specifically requires
+          organisations relying on legitimate interests to identify the interest, assess necessity and carry out a
+          balancing assessment (Information Commissioner&rsquo;s Office).
         </p>
-        <p>
-          A verification badge means that a particular check has been completed according to ASAP Local&rsquo;s
-          stated verification process. It does not mean that ASAP Local guarantees the quality, safety, reliability
-          or outcome of a professional&rsquo;s work.
-        </p>
-        <p>Where appropriate, we may periodically repeat checks or require updated documentation.</p>
+        <h3>Consent</h3>
+        <p>Where consent is required by law, we will request it. You can withdraw consent where processing is based on consent.</p>
 
-        <h2>7. Sensitive and verification information</h2>
-        <p>
-          Some verification processes may involve information requiring additional protection under UK data
-          protection law. For example, biometric information used for identification and criminal-offence
-          information are subject to additional legal requirements (Information Commissioner&rsquo;s Office).
-        </p>
-        <p>
-          Where such information is processed, we will only do so where we have an appropriate lawful basis and any
-          additional condition required by law. We will seek to minimise the information we retain. Where practical,
-          we may retain a verification result rather than the underlying identity document.
-        </p>
-
-        <h2>8. Automated checks and decision-making</h2>
-        <p>We may use automated systems to help:</p>
+        <h2>6. Verification and sensitive information</h2>
+        <p>Certain verification processes may involve information that receives additional protection under UK data protection law. This can include:</p>
         <ul>
-          <li>Detect fraud;</li>
-          <li>Identify duplicate accounts;</li>
-          <li>Prioritise security alerts;</li>
-          <li>Match jobs with professionals;</li>
-          <li>Identify unusual activity;</li>
-          <li>Assist with verification and risk assessment.</li>
+          <li>Biometric information used for identification</li>
+          <li>Criminal-offence information</li>
+          <li>Other specially protected information</li>
         </ul>
         <p>
-          Where applicable law gives you rights concerning solely automated decisions with legal or similarly
-          significant effects, we will provide the appropriate safeguards, including information about the decision
-          and a way to request human review where required. UK rules place specific requirements around significant
-          automated decision-making (Information Commissioner&rsquo;s Office).
-        </p>
-        <p>
-          We will not use automated systems as a substitute for appropriate human review where the law requires
-          human involvement.
+          We will only process such information where we have the appropriate lawful basis and any additional legal
+          condition required. We may use specialist third-party providers for identity and verification checks. We
+          do not intend to create or maintain our own unrestricted database of criminal or financial information.
         </p>
 
-        <h2>9. Who we share information with</h2>
-        <p>We may share information with:</p>
+        <h2>7. Automated systems and profiling</h2>
+        <p>ASAP Local may use automated tools to help:</p>
         <ul>
-          <li>Professionals you choose to contact or book;</li>
-          <li>Customers where necessary to provide a service;</li>
-          <li>Payment providers;</li>
-          <li>Identity-verification providers;</li>
-          <li>Business and professional-registration providers;</li>
-          <li>Fraud-prevention providers;</li>
-          <li>IT, hosting and cloud providers;</li>
-          <li>Customer-support providers;</li>
-          <li>Analytics and security providers;</li>
-          <li>Communications providers;</li>
-          <li>Professional advisers;</li>
-          <li>Insurers;</li>
-          <li>Law enforcement or public authorities where legally required;</li>
-          <li>Courts, regulators or other authorities where necessary;</li>
-          <li>Buyers or advisers involved in a merger, acquisition or sale of the business.</li>
+          <li>Detect fraud</li>
+          <li>Detect duplicate accounts</li>
+          <li>Identify suspicious behaviour</li>
+          <li>Match Customers with Professionals</li>
+          <li>Prioritise security alerts</li>
+          <li>Assist verification</li>
+          <li>Improve search results</li>
         </ul>
-        <p>We require appropriate contractual and security protections where required.</p>
+        <p>
+          Automated tools may flag an account or transaction for further review. Where applicable law provides
+          additional rights regarding solely automated decisions that have legal or similarly significant effects,
+          we will provide the safeguards required by law.
+        </p>
 
-        <h2>10. Information visible to other users</h2>
-        <p>Depending on how you use ASAP Local, some information may be visible to other users.</p>
-        <p>For example, a professional profile may display:</p>
+        <h2>8. Information shared with Customers and Professionals</h2>
+        <p>To operate the marketplace, certain information may be shared between users.</p>
+        <p>For example, a Professional may receive:</p>
         <ul>
-          <li>Trading/business name</li>
-          <li>Profile photograph or logo</li>
-          <li>Service areas</li>
+          <li>Job description</li>
+          <li>Relevant photographs</li>
+          <li>Approximate/service location</li>
+          <li>Preferred dates</li>
+          <li>Budget information</li>
+          <li>Information necessary to prepare a quote</li>
+        </ul>
+        <p>A Professional profile may display:</p>
+        <ul>
+          <li>Business/trading name</li>
+          <li>Profile photograph/logo</li>
           <li>Services</li>
-          <li>Portfolio</li>
+          <li>Service areas</li>
           <li>Reviews</li>
           <li>Ratings</li>
+          <li>Portfolio</li>
+          <li>Experience</li>
           <li>Verification badges</li>
-          <li>Years of experience</li>
-          <li>General business information</li>
         </ul>
-        <p>
-          We will not publicly display sensitive verification information such as identity documents, bank details
-          or private screening results.
-        </p>
-        <p>Customer job information may be shared with professionals for the purpose of quoting or providing the requested service.</p>
+        <p>We will not publicly display information such as:</p>
+        <ul>
+          <li>Identity documents</li>
+          <li>Bank account numbers</li>
+          <li>Payment-card details</li>
+          <li>Private verification results</li>
+        </ul>
+        <p>unless disclosure is required or authorised by law.</p>
+
+        <h2>9. Payment information</h2>
+        <p>Payments may be processed through third-party payment providers. ASAP Local may receive:</p>
+        <ul>
+          <li>Transaction amount</li>
+          <li>Payment status</li>
+          <li>Transaction reference</li>
+          <li>Refund information</li>
+          <li>Payout information</li>
+          <li>Payment method information</li>
+        </ul>
+        <p>Where possible, complete payment-card details are handled by the payment provider rather than stored directly by ASAP Local.</p>
+
+        <h2>10. Third-party service providers</h2>
+        <p>We may use third-party providers for:</p>
+        <ul>
+          <li>Hosting</li>
+          <li>Identity verification</li>
+          <li>Payments</li>
+          <li>Email</li>
+          <li>SMS</li>
+          <li>Push notifications</li>
+          <li>Analytics</li>
+          <li>Fraud prevention</li>
+          <li>Security</li>
+          <li>Customer support</li>
+          <li>Professional verification</li>
+          <li>Document storage</li>
+          <li>Business information</li>
+          <li>Professional registration checks</li>
+        </ul>
+        <p>Those providers may process information on our behalf or, depending on their role, as independent controllers.</p>
 
         <h2>11. Location information</h2>
         <p>We may process location information to:</p>
         <ul>
-          <li>Match customers with nearby professionals;</li>
-          <li>Show service areas;</li>
-          <li>Estimate travel distances;</li>
-          <li>Help professionals determine whether they can accept a job;</li>
-          <li>Improve marketplace recommendations;</li>
-          <li>Prevent fraud.</li>
+          <li>Find Professionals near a Customer</li>
+          <li>Calculate approximate travel distance</li>
+          <li>Display service areas</li>
+          <li>Improve matching</li>
+          <li>Prevent fraud</li>
+          <li>Facilitate bookings</li>
         </ul>
-        <p>We aim to disclose only the location information reasonably necessary for the relevant transaction.</p>
+        <p>We aim to disclose only the location information necessary for the relevant transaction.</p>
 
-        <h2>12. Marketing</h2>
-        <p>We may send you marketing communications where permitted by law. You can unsubscribe from marketing communications at any time.</p>
-        <p>
-          Service, security, account and transactional messages may still be sent where necessary to provide ASAP
-          Local services.
-        </p>
-
-        <h2>13. Cookies and similar technologies</h2>
-        <p>ASAP Local may use cookies and similar technologies for:</p>
+        <h2>12. Cookies</h2>
+        <p>We use cookies and similar technologies for:</p>
         <ul>
-          <li>Essential website functionality;</li>
-          <li>Login and security;</li>
-          <li>Preferences;</li>
-          <li>Analytics;</li>
-          <li>Performance;</li>
-          <li>Marketing, where applicable.</li>
+          <li>Essential functionality</li>
+          <li>Authentication</li>
+          <li>Security</li>
+          <li>Preferences</li>
+          <li>Analytics</li>
+          <li>Performance</li>
+          <li>Marketing where permitted</li>
         </ul>
         <p>
-          Where consent is required, we will request it before placing non-essential cookies. You can manage cookie
-          preferences through our cookie controls and your browser settings.
+          Non-essential cookies will be managed in accordance with applicable law and our{" "}
+          <a href="/cookies">Cookie Policy</a>.
         </p>
+
+        <h2>13. Marketing</h2>
+        <p>We may send marketing communications where legally permitted. You can unsubscribe from marketing communications at any time.</p>
+        <p>You may still receive essential messages concerning:</p>
+        <ul>
+          <li>Your account</li>
+          <li>Jobs</li>
+          <li>Quotes</li>
+          <li>Bookings</li>
+          <li>Payments</li>
+          <li>Security</li>
+          <li>Verification</li>
+          <li>Complaints</li>
+        </ul>
 
         <h2>14. Data retention</h2>
-        <p>We keep personal information only for as long as reasonably necessary for the purposes for which it was collected, including:</p>
+        <p>We retain information only for as long as reasonably necessary. Retention periods depend on:</p>
         <ul>
-          <li>Providing services;</li>
-          <li>Maintaining accounts;</li>
-          <li>Meeting legal obligations;</li>
-          <li>Resolving disputes;</li>
-          <li>Preventing fraud;</li>
-          <li>Maintaining financial records;</li>
-          <li>Establishing or defending legal claims.</li>
+          <li>The type of information</li>
+          <li>Why we collected it</li>
+          <li>Legal requirements</li>
+          <li>Fraud-prevention requirements</li>
+          <li>Financial record requirements</li>
+          <li>Dispute periods</li>
+          <li>Potential legal claims</li>
         </ul>
-        <p>
-          Retention periods vary depending on the type of information. Verification information will not be retained
-          indefinitely simply because it was collected. When information is no longer required, we will securely
-          delete, anonymise or otherwise dispose of it where appropriate.
-        </p>
+        <p>When information is no longer required, we will delete, anonymise or securely dispose of it where appropriate.</p>
 
         <h2>15. International transfers</h2>
         <p>
-          Some of our service providers may process information outside the United Kingdom. Where personal
-          information is transferred internationally, we will use appropriate safeguards required by applicable data
-          protection law.
+          Some service providers may process personal information outside the UK. Where this occurs, we will use
+          appropriate safeguards required under applicable UK data protection law.
         </p>
 
         <h2>16. Security</h2>
-        <p>We use appropriate technical and organisational measures designed to protect personal information against:</p>
+        <p>We use appropriate technical and organisational measures to protect personal information. These may include:</p>
         <ul>
-          <li>Unauthorised access;</li>
-          <li>Loss;</li>
-          <li>Destruction;</li>
-          <li>Alteration;</li>
-          <li>Disclosure;</li>
-          <li>Misuse.</li>
+          <li>Access controls</li>
+          <li>Encryption where appropriate</li>
+          <li>Authentication</li>
+          <li>Logging</li>
+          <li>Monitoring</li>
+          <li>Secure hosting</li>
+          <li>Staff access restrictions</li>
+          <li>Data minimisation</li>
+          <li>Backup and recovery controls</li>
         </ul>
-        <p>However, no internet-based service can guarantee absolute security.</p>
+        <p>No online system can guarantee absolute security.</p>
 
         <h2>17. Your rights</h2>
-        <p>Subject to applicable law, you may have the right to:</p>
+        <p>Subject to applicable law, you may have rights to:</p>
         <ul>
-          <li>Request access to your personal information;</li>
-          <li>Request correction of inaccurate information;</li>
-          <li>Request deletion;</li>
-          <li>Request restriction of processing;</li>
-          <li>Object to certain processing;</li>
-          <li>Request portability of certain information;</li>
-          <li>Withdraw consent where processing relies on consent;</li>
-          <li>Object to certain direct marketing;</li>
-          <li>Request information about certain automated decisions.</li>
+          <li>Access your information</li>
+          <li>Correct inaccurate information</li>
+          <li>Request deletion</li>
+          <li>Request restriction</li>
+          <li>Object to processing</li>
+          <li>Request data portability</li>
+          <li>Withdraw consent</li>
+          <li>Object to direct marketing</li>
+          <li>Request information about certain automated decisions</li>
         </ul>
         <p>
-          You can contact us using:{" "}
-          <a href="mailto:privacy@asaplocal.pro">privacy@asaplocal.pro</a>
+          Requests should be sent to: <a href="mailto:privacy@asaplocal.pro">privacy@asaplocal.pro</a>
         </p>
         <p>
-          You also have the right to complain to the UK&rsquo;s Information Commissioner&rsquo;s Office
-          (ico.org.uk).
-        </p>
-
-        <h2>18. Changes to this Privacy Policy</h2>
-        <p>We may update this Privacy Policy from time to time.</p>
-        <p>
-          The latest version will be published on the ASAP Local website/application with the date it was last
-          updated. Where required, we will provide additional notice of significant changes.
+          You can also complain to the Information Commissioner&rsquo;s Office (ico.org.uk). The ICO requires privacy
+          information to explain purposes, lawful bases and legitimate interests where applicable (Information
+          Commissioner&rsquo;s Office).
         </p>
       </div>
     </div>
