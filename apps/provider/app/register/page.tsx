@@ -57,7 +57,7 @@ export default function RegisterPage() {
   function onSubmitForm(e: React.FormEvent) {
     e.preventDefault();
     if (!termsAccepted) {
-      setError("You must agree to the Terms & Privacy Policy");
+      setError("You must agree to the Terms & Conditions, Professional Terms and Community & Safety Policy, and Privacy Policy");
       return;
     }
     submit({ ...form, termsAccepted, marketingEmail }, form.password);
@@ -247,7 +247,7 @@ export default function RegisterPage() {
                     style={{ accentColor: "#c67139" }}
                   />
                   <span>
-                    I agree to the{" "}
+                    By applying as a provider, you agree to the ASAP Local{" "}
                     <a
                       href={`${process.env.NEXT_PUBLIC_WEB_URL}/terms`}
                       target="_blank"
@@ -255,9 +255,29 @@ export default function RegisterPage() {
                       className="font-semibold hover:underline"
                       style={{ color: "#f6a06b" }}
                     >
-                      Terms
+                      Terms &amp; Conditions
+                    </a>
+                    ,{" "}
+                    <a
+                      href={`${process.env.NEXT_PUBLIC_WEB_URL}/terms/professionals`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="font-semibold hover:underline"
+                      style={{ color: "#f6a06b" }}
+                    >
+                      Professional Terms
+                    </a>
+                    ,{" "}
+                    <a
+                      href={`${process.env.NEXT_PUBLIC_WEB_URL}/community`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="font-semibold hover:underline"
+                      style={{ color: "#f6a06b" }}
+                    >
+                      Community &amp; Safety Policy
                     </a>{" "}
-                    &{" "}
+                    and acknowledge our{" "}
                     <a
                       href={`${process.env.NEXT_PUBLIC_WEB_URL}/privacy`}
                       target="_blank"
@@ -267,6 +287,7 @@ export default function RegisterPage() {
                     >
                       Privacy Policy
                     </a>
+                    .
                   </span>
                 </label>
                 <label className="flex items-start gap-2 text-[13px]" style={{ color: "rgba(249,244,237,.6)" }}>

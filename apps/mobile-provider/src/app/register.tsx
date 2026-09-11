@@ -49,7 +49,7 @@ export default function RegisterScreen() {
       if (!email.includes('@')) return setError('Enter a valid email address.');
       if (!phone.trim()) return setError('Enter a phone number.');
       if (password.length < 8) return setError('Password must be at least 8 characters.');
-      if (!termsAccepted) return setError('You must agree to the Terms & Privacy Policy.');
+      if (!termsAccepted) return setError('You must agree to the Terms & Conditions, Professional Terms, Community & Safety Policy, and Privacy Policy.');
     } else if (!confirmPassword) {
       return setError('Enter your existing password to confirm.');
     }
@@ -157,14 +157,23 @@ export default function RegisterScreen() {
                 <Pressable style={s.checkboxRow} onPress={() => setTermsAccepted((v) => !v)}>
                   <View style={[s.checkbox, termsAccepted && s.checkboxChecked]} />
                   <Text style={s.checkboxLabel}>
-                    I agree to the{' '}
+                    By applying as a provider, you agree to the ASAP Local{' '}
                     <Text style={s.checkboxLink} onPress={() => openWebPage('/terms')}>
-                      Terms
+                      Terms & Conditions
+                    </Text>
+                    ,{' '}
+                    <Text style={s.checkboxLink} onPress={() => openWebPage('/terms/professionals')}>
+                      Professional Terms
+                    </Text>
+                    ,{' '}
+                    <Text style={s.checkboxLink} onPress={() => openWebPage('/community')}>
+                      Community & Safety Policy
                     </Text>{' '}
-                    &{' '}
+                    and acknowledge our{' '}
                     <Text style={s.checkboxLink} onPress={() => openWebPage('/privacy')}>
                       Privacy Policy
                     </Text>
+                    .
                   </Text>
                 </Pressable>
 
