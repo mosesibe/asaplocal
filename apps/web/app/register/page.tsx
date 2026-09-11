@@ -152,14 +152,15 @@ export default function RegisterPage() {
                     style={{ accentColor: "#c67139" }}
                   />
                   <span>
-                    I agree to the{" "}
+                    By creating an account, you agree to the ASAP Local{" "}
                     <a href="/terms" target="_blank" rel="noreferrer" className="font-semibold hover:underline" style={{ color: "#8c491a" }}>
-                      Terms
+                      Terms &amp; Conditions
                     </a>{" "}
-                    &amp;{" "}
+                    and acknowledge our{" "}
                     <a href="/privacy" target="_blank" rel="noreferrer" className="font-semibold hover:underline" style={{ color: "#8c491a" }}>
                       Privacy Policy
                     </a>
+                    .
                   </span>
                 </label>
                 <label className="flex items-start gap-2 text-[13px]" style={{ color: "rgba(32,30,29,.6)" }}>
