@@ -7,6 +7,8 @@ const LEGAL_DOCS = [
   { href: "/terms/professionals", label: "Professional Terms" },
   { href: "/cookies", label: "Cookie Policy" },
   { href: "/community", label: "Community, Reviews & Safety" },
+  { href: "/accessibility", label: "Accessibility" },
+  { href: "/contact", label: "Contact & Complaints" },
 ] as const;
 
 export function LegalDocNav({ current }: { current: (typeof LEGAL_DOCS)[number]["href"] }) {
