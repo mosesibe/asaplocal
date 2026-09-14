@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Image, Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ChevronDown, X } from 'lucide-react-native';
 import { Screen, Card, Text, Button, TextField, useAppTheme, useBottomNavInset } from '@asaplocal/ui-native';
 
 import { api } from '@/lib/api';
 import { ApiError } from '@asaplocal/api-client';
+import { PhoneVerificationModal } from '@/components/account/PhoneVerificationModal';
 import { LocationPicker, type LocationValue } from '@/components/LocationPicker';
 import { PreferredDatePicker, toPreferredDateTime, type PreferredDateValue } from '@/components/PreferredDatePicker';
 
@@ -53,6 +54,18 @@ export default function NewJobScreen() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [phonePrompt, setPhonePrompt] = useState<{ phone: string | null } | null>(null);
+
+  // Studio handoff: real photos of the space, JSON-encoded in the route params.
+  const studioPhotos = useMemo<string[]>(() => {
+    if (!prefill.photos) return [];
+    try {
+      const parsed: unknown = JSON.parse(prefill.photos);
+      return Array.isArray(parsed) ? parsed.filter((p): p is string => typeof p === 'string') : [];
+    } catch {
+      return [];
+    }
+  }, [prefill.photos]);
 
   useEffect(() => {
     api
@@ -102,7 +115,7 @@ export default function NewJobScreen() {
       body.flexibleDate = preferredDate ? preferredDate.time === null : true;
       if (budgetMin.trim()) body.budgetMinPence = Math.round(Number(budgetMin) * 100);
       if (budgetMax.trim()) body.budgetMaxPence = Math.round(Number(budgetMax) * 100);
-      if (prefill.photos) body.photos = JSON.parse(prefill.photos);
+      if (studioPhotos.length > 0) body.photos = studioPhotos;
       if (prefill.designRenderUrl) body.designRenderUrl = prefill.designRenderUrl;
       if (prefill.designSessionId) body.designSessionId = prefill.designSessionId;
       if (prefill.businessId) body.targetBusinessId = prefill.businessId;
@@ -110,11 +123,16 @@ export default function NewJobScreen() {
       const res = await api.request<{ id: string }>('/api/jobs', { method: 'POST', body: JSON.stringify(body) });
       router.replace(`/jobs/${res.id}`);
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : 'Could not post this job.');
+      if (e instanceof ApiError && e.data.code === 'PHONE_NOT_VERIFIED') {
+        // Verify in place, then submit again — the form stays exactly as filled in.
+        setPhonePrompt({ phone: typeof e.data.phone === 'string' ? e.data.phone : null });
+      } else {
+        setError(e instanceof ApiError ? e.message : 'Could not post this job.');
+      }
     } finally {
       setSubmitting(false);
     }
-  }, [categoryId, title, description, location, preferredDate, budgetMin, budgetMax, prefill, router]);
+  }, [categoryId, title, description, location, preferredDate, budgetMin, budgetMax, studioPhotos, prefill, router]);
 
   if (loading) {
     return (
@@ -137,6 +155,40 @@ export default function NewJobScreen() {
         </Text>
 
         <Card style={styles.formCard}>
+          {/* Studio jobs: show exactly what gets attached — the real photos
+              and the chosen concept — so the customer can see what pros receive. */}
+          {(studioPhotos.length > 0 || prefill.designRenderUrl) && (
+            <View style={[styles.attachments, { borderColor: colors.border, backgroundColor: colors.muted, borderRadius: radius.lg }]}>
+              {studioPhotos.length > 0 && (
+                <View>
+                  <Text variant="caption" color="muted" style={styles.attachmentLabel}>
+                    PHOTOS OF YOUR SPACE
+                  </Text>
+                  <View style={styles.photoRow}>
+                    {studioPhotos.map((src) => (
+                      <Image key={src} source={{ uri: src }} style={[styles.photoThumb, { borderRadius: radius.md }]} />
+                    ))}
+                  </View>
+                </View>
+              )}
+              {prefill.designRenderUrl && (
+                <View>
+                  <Text variant="caption" color="muted" style={styles.attachmentLabel}>
+                    YOUR CHOSEN DESIGN
+                  </Text>
+                  <Image
+                    source={{ uri: prefill.designRenderUrl }}
+                    style={[styles.conceptImage, { borderRadius: radius.md }]}
+                    accessibilityLabel="The design concept you chose"
+                  />
+                </View>
+              )}
+              <Text variant="caption" color="muted">
+                Both are attached to your job, so pros can see the space as it is and the look you're after.
+              </Text>
+            </View>
+          )}
+
           <View>
             <Text variant="bodyMedium" style={styles.label}>
               Category
@@ -256,12 +308,25 @@ export default function NewJobScreen() {
           </Pressable>
         </Pressable>
       </Modal>
+
+      <PhoneVerificationModal
+        visible={!!phonePrompt}
+        onClose={() => setPhonePrompt(null)}
+        initialPhone={phonePrompt?.phone ?? null}
+        intro="To keep requests genuine, we need a verified phone number before your job goes live."
+        onVerified={handleSubmit}
+      />
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
   centered: { alignItems: 'center', justifyContent: 'center' },
+  attachments: { borderWidth: StyleSheet.hairlineWidth, padding: 12, gap: 12 },
+  attachmentLabel: { letterSpacing: 0.5, marginBottom: 6 },
+  photoRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  photoThumb: { width: 72, height: 72 },
+  conceptImage: { width: '100%', aspectRatio: 4 / 3 },
   scroll: { gap: 4 },
   heading: { fontSize: 22, lineHeight: 28 },
   subheading: { marginTop: 6 },

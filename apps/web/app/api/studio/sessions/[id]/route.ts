@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { auth } from "@asaplocal/auth";
 import { prisma } from "@asaplocal/db";
-import type { GeneratedConcept } from "@asaplocal/core";
+import { resolveStudioCategoryId, type GeneratedConcept } from "@asaplocal/core";
 
 const schema = z.object({ selectedIndex: z.number().int().min(0).max(9) });
 
@@ -47,5 +47,15 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     },
   });
 
-  return NextResponse.json({ id: updated.id, selectedIndex: updated.selectedIndex });
+  // Resolved server-side so web and mobile hand off the same category, and so
+  // it can be classified from the concept's scope rather than the space alone.
+  const analysis = studioSession.analysis as { needsSpecialist?: boolean } | null;
+  const categoryId = await resolveStudioCategoryId({
+    spaceType: studioSession.spaceType,
+    needsSpecialist: !!analysis?.needsSpecialist,
+    briefText: studioSession.briefText,
+    concept: chosen,
+  }).catch(() => null);
+
+  return NextResponse.json({ id: updated.id, selectedIndex: updated.selectedIndex, categoryId });
 }

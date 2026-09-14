@@ -38,6 +38,17 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ message: "Please sign in as a customer to post a job." }, { status: 401 });
   }
 
+  // Checked against the database, not the session flag — the JWT can predate
+  // a verification the customer has just completed. `code` lets clients open
+  // their verify-phone prompt and retry instead of showing a dead-end error.
+  const customer = await prisma.user.findUnique({ where: { id: session.user.id }, select: { phone: true, phoneVerifiedAt: true } });
+  if (!customer?.phoneVerifiedAt) {
+    return NextResponse.json(
+      { message: "Please verify your phone number before posting a job.", code: "PHONE_NOT_VERIFIED", phone: customer?.phone ?? null },
+      { status: 403 }
+    );
+  }
+
   try {
     await checkRateLimit("job-post", session.user.id, 5, 300); // 5 job posts per 5 minutes
   } catch (e) {

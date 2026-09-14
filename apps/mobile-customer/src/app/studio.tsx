@@ -130,10 +130,16 @@ export default function StudioScreen() {
     if (!sessionId || !chosen.url) return;
     setChoosing(index);
     try {
-      await api.request(`/api/studio/sessions/${sessionId}`, { method: 'PATCH', body: JSON.stringify({ selectedIndex: index }) });
+      // The server resolves the category from the concept's scope, so the job
+      // form arrives with it already selected.
+      const { categoryId } = await api.request<{ categoryId: string | null }>(`/api/studio/sessions/${sessionId}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ selectedIndex: index }),
+      });
       router.push({
         pathname: '/jobs/new',
         params: {
+          ...(categoryId ? { categoryId } : {}),
           title: `${chosen.label} redesign`,
           description: [
             brief.trim() ? `Brief: ${brief.trim()}` : null,

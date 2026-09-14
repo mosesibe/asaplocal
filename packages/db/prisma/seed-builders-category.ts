@@ -32,6 +32,11 @@ const BUILDER_CHILDREN = [
   "Tiling",
   "Flooring installation",
   "Structural work",
+  "Brickwork & masonry",
+  "Roofing",
+  "Windows & doors",
+  "Rendering & cladding",
+  "Interior renovation",
 ];
 
 const slugify = (name: string) =>

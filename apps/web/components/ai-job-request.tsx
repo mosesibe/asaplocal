@@ -7,6 +7,7 @@ import { ArrowUp, Loader2, Sparkles } from "lucide-react";
 import { Button, Card, Input, Select, Textarea } from "@asaplocal/ui";
 import { LocationPicker, type LocationValue } from "./location-picker";
 import { PreferredDatePicker, toPreferredDateTime, type PreferredDateValue } from "./preferred-date-picker";
+import { PhoneVerificationSheet } from "./account/phone-verification-sheet";
 
 interface Category {
   id: string;
@@ -68,6 +69,7 @@ export function AiJobRequest({
   const [posting, setPosting] = useState(false);
   const [postError, setPostError] = useState<string | null>(null);
   const [needsLogin, setNeedsLogin] = useState(false);
+  const [phonePrompt, setPhonePrompt] = useState<{ phone: string | null } | null>(null);
 
   function handleDescriptionChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
     setDescription(e.target.value);
@@ -177,6 +179,11 @@ export function AiJobRequest({
         return;
       }
       const data = await res.json();
+      if (res.status === 403 && data.code === "PHONE_NOT_VERIFIED") {
+        // Verify in place, then post again — the form stays exactly as filled in.
+        setPhonePrompt({ phone: data.phone ?? null });
+        return;
+      }
       if (!res.ok) throw new Error(data.message ?? "Something went wrong — please try again.");
       router.push(`/jobs/${data.id}`);
     } catch (e) {
@@ -231,6 +238,37 @@ export function AiJobRequest({
             </button>
           </div>
           <div className="space-y-3">
+            {/* Studio jobs: show exactly what gets attached — the real photos
+                and the chosen concept — so the customer can see what pros receive. */}
+            {studioPrefill && (studioPrefill.photos.length > 0 || studioPrefill.designRenderUrl) && (
+              <div className="space-y-3 rounded-xl border border-border bg-muted/40 p-3">
+                {studioPrefill.photos.length > 0 && (
+                  <div>
+                    <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Photos of your space</p>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {studioPrefill.photos.map((src) => (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img key={src} src={src} alt="" className="h-20 w-20 rounded-lg border border-border object-cover" />
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {studioPrefill.designRenderUrl && (
+                  <div>
+                    <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Your chosen design</p>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={studioPrefill.designRenderUrl}
+                      alt="The design concept you chose"
+                      className="mt-2 w-full max-w-sm rounded-lg border border-border object-cover"
+                    />
+                  </div>
+                )}
+                <p className="text-xs text-muted-foreground">
+                  Both are attached to your job, so pros can see the space as it is and the look you&apos;re after.
+                </p>
+              </div>
+            )}
             <div>
               <label className="text-sm font-medium text-foreground">Category</label>
               <Select
@@ -322,6 +360,13 @@ export function AiJobRequest({
           </Button>
         </>
       )}
+      <PhoneVerificationSheet
+        open={!!phonePrompt}
+        onOpenChange={(open) => !open && setPhonePrompt(null)}
+        initialPhone={phonePrompt?.phone ?? null}
+        intro="To keep requests genuine, we need a verified phone number before your job goes live."
+        onVerified={() => void handlePost()}
+      />
     </Card>
   );
 }

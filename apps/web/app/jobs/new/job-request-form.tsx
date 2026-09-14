@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useForm } from "react-hook-form";
@@ -9,6 +9,7 @@ import { z } from "zod";
 import { Button, Card, Input, Select, Textarea } from "@asaplocal/ui";
 import { LocationPicker, type LocationValue } from "@/components/location-picker";
 import { PreferredDatePicker, toPreferredDateTime, type PreferredDateValue } from "@/components/preferred-date-picker";
+import { PhoneVerificationSheet } from "@/components/account/phone-verification-sheet";
 
 // Lets an anonymous visitor fill in the whole form before we make them sign
 // up: the values are cached here on submit, the signed-out user is bounced
@@ -49,6 +50,8 @@ export function JobRequestForm({
   const [location, setLocation] = useState<LocationValue | null>(null);
   const [locationError, setLocationError] = useState<string | null>(null);
   const [preferredDate, setPreferredDate] = useState<PreferredDateValue | null>(null);
+  const [phonePrompt, setPhonePrompt] = useState<{ phone: string | null } | null>(null);
+  const pendingPostRef = useRef<[FormValues, LocationValue, PreferredDateValue | null, string | undefined] | null>(null);
   const {
     register,
     handleSubmit,
@@ -82,6 +85,12 @@ export function JobRequestForm({
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
+        if (res.status === 403 && err.code === "PHONE_NOT_VERIFIED") {
+          // Keep the exact payload so posting resumes straight after verifying.
+          pendingPostRef.current = [values, loc, date, businessId];
+          setPhonePrompt({ phone: err.phone ?? null });
+          return;
+        }
         throw new Error(err.message ?? "Something went wrong — please try again.");
       }
       const data = await res.json();
@@ -200,6 +209,17 @@ export function JobRequestForm({
             : "Posting is free. We'll ask you to create a quick account before your job goes live."}
         </p>
       </form>
+      <PhoneVerificationSheet
+        open={!!phonePrompt}
+        onOpenChange={(open) => !open && setPhonePrompt(null)}
+        initialPhone={phonePrompt?.phone ?? null}
+        intro="To keep requests genuine, we need a verified phone number before your job goes live."
+        onVerified={() => {
+          const pending = pendingPostRef.current;
+          pendingPostRef.current = null;
+          if (pending) void postJob(...pending);
+        }}
+      />
     </Card>
   );
 }

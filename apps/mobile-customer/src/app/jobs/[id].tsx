@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Image, Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { Trash2 } from 'lucide-react-native';
 import { Screen, Card, Text, Badge, Button, useAppTheme, useBottomNavInset } from '@asaplocal/ui-native';
@@ -19,6 +19,8 @@ interface JobDetail {
     city: string;
     postcode: string | null;
     status: string;
+    photos: string[];
+    designRenderUrl: string | null;
     budgetMinPence: number | null;
     budgetMaxPence: number | null;
     preferredDate: string | null;
@@ -194,6 +196,35 @@ export default function JobDetailScreen() {
           </Text>
           <Text style={styles.description}>{job.description}</Text>
 
+          {job.photos.length > 0 && (
+            <View style={styles.mediaBlock}>
+              <Text variant="caption" color="muted" style={styles.mediaLabel}>
+                PHOTOS OF YOUR SPACE
+              </Text>
+              <View style={styles.photoRow}>
+                {job.photos.map((src, i) => (
+                  <Image key={i} source={{ uri: src }} style={[styles.photoThumb, { borderColor: colors.border }]} />
+                ))}
+              </View>
+            </View>
+          )}
+
+          {job.designRenderUrl && (
+            <View style={[styles.conceptBox, { borderColor: colors.border, backgroundColor: colors.muted }]}>
+              <Text variant="caption" color="muted" style={styles.mediaLabel}>
+                YOUR DESIGN CONCEPT
+              </Text>
+              <Image
+                source={{ uri: job.designRenderUrl }}
+                style={styles.conceptImage}
+                accessibilityLabel="The design concept you chose in Redesign Studio"
+              />
+              <Text variant="caption" color="muted">
+                Shared with pros as inspiration. They'll advise on what's achievable in your space.
+              </Text>
+            </View>
+          )}
+
           <View style={[styles.detailsBlock, { borderTopColor: colors.border }]}>
             <View style={styles.detailRow}>
               <Text variant="small" color="muted">
@@ -306,6 +337,12 @@ const styles = StyleSheet.create({
   flex1: { flex: 1 },
   card: { gap: 4, marginVertical: 4 },
   description: { lineHeight: 22 },
+  mediaBlock: { marginTop: 12 },
+  mediaLabel: { letterSpacing: 0.5, marginBottom: 6 },
+  photoRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  photoThumb: { width: 80, height: 80, borderRadius: 8, borderWidth: StyleSheet.hairlineWidth },
+  conceptBox: { marginTop: 12, padding: 12, borderRadius: 12, borderWidth: StyleSheet.hairlineWidth, gap: 6 },
+  conceptImage: { width: '100%', aspectRatio: 4 / 3, borderRadius: 8 },
   detailsBlock: { marginTop: 12, paddingTop: 12, borderTopWidth: StyleSheet.hairlineWidth, gap: 8 },
   detailRow: { gap: 1 },
   sectionHeading: { marginTop: 24 },
