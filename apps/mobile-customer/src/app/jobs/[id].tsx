@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Image, Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { Trash2 } from 'lucide-react-native';
-import { Screen, Card, Text, Badge, Button, useAppTheme, useBottomNavInset } from '@asaplocal/ui-native';
+import { Screen, Card, Text, Badge, Button, ImageGallery, ZoomableImage, useAppTheme, useBottomNavInset } from '@asaplocal/ui-native';
 
 import { api } from '@/lib/api';
 import { ApiError } from '@asaplocal/api-client';
@@ -201,11 +201,7 @@ export default function JobDetailScreen() {
               <Text variant="caption" color="muted" style={styles.mediaLabel}>
                 PHOTOS OF YOUR SPACE
               </Text>
-              <View style={styles.photoRow}>
-                {job.photos.map((src, i) => (
-                  <Image key={i} source={{ uri: src }} style={[styles.photoThumb, { borderColor: colors.border }]} />
-                ))}
-              </View>
+              <ImageGallery images={job.photos} thumbSize={80} thumbStyle={[styles.photoThumb, { borderColor: colors.border }]} />
             </View>
           )}
 
@@ -214,8 +210,8 @@ export default function JobDetailScreen() {
               <Text variant="caption" color="muted" style={styles.mediaLabel}>
                 YOUR DESIGN CONCEPT
               </Text>
-              <Image
-                source={{ uri: job.designRenderUrl }}
+              <ZoomableImage
+                uri={job.designRenderUrl}
                 style={styles.conceptImage}
                 accessibilityLabel="The design concept you chose in Redesign Studio"
               />

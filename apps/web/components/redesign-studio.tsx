@@ -3,8 +3,8 @@
 import { useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Camera, Info, Loader2, Sparkles, X } from "lucide-react";
-import { Button, Card, Textarea } from "@asaplocal/ui";
+import { Camera, Info, Loader2, Maximize2, Sparkles, X } from "lucide-react";
+import { Button, Card, ImageLightbox, Textarea } from "@asaplocal/ui";
 import { uploadFile } from "@/lib/upload";
 import { AiJobRequest, type StudioPrefill } from "./ai-job-request";
 
@@ -60,6 +60,9 @@ export function RedesignStudio({ categories }: { categories: Category[] }) {
   const [concepts, setConcepts] = useState<Concept[]>([]);
   const [remaining, setRemaining] = useState<number | null>(null);
   const [prefill, setPrefill] = useState<StudioPrefill | null>(null);
+  const [viewerIndex, setViewerIndex] = useState<number | null>(null);
+  // The full-size viewer pages across every concept that rendered.
+  const conceptUrls = concepts.flatMap((c) => (c.url ? [c.url] : []));
 
   async function onFilesSelected(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files ?? []);
@@ -279,7 +282,17 @@ export function RedesignStudio({ categories }: { categories: Category[] }) {
               <Card key={concept.key} className="flex flex-col overflow-hidden p-0">
                 <div className="relative aspect-[4/3] w-full bg-muted">
                   {concept.url ? (
-                    <Image src={concept.url} alt={concept.label} fill sizes="(max-width:640px) 100vw, 33vw" className="object-cover" unoptimized />
+                    <button
+                      type="button"
+                      onClick={() => setViewerIndex(conceptUrls.indexOf(concept.url!))}
+                      aria-label={`View the ${concept.label} design full size`}
+                      className="group absolute inset-0 cursor-zoom-in focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-500"
+                    >
+                      <Image src={concept.url} alt={concept.label} fill sizes="(max-width:640px) 100vw, 33vw" className="object-cover" unoptimized />
+                      <span className="pointer-events-none absolute bottom-2 right-2 rounded-full bg-black/60 p-1.5 text-white opacity-90 transition-opacity group-hover:opacity-100">
+                        <Maximize2 size={14} />
+                      </span>
+                    </button>
                   ) : (
                     <div className="flex h-full items-center justify-center text-muted-foreground">
                       {busy === "rendering" ? <Loader2 size={20} className="animate-spin" /> : <span className="text-xs">Couldn&apos;t create this one</span>}
@@ -329,6 +342,8 @@ export function RedesignStudio({ categories }: { categories: Category[] }) {
           </div>
         </>
       )}
+
+      <ImageLightbox images={conceptUrls} index={viewerIndex} onIndexChange={setViewerIndex} label="Design concepts" />
     </div>
   );
 }

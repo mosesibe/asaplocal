@@ -9,3 +9,4 @@ export * from "./Screen";
 export * from "./BottomNav";
 export * from "./BottomNavWave";
 export * from "./useBottomNavInset";
+export * from "./ImageLightbox";

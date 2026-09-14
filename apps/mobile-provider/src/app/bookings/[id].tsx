@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Image, Modal, Pressable, ScrollView, StyleSheet, Switch, View } from 'react-native';
 import { useFocusEffect, useLocalSearchParams } from 'expo-router';
 import * as Location from 'expo-location';
-import { Screen, Card, Text, Button, Badge, TextField, useAppTheme, useBottomNavInset } from '@asaplocal/ui-native';
+import { Screen, Card, Text, Button, Badge, ImageGallery, TextField, useAppTheme, useBottomNavInset } from '@asaplocal/ui-native';
 
 import { api } from '@/lib/api';
 import { uploadImage } from '@/lib/upload';
@@ -567,13 +567,7 @@ export default function BookingDetailScreen() {
                         </Text>
                         <Text variant="smallMedium">{formatPence(v.amountPence)}</Text>
                       </View>
-                      {v.photos.length > 0 && (
-                        <View style={styles.photoRow}>
-                          {v.photos.map((url) => (
-                            <Image key={url} source={{ uri: url }} style={[styles.photoThumb, { borderRadius: radius.md }]} />
-                          ))}
-                        </View>
-                      )}
+                      <ImageGallery images={v.photos} style={styles.photoRow} thumbStyle={[styles.photoThumb, { borderRadius: radius.md }]} />
                       <Badge variant={v.status === 'ACCEPTED' ? 'success' : v.status === 'DECLINED' ? 'destructive' : 'outline'}>
                         {v.status === 'PENDING' ? 'Awaiting approval' : v.status === 'ACCEPTED' ? 'Approved' : 'Declined'}
                       </Badge>
@@ -658,13 +652,7 @@ export default function BookingDetailScreen() {
               {disputes.map((dispute) => (
                 <View key={dispute.id} style={[styles.variationRow, { borderColor: colors.border }]}>
                   <Text variant="small">{dispute.reason}</Text>
-                  {dispute.photos.length > 0 && (
-                    <View style={styles.photoRow}>
-                      {dispute.photos.map((url) => (
-                        <Image key={url} source={{ uri: url }} style={[styles.photoThumb, { borderRadius: radius.md }]} />
-                      ))}
-                    </View>
-                  )}
+                  <ImageGallery images={dispute.photos} style={styles.photoRow} thumbStyle={[styles.photoThumb, { borderRadius: radius.md }]} />
                   {dispute.status === 'RESOLVED' ? (
                     <View style={[styles.formBlock, { borderColor: colors.border }]}>
                       <Text variant="caption" color="muted">
@@ -673,13 +661,7 @@ export default function BookingDetailScreen() {
                       <Text variant="small" style={styles.spacedTop}>
                         {dispute.providerResponse}
                       </Text>
-                      {dispute.providerPhotos.length > 0 && (
-                        <View style={styles.photoRow}>
-                          {dispute.providerPhotos.map((url) => (
-                            <Image key={url} source={{ uri: url }} style={[styles.photoThumb, { borderRadius: radius.md }]} />
-                          ))}
-                        </View>
-                      )}
+                      <ImageGallery images={dispute.providerPhotos} style={styles.photoRow} thumbStyle={[styles.photoThumb, { borderRadius: radius.md }]} />
                     </View>
                   ) : (
                     <Text variant="caption" color="muted">
@@ -743,13 +725,7 @@ export default function BookingDetailScreen() {
             {jobSheetEntries.map((entry) => (
               <Card key={entry.id} style={styles.card}>
                 <Text variant="small">{entry.description}</Text>
-                {entry.photos.length > 0 && (
-                  <View style={styles.photoRow}>
-                    {entry.photos.map((url) => (
-                      <Image key={url} source={{ uri: url }} style={[styles.photoThumb, { borderRadius: radius.md }]} />
-                    ))}
-                  </View>
-                )}
+                <ImageGallery images={entry.photos} style={styles.photoRow} thumbStyle={[styles.photoThumb, { borderRadius: radius.md }]} />
                 <Text variant="small" color="muted">
                   {new Date(entry.loggedAt).toLocaleString()}
                 </Text>

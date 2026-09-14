@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Camera, Sparkles, Info, X, Check } from 'lucide-react-native';
-import { Screen, Card, Text, Button, useAppTheme, useBottomNavInset } from '@asaplocal/ui-native';
+import { Camera, Sparkles, Info, X, Check, Maximize2 } from 'lucide-react-native';
+import { Screen, Card, Text, Button, ImageLightbox, useAppTheme, useBottomNavInset } from '@asaplocal/ui-native';
 
 import { api } from '@/lib/api';
 import { uploadImage } from '@/lib/upload';
@@ -65,7 +65,10 @@ export default function StudioScreen() {
   const [concepts, setConcepts] = useState<Concept[]>([]);
   const [remaining, setRemaining] = useState<number | null>(null);
   const [choosing, setChoosing] = useState<number | null>(null);
+  const [viewerIndex, setViewerIndex] = useState<number | null>(null);
   const { pick, sheet } = usePhotoPicker();
+  // The full-screen viewer pages across every concept that rendered.
+  const conceptUrls = concepts.flatMap((c) => (c.url ? [c.url] : []));
 
   async function pickPhotos() {
     const remainingSlots = MAX_PHOTOS - photos.length;
@@ -257,7 +260,17 @@ export default function StudioScreen() {
               <Card key={c.key} style={{ borderRadius: radius.xl, gap: 8 }}>
                 <View style={[styles.conceptImage, { backgroundColor: colors.muted, borderRadius: radius.lg }]}>
                   {c.url ? (
-                    <Image source={{ uri: c.url }} style={styles.conceptImageFill} />
+                    <Pressable
+                      style={styles.conceptImageFill}
+                      onPress={() => setViewerIndex(conceptUrls.indexOf(c.url!))}
+                      accessibilityRole="imagebutton"
+                      accessibilityLabel={`View the ${c.label} design full screen`}
+                    >
+                      <Image source={{ uri: c.url }} style={styles.conceptImageFill} />
+                      <View style={styles.expandBadge}>
+                        <Maximize2 size={14} color="#fff" />
+                      </View>
+                    </Pressable>
                   ) : busy === 'rendering' ? (
                     <ActivityIndicator color={colors.mutedForeground} />
                   ) : (
@@ -305,6 +318,7 @@ export default function StudioScreen() {
         )}
       </ScrollView>
       {sheet}
+      <ImageLightbox images={conceptUrls} index={viewerIndex} onClose={() => setViewerIndex(null)} />
     </Screen>
   );
 }
@@ -350,6 +364,7 @@ const styles = StyleSheet.create({
   renderingRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 12 },
   conceptImage: { aspectRatio: 4 / 3, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   conceptImageFill: { width: '100%', height: '100%' },
+  expandBadge: { position: 'absolute', bottom: 8, right: 8, padding: 6, borderRadius: 999, backgroundColor: 'rgba(0,0,0,0.6)' },
   metaRow: { flexDirection: 'row', justifyContent: 'space-between' },
   footerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 8 },
 });

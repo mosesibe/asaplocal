@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Image, Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ChevronDown, X } from 'lucide-react-native';
-import { Screen, Card, Text, Button, TextField, useAppTheme, useBottomNavInset } from '@asaplocal/ui-native';
+import { Screen, Card, Text, Button, ImageGallery, TextField, ZoomableImage, useAppTheme, useBottomNavInset } from '@asaplocal/ui-native';
 
 import { api } from '@/lib/api';
 import { ApiError } from '@asaplocal/api-client';
@@ -164,11 +164,7 @@ export default function NewJobScreen() {
                   <Text variant="caption" color="muted" style={styles.attachmentLabel}>
                     PHOTOS OF YOUR SPACE
                   </Text>
-                  <View style={styles.photoRow}>
-                    {studioPhotos.map((src) => (
-                      <Image key={src} source={{ uri: src }} style={[styles.photoThumb, { borderRadius: radius.md }]} />
-                    ))}
-                  </View>
+                  <ImageGallery images={studioPhotos} thumbStyle={[styles.photoThumb, { borderRadius: radius.md }]} />
                 </View>
               )}
               {prefill.designRenderUrl && (
@@ -176,8 +172,8 @@ export default function NewJobScreen() {
                   <Text variant="caption" color="muted" style={styles.attachmentLabel}>
                     YOUR CHOSEN DESIGN
                   </Text>
-                  <Image
-                    source={{ uri: prefill.designRenderUrl }}
+                  <ZoomableImage
+                    uri={prefill.designRenderUrl}
                     style={[styles.conceptImage, { borderRadius: radius.md }]}
                     accessibilityLabel="The design concept you chose"
                   />

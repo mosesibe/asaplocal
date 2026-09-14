@@ -3,7 +3,7 @@ import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, TextInput,
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import { Star } from 'lucide-react-native';
-import { Screen, Card, Text, Badge, Button, useAppTheme, useBottomNavInset } from '@asaplocal/ui-native';
+import { Screen, Card, Text, Badge, Button, ImageGallery, useAppTheme, useBottomNavInset } from '@asaplocal/ui-native';
 
 import { api } from '@/lib/api';
 import { uploadImage } from '@/lib/upload';
@@ -231,13 +231,7 @@ export default function BookingDetailScreen() {
                   </Text>
                   <Text variant="smallMedium">+{formatPence(v.amountPence)}</Text>
                 </View>
-                {v.photos.length > 0 && (
-                  <View style={styles.photoRow}>
-                    {v.photos.map((p) => (
-                      <Image key={p} source={{ uri: p }} style={[styles.logPhoto, { borderRadius: radius.sm }]} />
-                    ))}
-                  </View>
-                )}
+                <ImageGallery images={v.photos} style={styles.photoRow} thumbStyle={[styles.logPhoto, { borderRadius: radius.sm }]} />
                 {v.status === 'PENDING' ? (
                   <View style={styles.actionRow}>
                     <Button size="sm" onPress={() => decideVariation(v.id, true)} loading={busy} style={styles.flex1}>
@@ -304,13 +298,7 @@ export default function BookingDetailScreen() {
             {data.jobSheetEntries.map((e) => (
               <View key={e.id} style={[styles.innerBox, { borderColor: colors.border, borderRadius: radius.md }]}>
                 <Text variant="small">{e.description}</Text>
-                {e.photos.length > 0 && (
-                  <View style={styles.photoRow}>
-                    {e.photos.map((p) => (
-                      <Image key={p} source={{ uri: p }} style={[styles.logPhoto, { borderRadius: radius.sm }]} />
-                    ))}
-                  </View>
-                )}
+                <ImageGallery images={e.photos} style={styles.photoRow} thumbStyle={[styles.logPhoto, { borderRadius: radius.sm }]} />
                 <Text variant="caption" color="muted" style={styles.mt6}>
                   {new Date(e.loggedAt).toLocaleString('en-GB')}
                 </Text>
@@ -358,26 +346,14 @@ export default function BookingDetailScreen() {
             {data.disputes.map((d) => (
               <View key={d.id} style={[styles.innerBox, { borderColor: colors.border, borderRadius: radius.md }]}>
                 <Text variant="small">{d.reason}</Text>
-                {d.photos.length > 0 && (
-                  <View style={styles.photoRow}>
-                    {d.photos.map((p) => (
-                      <Image key={p} source={{ uri: p }} style={[styles.logPhoto, { borderRadius: radius.sm }]} />
-                    ))}
-                  </View>
-                )}
+                <ImageGallery images={d.photos} style={styles.photoRow} thumbStyle={[styles.logPhoto, { borderRadius: radius.sm }]} />
                 {d.status === 'RESOLVED' ? (
                   <View style={[styles.disputeResponse, { borderTopColor: colors.border }]}>
                     <Text variant="caption" color="muted">
                       {data.business.name}'s response
                     </Text>
                     <Text variant="small">{d.providerResponse}</Text>
-                    {d.providerPhotos.length > 0 && (
-                      <View style={styles.photoRow}>
-                        {d.providerPhotos.map((p) => (
-                          <Image key={p} source={{ uri: p }} style={[styles.logPhoto, { borderRadius: radius.sm }]} />
-                        ))}
-                      </View>
-                    )}
+                    <ImageGallery images={d.providerPhotos} style={styles.photoRow} thumbStyle={[styles.logPhoto, { borderRadius: radius.sm }]} />
                   </View>
                 ) : (
                   <Text variant="caption" color="muted" style={styles.mt6}>
