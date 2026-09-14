@@ -4,7 +4,9 @@ import { getApiBaseUrlOverride, setApiBaseUrlOverride } from "./base-url";
 export class ApiError extends Error {
   constructor(
     message: string,
-    public status: number
+    public status: number,
+    /** The parsed error body — carries machine-readable fields such as `code`. */
+    public data: Record<string, unknown> = {}
   ) {
     super(message);
   }
@@ -86,7 +88,7 @@ export function createApiClient(defaultBaseUrl: string) {
 
     if (!res.ok) {
       const body = await res.json().catch(() => ({ message: res.statusText }));
-      throw new ApiError(body.message ?? "Request failed", res.status);
+      throw new ApiError(body.message ?? "Request failed", res.status, body);
     }
 
     if (res.status === 204) return undefined as T;

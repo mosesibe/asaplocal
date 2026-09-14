@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Image, Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ChevronDown, X } from 'lucide-react-native';
 import { Screen, Card, Text, Badge, Button, TextField, useAppTheme, useBottomNavInset } from '@asaplocal/ui-native';
@@ -18,6 +18,8 @@ interface LeadDetail {
     postcode: string | null;
     budgetMinPence: number | null;
     budgetMaxPence: number | null;
+    photos: string[];
+    designRenderUrl: string | null;
   };
   access: { id: string; status: string; refundRequestStatus: string | null };
   customer: { name: string; phone: string | null };
@@ -249,6 +251,39 @@ export default function LeadDetailScreen() {
 
         <Card style={styles.card}>
           <Text style={styles.description}>{lead.description}</Text>
+
+          {lead.photos.length > 0 && (
+            <View style={styles.mediaBlock}>
+              <Text variant="caption" color="muted" style={styles.mediaLabel}>
+                PHOTOS OF THE SPACE NOW
+              </Text>
+              <View style={styles.photoRow}>
+                {lead.photos.map((src, i) => (
+                  <Image key={i} source={{ uri: src }} style={[styles.photoThumb, { borderRadius: radius.md }]} />
+                ))}
+              </View>
+            </View>
+          )}
+
+          {/* Kept visually distinct from the real photos above (mirrors the
+              provider web lead page) — this is what the customer would like,
+              not what is there, so it must never be priced as the current state. */}
+          {lead.designRenderUrl && (
+            <View style={[styles.conceptBox, { borderRadius: radius.lg }]}>
+              <Text variant="caption" style={[styles.mediaLabel, styles.conceptText]}>
+                CUSTOMER'S AI CONCEPT — NOT THE CURRENT STATE
+              </Text>
+              <Image
+                source={{ uri: lead.designRenderUrl }}
+                style={[styles.conceptImage, { borderRadius: radius.md }]}
+                accessibilityLabel="AI-generated concept of how the customer would like the space to look"
+              />
+              <Text variant="caption" style={styles.conceptText}>
+                Generated from the customer's photo to show the look they're after. They've been told it's inspiration only and that
+                you'll advise on what's actually achievable.
+              </Text>
+            </View>
+          )}
         </Card>
 
         {ownBooking && (
@@ -430,6 +465,13 @@ const styles = StyleSheet.create({
   customerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginVertical: 4 },
   card: { gap: 4, marginVertical: 4 },
   description: { lineHeight: 22 },
+  mediaBlock: { marginTop: 12 },
+  mediaLabel: { letterSpacing: 0.5, marginBottom: 6 },
+  photoRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  photoThumb: { width: 80, height: 80 },
+  conceptBox: { marginTop: 12, padding: 12, gap: 6, borderWidth: 1, borderColor: '#fcd34d', backgroundColor: 'rgba(251,191,36,0.12)' },
+  conceptText: { color: '#b45309' },
+  conceptImage: { width: '100%', aspectRatio: 4 / 3 },
   sectionHeading: { marginTop: 24 },
   spacedInput: { marginTop: 8 },
   submitButton: { marginTop: 4 },

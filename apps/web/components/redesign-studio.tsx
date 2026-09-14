@@ -57,7 +57,6 @@ export function RedesignStudio({ categories }: { categories: Category[] }) {
   const [busy, setBusy] = useState<null | "analysing" | "rendering">(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [spaceLabel, setSpaceLabel] = useState<string>("");
-  const [needsSpecialist, setNeedsSpecialist] = useState(false);
   const [concepts, setConcepts] = useState<Concept[]>([]);
   const [remaining, setRemaining] = useState<number | null>(null);
   const [prefill, setPrefill] = useState<StudioPrefill | null>(null);
@@ -106,7 +105,6 @@ export function RedesignStudio({ categories }: { categories: Category[] }) {
 
       setSessionId(data.id);
       setSpaceLabel(String(data.spaceType ?? "").replace(/_/g, " ").toLowerCase());
-      setNeedsSpecialist(!!data.needsSpecialist);
       setRemaining(typeof data.remainingThisMonth === "number" ? data.remainingThisMonth : null);
       // Show the directions and their estimates straight away; the renders
       // fill in underneath as they finish.
@@ -135,10 +133,13 @@ export function RedesignStudio({ categories }: { categories: Category[] }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ selectedIndex: index }),
       });
-      if (!res.ok) throw new Error((await res.json().catch(() => ({}))).message ?? "Something went wrong");
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.message ?? "Something went wrong");
 
-      const slug = categorySlugFor(spaceLabel, needsSpecialist);
-      const category = categories.find((c) => c.slug === slug) ?? categories.find((c) => c.slug === "builders");
+      // The server classifies the chosen concept's scope against every live
+      // category (e.g. a garden patio → "Patio & paving installation").
+      const categoryId =
+        typeof data.categoryId === "string" && categories.some((c) => c.id === data.categoryId) ? data.categoryId : "";
 
       setPrefill({
         nonce: Date.now(),
@@ -152,7 +153,7 @@ export function RedesignStudio({ categories }: { categories: Category[] }) {
         ]
           .filter(Boolean)
           .join("\n"),
-        categoryId: category?.id ?? "",
+        categoryId,
         photos,
         designRenderUrl: chosen.url,
         designSessionId: sessionId,
@@ -351,26 +352,4 @@ function ConceptNotAQuote() {
       </p>
     </div>
   );
-}
-
-/** Mirrors categorySlugForSpace() in core, for the client-side handoff. */
-function categorySlugFor(spaceLabel: string, needsSpecialist: boolean): string {
-  const map: Record<string, string> = {
-    kitchen: "kitchen-fitting",
-    bathroom: "bathroom-fitting",
-    loft: "loft-conversion",
-    garage: "garage-conversion",
-    basement: "builders",
-    garden: "garden-design-landscaping",
-    "outdoor other": "garden-design-landscaping",
-    bedroom: "interior-painting",
-    "living room": "interior-painting",
-    "dining room": "interior-painting",
-    hallway: "interior-painting",
-    "home office": "interior-painting",
-    commercial: "builders",
-  };
-  const slug = map[spaceLabel] ?? "builders";
-  if (needsSpecialist && slug === "interior-painting") return "builders";
-  return slug;
 }

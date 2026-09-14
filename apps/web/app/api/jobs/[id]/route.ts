@@ -34,6 +34,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
       postcode: job.postcode,
       status: job.status,
       photos: job.photos,
+      designRenderUrl: job.designRenderUrl,
       budgetMinPence: job.budgetMinPence,
       budgetMaxPence: job.budgetMaxPence,
       preferredDate: job.preferredDate,
