@@ -201,38 +201,77 @@ const EDIT_GUARDRAILS =
  */
 export async function generateConcept(heroPhotoUrl: string, editPrompt: string): Promise<string | null> {
   if (!process.env.QWEN_API_KEY) return null;
-  try {
-    const res = await fetch(`${QWEN_HOST}/api/v1/services/aigc/multimodal-generation/generation`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${process.env.QWEN_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: EDIT_MODEL,
-        input: {
-          messages: [
-            {
-              role: "user",
-              content: [{ image: heroPhotoUrl }, { text: editPrompt + EDIT_GUARDRAILS }],
-            },
-          ],
-        },
-        parameters: { n: 1, watermark: false },
-      }),
-    });
 
-    if (!res.ok) {
-      console.error("[ai-images] generateConcept HTTP", res.status, await res.text().catch(() => ""));
+  for (let attempt = 1; attempt <= RENDER_MAX_ATTEMPTS; attempt++) {
+    const isLastAttempt = attempt === RENDER_MAX_ATTEMPTS;
+    let res: Response;
+    try {
+      res = await fetch(`${QWEN_HOST}/api/v1/services/aigc/multimodal-generation/generation`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${process.env.QWEN_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: EDIT_MODEL,
+          input: {
+            messages: [
+              {
+                role: "user",
+                content: [{ image: heroPhotoUrl }, { text: editPrompt + EDIT_GUARDRAILS }],
+              },
+            ],
+          },
+          parameters: { n: 1, watermark: false },
+        }),
+      });
+    } catch (err) {
+      if (!isLastAttempt) {
+        await sleep(retryDelayMs(attempt, null));
+        continue;
+      }
+      console.error("[ai-images] generateConcept failed", err);
       return null;
     }
-    const data = await res.json();
-    const url = data?.output?.choices?.[0]?.message?.content?.find((c: { image?: string }) => c.image)?.image;
-    return typeof url === "string" ? url : null;
-  } catch (err) {
-    console.error("[ai-images] generateConcept failed", err);
-    return null;
+
+    if (!res.ok) {
+      const body = await res.text().catch(() => "");
+      // DashScope throttles bursts (429 Throttling.RateQuota) — observed
+      // killing one of the three concepts in every session. Those, and
+      // transient 5xx, are worth waiting out; anything else won't improve.
+      if (RETRYABLE_STATUS.has(res.status) && !isLastAttempt) {
+        console.warn(`[ai-images] generateConcept HTTP ${res.status}, retrying (attempt ${attempt}/${RENDER_MAX_ATTEMPTS})`);
+        await sleep(retryDelayMs(attempt, res.headers.get("retry-after")));
+        continue;
+      }
+      console.error("[ai-images] generateConcept HTTP", res.status, body);
+      return null;
+    }
+
+    try {
+      const data = await res.json();
+      const url = data?.output?.choices?.[0]?.message?.content?.find((c: { image?: string }) => c.image)?.image;
+      return typeof url === "string" ? url : null;
+    } catch (err) {
+      console.error("[ai-images] generateConcept returned an unreadable response", err);
+      return null;
+    }
   }
+  return null;
+}
+
+const RENDER_MAX_ATTEMPTS = 4;
+const RETRYABLE_STATUS = new Set([429, 500, 502, 503, 504]);
+/** Gap between starting each concept's render, so a session never arrives as a burst. */
+const RENDER_STAGGER_MS = 1200;
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/** Honours Retry-After when given; otherwise exponential backoff (1.5s, 3s, 6s) with jitter. */
+function retryDelayMs(attempt: number, retryAfter: string | null): number {
+  const seconds = Number(retryAfter);
+  const base = Number.isFinite(seconds) && seconds > 0 ? seconds * 1000 : 1500 * 2 ** (attempt - 1);
+  return Math.min(base, 15_000) + Math.random() * 500;
 }
 
 /**
@@ -277,16 +316,21 @@ export interface GeneratedConcept extends StyleProposal {
 }
 
 /**
- * Renders every proposed style in parallel. A failed render yields a concept
- * with url:null rather than failing the whole session, so the customer still
- * sees the concepts that did work.
+ * Renders every proposed style concurrently, but with staggered starts so the
+ * three calls don't land as one burst and trip DashScope's rate quota (each
+ * render also retries a throttled call — see generateConcept). A failed
+ * render yields a concept with url:null rather than failing the whole
+ * session, so the customer still sees the concepts that did work.
  */
 export async function generateConcepts(
   heroPhotoUrl: string,
   styles: StyleProposal[]
 ): Promise<{ concepts: GeneratedConcept[]; aiCostPence: number }> {
   const results = await Promise.all(
-    styles.map(async (style) => ({ ...style, url: await generateConcept(heroPhotoUrl, style.editPrompt) }))
+    styles.map(async (style, i) => {
+      if (i > 0) await sleep(i * RENDER_STAGGER_MS);
+      return { ...style, url: await generateConcept(heroPhotoUrl, style.editPrompt) };
+    })
   );
   const succeeded = results.filter((r) => r.url).length;
   return {

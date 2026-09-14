@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowUp, Loader2, Sparkles } from "lucide-react";
-import { Button, Card, Input, Select, Textarea } from "@asaplocal/ui";
+import { Button, Card, ImageGallery, Input, Select, Textarea, ZoomableImage } from "@asaplocal/ui";
 import { LocationPicker, type LocationValue } from "./location-picker";
 import { PreferredDatePicker, toPreferredDateTime, type PreferredDateValue } from "./preferred-date-picker";
 import { PhoneVerificationSheet } from "./account/phone-verification-sheet";
@@ -245,19 +245,13 @@ export function AiJobRequest({
                 {studioPrefill.photos.length > 0 && (
                   <div>
                     <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Photos of your space</p>
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      {studioPrefill.photos.map((src) => (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img key={src} src={src} alt="" className="h-20 w-20 rounded-lg border border-border object-cover" />
-                      ))}
-                    </div>
+                    <ImageGallery images={studioPrefill.photos} label="Photos of your space" className="mt-2" />
                   </div>
                 )}
                 {studioPrefill.designRenderUrl && (
                   <div>
                     <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Your chosen design</p>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
+                    <ZoomableImage
                       src={studioPrefill.designRenderUrl}
                       alt="The design concept you chose"
                       className="mt-2 w-full max-w-sm rounded-lg border border-border object-cover"

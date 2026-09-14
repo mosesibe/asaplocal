@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Image, Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ChevronDown, X } from 'lucide-react-native';
-import { Screen, Card, Text, Badge, Button, TextField, useAppTheme, useBottomNavInset } from '@asaplocal/ui-native';
+import { Screen, Card, Text, Badge, Button, ImageGallery, TextField, ZoomableImage, useAppTheme, useBottomNavInset } from '@asaplocal/ui-native';
 
 import { api } from '@/lib/api';
 
@@ -257,11 +257,7 @@ export default function LeadDetailScreen() {
               <Text variant="caption" color="muted" style={styles.mediaLabel}>
                 PHOTOS OF THE SPACE NOW
               </Text>
-              <View style={styles.photoRow}>
-                {lead.photos.map((src, i) => (
-                  <Image key={i} source={{ uri: src }} style={[styles.photoThumb, { borderRadius: radius.md }]} />
-                ))}
-              </View>
+              <ImageGallery images={lead.photos} thumbSize={80} thumbStyle={{ borderRadius: radius.md }} />
             </View>
           )}
 
@@ -273,8 +269,8 @@ export default function LeadDetailScreen() {
               <Text variant="caption" style={[styles.mediaLabel, styles.conceptText]}>
                 CUSTOMER'S AI CONCEPT — NOT THE CURRENT STATE
               </Text>
-              <Image
-                source={{ uri: lead.designRenderUrl }}
+              <ZoomableImage
+                uri={lead.designRenderUrl}
                 style={[styles.conceptImage, { borderRadius: radius.md }]}
                 accessibilityLabel="AI-generated concept of how the customer would like the space to look"
               />

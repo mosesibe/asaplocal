@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
-import { Button, Card, Input, Textarea, formatPence } from "@asaplocal/ui";
+import { Button, Card, ImageGallery, Input, Textarea, formatPence } from "@asaplocal/ui";
 import { uploadFile } from "@/lib/upload";
 
 interface Variation {
@@ -92,16 +92,7 @@ export function VariationPanel({ bookingId, variations }: { bookingId: string; v
                 <p className="text-sm">{v.description}</p>
                 <span className="shrink-0 text-sm font-semibold">{formatPence(v.amountPence)}</span>
               </div>
-              {v.photos.length > 0 && (
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {v.photos.map((url, i) => (
-                    <a key={i} href={url} target="_blank" rel="noreferrer">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={url} alt="" className="h-14 w-14 rounded-lg border border-border object-cover" />
-                    </a>
-                  ))}
-                </div>
-              )}
+              <ImageGallery images={v.photos} label={`Photos: ${v.description}`} className="mt-2" thumbClassName="h-14 w-14" />
               <p className="mt-1 text-xs text-muted-foreground">
                 {v.status === "PENDING" ? "Waiting for the customer to approve" : v.status === "ACCEPTED" ? "Approved — will be added to the balance" : "Declined by the customer"}
               </p>

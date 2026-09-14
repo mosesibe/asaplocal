@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Button, Card, Textarea } from "@asaplocal/ui";
+import { Button, Card, ImageGallery, Textarea } from "@asaplocal/ui";
 import { uploadFile } from "@/lib/upload";
 
 interface Dispute {
@@ -70,30 +70,12 @@ export function DisputePanel({ bookingId, disputes }: { bookingId: string; dispu
         {disputes.map((dispute) => (
           <div key={dispute.id} className="rounded-lg border border-border p-3">
             <p className="text-sm">{dispute.reason}</p>
-            {dispute.photos.length > 0 && (
-              <div className="mt-2 flex flex-wrap gap-2">
-                {dispute.photos.map((url, i) => (
-                  <a key={i} href={url} target="_blank" rel="noreferrer">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={url} alt="" className="h-14 w-14 rounded-lg border border-border object-cover" />
-                  </a>
-                ))}
-              </div>
-            )}
+            <ImageGallery images={dispute.photos} label="Customer's photos of the issue" className="mt-2" thumbClassName="h-14 w-14" />
             {dispute.status === "RESOLVED" ? (
               <div className="mt-3 border-t border-border pt-3">
                 <p className="text-xs font-medium text-muted-foreground">Your response</p>
                 <p className="mt-1 text-sm">{dispute.providerResponse}</p>
-                {dispute.providerPhotos.length > 0 && (
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {dispute.providerPhotos.map((url, i) => (
-                      <a key={i} href={url} target="_blank" rel="noreferrer">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={url} alt="" className="h-14 w-14 rounded-lg border border-border object-cover" />
-                      </a>
-                    ))}
-                  </div>
-                )}
+                <ImageGallery images={dispute.providerPhotos} label="Your response photos" className="mt-2" thumbClassName="h-14 w-14" />
               </div>
             ) : (
               <p className="mt-2 text-xs text-muted-foreground">Waiting on your response</p>

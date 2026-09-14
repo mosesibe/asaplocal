@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { auth } from "@asaplocal/auth";
 import { prisma } from "@asaplocal/db";
-import { Badge, Card } from "@asaplocal/ui";
+import { Badge, Card, ImageGallery } from "@asaplocal/ui";
 import { JobSheetPanel } from "./job-sheet-panel";
 import { OnTheWayPanel } from "./on-the-way-panel";
 import { VariationPanel } from "./variation-panel";
@@ -90,16 +90,7 @@ export default async function ProviderBookingDetailPage({ params }: { params: Pr
             {booking.jobSheetEntries.map((entry) => (
               <Card key={entry.id} className="p-4">
                 <p className="text-sm">{entry.description}</p>
-                {entry.photos.length > 0 && (
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {entry.photos.map((url, i) => (
-                      <a key={i} href={url} target="_blank" rel="noreferrer">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={url} alt="" className="h-16 w-16 rounded-lg border border-border object-cover" />
-                      </a>
-                    ))}
-                  </div>
-                )}
+                <ImageGallery images={entry.photos} label={`Photos: ${entry.description}`} className="mt-2" thumbClassName="h-16 w-16" />
                 <p className="mt-1 text-xs text-muted-foreground">{entry.loggedAt.toLocaleString("en-GB")}</p>
               </Card>
             ))}

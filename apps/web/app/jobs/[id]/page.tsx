@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { auth } from "@asaplocal/auth";
 import { prisma } from "@asaplocal/db";
-import { Badge, Button, Card, MobileTopBar, buttonVariants, formatPence } from "@asaplocal/ui";
+import { Badge, Button, Card, ImageGallery, MobileTopBar, ZoomableImage, buttonVariants, formatPence } from "@asaplocal/ui";
 import { computeBookingBalance } from "@asaplocal/core";
 import { formatBudget, formatJobLocation, formatNeededBy } from "@/lib/job-format";
 import { AcceptQuoteButton } from "./accept-quote-button";
@@ -60,22 +60,14 @@ export default async function JobStatusPage({ params }: { params: Promise<{ id: 
           <p className="text-sm text-muted-foreground">{job.category.name} · {job.city}</p>
           <p className="mt-3 whitespace-pre-line">{job.description}</p>
 
-          {job.photos.length > 0 && (
-            <div className="mt-4 flex flex-wrap gap-2">
-              {job.photos.map((src, i) => (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img key={i} src={src} alt="" className="h-20 w-20 rounded-lg border border-border object-cover" />
-              ))}
-            </div>
-          )}
+          {job.photos.length > 0 && <ImageGallery images={job.photos} label="Photos of your space" className="mt-4" />}
 
           {job.designRenderUrl && (
             <div className="mt-4 rounded-xl border border-border bg-muted/40 p-3">
               <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                 Your design concept
               </p>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
+              <ZoomableImage
                 src={job.designRenderUrl}
                 alt="The design concept you chose in Redesign Studio"
                 className="mt-2 w-full max-w-sm rounded-lg border border-border object-cover"

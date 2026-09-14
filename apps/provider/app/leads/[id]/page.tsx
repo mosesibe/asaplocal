@@ -3,7 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { auth } from "@asaplocal/auth";
 import { prisma } from "@asaplocal/db";
 import { generateQuoteTemplate } from "@asaplocal/core";
-import { Badge, Card, MobileTopBar, buttonVariants, formatPence } from "@asaplocal/ui";
+import { Badge, Card, ImageGallery, MobileTopBar, ZoomableImage, buttonVariants, formatPence } from "@asaplocal/ui";
 import { LeadPipelineControls } from "./lead-pipeline-controls";
 import { QuoteForm } from "./quote-form";
 import { RefundRequestForm } from "./refund-request-form";
@@ -104,9 +104,7 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
             <p className="mt-4 text-xs font-medium uppercase tracking-wide text-muted-foreground">
               Photos of the space now
             </p>
-            <div className="mt-2 flex flex-wrap gap-2">
-              {lead.jobRequest.photos.map((p, i) => <img key={i} src={p} alt="" className="h-20 w-20 rounded-lg object-cover" />)}
-            </div>
+            <ImageGallery images={lead.jobRequest.photos} label="Photos of the space now" className="mt-2" thumbClassName="border-0" />
           </>
         )}
         {/* Kept visually distinct from the real photos above — this is what the
@@ -117,7 +115,7 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
             <p className="text-xs font-medium uppercase tracking-wide text-amber-800 dark:text-amber-300">
               Customer&apos;s AI concept — not the current state
             </p>
-            <img
+            <ZoomableImage
               src={lead.jobRequest.designRenderUrl}
               alt="AI-generated concept of how the customer would like the space to look"
               className="mt-2 w-full max-w-sm rounded-lg object-cover"
