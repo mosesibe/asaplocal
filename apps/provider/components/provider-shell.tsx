@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Avatar, Badge, cn, Logo, ThemeToggle } from "@asaplocal/ui";
+import { signOut } from "next-auth/react";
+import { LogOut } from "lucide-react";
+import { Avatar, Badge, cn, Logo, LogoMark, ThemeToggle } from "@asaplocal/ui";
 import { PRIMARY_NAV, SECONDARY_NAV } from "@/lib/nav";
 import { VerificationStatusBadge } from "@/lib/verification-badge";
 import { SignOutButton } from "./sign-out-button";
@@ -32,24 +34,43 @@ interface AccountSummary {
   marketingSms: boolean;
 }
 
+/**
+ * Navigation by width:
+ *   - below md (phones): ProviderTopBar's menu + ProviderBottomNav
+ *   - md to lg (tablets): a narrow icon-only rail, so a portrait tablet keeps
+ *     most of its width for content
+ *   - lg and up: the full sidebar with labels, account card and sub-pages
+ */
 export function ProviderShell({ children, account }: { children: React.ReactNode; account: AccountSummary }) {
   const pathname = usePathname();
   const NAV = [...PRIMARY_NAV, ...SECONDARY_NAV].filter((item) => account.canHaveStaff || item.href !== "/staff");
 
   return (
     <div className="flex min-h-screen">
-      <aside className="hidden w-64 shrink-0 border-r border-border bg-surface p-4 md:block">
-        <div className="mb-8 flex items-center justify-between">
-          <Link href="/dashboard" className="flex items-center gap-2">
-            <Logo markClassName="h-7 w-7" markSrcLight="/logo-mark-light.png" markSrcDark="/logo-mark-dark.png" />
-            <span className="text-sm font-normal text-muted-foreground">Business</span>
+      <aside className="hidden shrink-0 flex-col border-r border-border bg-surface md:flex md:w-[4.5rem] md:px-2 md:py-4 lg:w-64 lg:p-4">
+        <div className="mb-6 flex flex-col items-center gap-3 lg:mb-8 lg:flex-row lg:justify-between">
+          <Link href="/dashboard" className="flex items-center gap-2" aria-label="AsapLocal Business home">
+            {/* The wordmark doesn't fit the rail, so the rail shows the mark alone. */}
+            <span className="lg:hidden">
+              <LogoMark className="h-7 w-7" srcLight="/logo-mark-light.png" srcDark="/logo-mark-dark.png" />
+            </span>
+            <span className="hidden lg:inline-flex">
+              <Logo markClassName="h-7 w-7" markSrcLight="/logo-mark-light.png" markSrcDark="/logo-mark-dark.png" />
+            </span>
+            <span className="hidden text-sm font-normal text-muted-foreground lg:inline">Business</span>
           </Link>
-          <div className="flex items-center gap-1">
-            <NotificationBell userId={account.userId} />
+          <div className="flex flex-col items-center gap-1 lg:flex-row">
+            {/* Sidebar sits on the left edge, so the panel opens rightwards over the page. */}
+            <NotificationBell userId={account.userId} align="left" />
             <ThemeToggle />
           </div>
         </div>
-        <div className="mb-6 rounded-xl border border-border bg-muted/40 p-3">
+
+        {/* Rail: avatar only. Full sidebar: the account card. */}
+        <Link href="/profile" title={account.name} className="mb-4 flex justify-center lg:hidden" aria-label={`Business profile — ${account.name}`}>
+          <Avatar src={account.avatarUrl} name={account.name} size={36} />
+        </Link>
+        <div className="mb-6 hidden rounded-xl border border-border bg-muted/40 p-3 lg:block">
           <div className="flex items-center gap-3">
             <Avatar src={account.avatarUrl} name={account.name} size={40} />
             <div className="min-w-0">
@@ -66,7 +87,8 @@ export function ProviderShell({ children, account }: { children: React.ReactNode
             <VerificationStatusBadge status={account.verificationStatus} />
           </div>
         </div>
-        <nav className="space-y-1">
+
+        <nav className="space-y-1" aria-label="Main">
           {NAV.map(({ href, label, icon: Icon, children }) => {
             const active = isActive(pathname, href);
             // A group expands whenever the user is anywhere inside it, so the
@@ -76,15 +98,19 @@ export function ProviderShell({ children, account }: { children: React.ReactNode
               <div key={href}>
                 <Link
                   href={href}
+                  // The rail has no room for labels, so the label doubles as a hover tooltip there.
+                  title={label}
+                  aria-current={active ? "page" : undefined}
                   className={cn(
-                    "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                    "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors md:justify-center lg:justify-start",
                     active || inSection ? "bg-muted text-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground"
                   )}
                 >
-                  <Icon size={18} /> {label}
+                  <Icon size={18} className="shrink-0" />
+                  <span className="md:sr-only lg:not-sr-only">{label}</span>
                 </Link>
                 {children && inSection && (
-                  <div className="ml-4 mt-1 space-y-0.5 border-l border-border pl-3">
+                  <div className="ml-4 mt-1 hidden space-y-0.5 border-l border-border pl-3 lg:block">
                     {children.map((c) => {
                       // Exact match for the group's own index route, otherwise
                       // "/earnings" would highlight on every child page.
@@ -108,9 +134,19 @@ export function ProviderShell({ children, account }: { children: React.ReactNode
             );
           })}
         </nav>
-        <div className="mt-8">
+
+        <div className="mt-8 hidden lg:block">
           <SignOutButton />
         </div>
+        <button
+          type="button"
+          onClick={() => signOut({ callbackUrl: "/login" })}
+          title="Sign out"
+          aria-label="Sign out"
+          className="mt-6 flex justify-center rounded-lg px-3 py-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground lg:hidden"
+        >
+          <LogOut size={18} />
+        </button>
       </aside>
       <div className="min-w-0 flex-1">
         <main className="mx-auto max-w-6xl px-4 py-8 pb-20 sm:px-6 md:pb-8">

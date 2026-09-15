@@ -72,7 +72,9 @@ export function BottomNavNotched({ items, className, as = "a" }: BottomNavNotche
   const Comp = as;
 
   return (
-    <nav className={cn("fixed inset-x-0 bottom-0 z-40 md:hidden", className)}>
+    // Visible through tablet widths (touch devices, where a bottom bar suits);
+    // from lg the customer header carries the same destinations instead.
+    <nav className={cn("fixed inset-x-0 bottom-0 z-40 lg:hidden", className)}>
       <div className="relative" style={{ height: BAR_HEIGHT + BUMP_HEIGHT }}>
         <svg
           viewBox={`0 ${-BUMP_HEIGHT} ${BAR_WIDTH} ${BAR_HEIGHT + BUMP_HEIGHT}`}

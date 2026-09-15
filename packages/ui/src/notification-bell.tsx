@@ -22,6 +22,7 @@ export function NotificationBell({
   onMarkAllRead,
   pushState,
   onEnablePush,
+  align = "right",
   className,
 }: {
   notifications: NotificationItem[];
@@ -30,6 +31,13 @@ export function NotificationBell({
   onMarkAllRead: () => void;
   pushState?: PushState;
   onEnablePush?: () => void;
+  /**
+   * Which edge of the bell the panel lines up with. "right" (default) opens
+   * leftwards, for bells near the right of the screen; "left" opens
+   * rightwards, for bells in a left sidebar where "right" would push the
+   * panel off-screen.
+   */
+  align?: "left" | "right";
   className?: string;
 }) {
   const [open, setOpen] = React.useState(false);
@@ -66,7 +74,12 @@ export function NotificationBell({
          * are also z-50 but portal to the end of <body>, so modals still win
          * the tie and render above this.
          */
-        <div className="absolute right-0 top-full z-50 mt-2 w-80 max-w-[90vw] rounded-xl border border-border bg-surface shadow-card">
+        <div
+          className={cn(
+            "absolute top-full z-50 mt-2 w-80 max-w-[90vw] rounded-xl border border-border bg-surface shadow-card",
+            align === "left" ? "left-0" : "right-0"
+          )}
+        >
           <div className="flex items-center justify-between border-b border-border px-3.5 py-2.5">
             <p className="text-sm font-semibold">Notifications</p>
             {unreadCount > 0 && (
