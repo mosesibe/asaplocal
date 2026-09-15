@@ -3,7 +3,7 @@ import { ActivityIndicator, Pressable, ScrollView, StyleSheet } from 'react-nati
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, useRouter } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
-import { HelpCircle, FileText, Shield } from 'lucide-react-native';
+import { HelpCircle, FileText, Shield, Sparkles } from 'lucide-react-native';
 import { Screen, Card, Text, Button, TextField, useAppTheme, useBottomNavInset } from '@asaplocal/ui-native';
 
 import { useSession } from '@/lib/session';
@@ -125,6 +125,10 @@ export default function AccountScreen() {
             <MarketingRows initialEmail={data.user.marketingEmail} initialSms={data.user.marketingSms} />
             <InvoicesSection invoices={data.invoices} />
             <ReferralCard />
+          </SectionCard>
+
+          <SectionCard title="Redesign Studio">
+            <SectionRow icon={Sparkles} label="My designs" onPress={() => router.push('/studio-designs')} />
           </SectionCard>
 
           <AddressesSection initial={data.addresses} />

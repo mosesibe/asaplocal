@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { HelpCircle, FileText, Shield } from "lucide-react";
+import { HelpCircle, FileText, Shield, Sparkles } from "lucide-react";
 import { auth } from "@asaplocal/auth";
 import { prisma } from "@asaplocal/db";
 import { getCustomerAccountStats, getSignInMethods, invoiceNumber } from "@asaplocal/core";
@@ -81,6 +81,13 @@ export default async function CustomerDashboard() {
             }))}
           />
           <ReferralCard />
+        </SectionCard>
+      </div>
+
+      {/* Redesign Studio history — every design the customer has created */}
+      <div className="mt-8">
+        <SectionCard title="Redesign Studio">
+          <SectionRow as={Link} href="/studio/designs" icon={Sparkles} label="My designs" />
         </SectionCard>
       </div>
 

@@ -3,6 +3,21 @@ import { z } from "zod";
 import { auth } from "@asaplocal/auth";
 import { prisma } from "@asaplocal/db";
 import { analyseSpace, checkRateLimit, isStudioConfigured } from "@asaplocal/core";
+import { toStudioSessionView } from "@/lib/studio-session";
+
+/** Every session this customer has ever run, newest first — their "My designs" history. */
+export async function GET() {
+  const session = await auth();
+  if (!session?.user) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+
+  const rows = await prisma.designStudioSession.findMany({
+    where: { customerId: session.user.id },
+    orderBy: { createdAt: "desc" },
+    include: { jobRequest: { select: { id: true, title: true, status: true } } },
+  });
+
+  return NextResponse.json({ sessions: rows.map((row) => toStudioSessionView(row)) });
+}
 
 // The vision pass reads the photo and proposes directions; it runs well inside
 // the default limit, but generation (the next call) is the slow half.

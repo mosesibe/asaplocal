@@ -84,6 +84,7 @@ function RootNavigator() {
           <Stack.Screen name="messages" />
           <Stack.Screen name="conversations/[id]" options={{ headerShown: true, title: 'Messages' }} />
           <Stack.Screen name="studio" options={{ headerShown: true, title: 'Redesign Studio' }} />
+          <Stack.Screen name="studio-designs" options={{ headerShown: true, title: 'My designs' }} />
           <Stack.Screen name="favourites" options={{ headerShown: true, title: 'Saved providers' }} />
           <Stack.Screen name="bookings/[id]" options={{ headerShown: true, title: 'Booking' }} />
         </Stack.Protected>
