@@ -1,11 +1,12 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Camera, Info, Loader2, Maximize2, Sparkles, X } from "lucide-react";
 import { Button, Card, ImageLightbox, Textarea } from "@asaplocal/ui";
 import { uploadFile } from "@/lib/upload";
+import type { StudioSessionView } from "@/lib/studio-session";
 import { AiJobRequest, type StudioPrefill } from "./ai-job-request";
 
 interface Category {
@@ -44,25 +45,40 @@ function duration(days: number): string {
   return `${weeks} week${weeks === 1 ? "" : "s"}`;
 }
 
-export function RedesignStudio({ categories }: { categories: Category[] }) {
+/**
+ * The studio flow. With `initialSession` it reopens a past session from
+ * "My designs" straight at its concepts — the customer can review them, view
+ * them full size, and still get quotes for any of them.
+ */
+export function RedesignStudio({ categories, initialSession }: { categories: Category[]; initialSession?: StudioSessionView }) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [step, setStep] = useState<Step>("upload");
-  const [photos, setPhotos] = useState<string[]>([]);
-  const [heroUrl, setHeroUrl] = useState<string | null>(null);
-  const [brief, setBrief] = useState("");
+  const [step, setStep] = useState<Step>(initialSession ? "concepts" : "upload");
+  const [photos, setPhotos] = useState<string[]>(initialSession?.sourcePhotos ?? []);
+  const [heroUrl, setHeroUrl] = useState<string | null>(initialSession?.heroPhotoUrl ?? null);
+  const [brief, setBrief] = useState(initialSession?.briefText ?? "");
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const [busy, setBusy] = useState<null | "analysing" | "rendering">(null);
-  const [sessionId, setSessionId] = useState<string | null>(null);
-  const [spaceLabel, setSpaceLabel] = useState<string>("");
-  const [concepts, setConcepts] = useState<Concept[]>([]);
+  const [sessionId, setSessionId] = useState<string | null>(initialSession?.id ?? null);
+  const [spaceLabel, setSpaceLabel] = useState<string>(initialSession?.spaceLabel ?? "");
+  const [concepts, setConcepts] = useState<Concept[]>(initialSession?.concepts ?? []);
   const [remaining, setRemaining] = useState<number | null>(null);
   const [prefill, setPrefill] = useState<StudioPrefill | null>(null);
   const [viewerIndex, setViewerIndex] = useState<number | null>(null);
   // The full-size viewer pages across every concept that rendered.
   const conceptUrls = concepts.flatMap((c) => (c.url ? [c.url] : []));
+  // Only meaningful while still looking at the reopened session.
+  const reopened = initialSession && sessionId === initialSession.id ? initialSession : null;
+  const chosenIndex = reopened && (reopened.status === "SELECTED" || reopened.status === "POSTED") ? reopened.selectedIndex : null;
+
+  // A reopened session whose rendering was interrupted is finished here, so
+  // the customer isn't left looking at a set of designs with no images.
+  useEffect(() => {
+    if (initialSession?.canResume) void renderConcepts(initialSession.id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function onFilesSelected(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files ?? []);
@@ -93,10 +109,26 @@ export function RedesignStudio({ categories }: { categories: Category[] }) {
     });
   }
 
+  async function renderConcepts(id: string) {
+    setError(null);
+    setBusy("rendering");
+    try {
+      const genRes = await fetch(`/api/studio/sessions/${id}/generate`, { method: "POST" });
+      const genData = await genRes.json();
+      if (!genRes.ok) throw new Error(genData.message ?? "We couldn't create the designs");
+      setConcepts(genData.concepts as Concept[]);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong");
+    } finally {
+      setBusy(null);
+    }
+  }
+
   async function handleGenerate() {
     if (!heroUrl) return;
     setError(null);
     setBusy("analysing");
+    let newSessionId: string;
     try {
       const res = await fetch("/api/studio/sessions", {
         method: "POST",
@@ -106,6 +138,7 @@ export function RedesignStudio({ categories }: { categories: Category[] }) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message ?? "Something went wrong");
 
+      newSessionId = data.id;
       setSessionId(data.id);
       setSpaceLabel(String(data.spaceType ?? "").replace(/_/g, " ").toLowerCase());
       setRemaining(typeof data.remainingThisMonth === "number" ? data.remainingThisMonth : null);
@@ -113,17 +146,12 @@ export function RedesignStudio({ categories }: { categories: Category[] }) {
       // fill in underneath as they finish.
       setConcepts((data.styles as StyleProposal[]).map((s) => ({ ...s, url: null })));
       setStep("concepts");
-
-      setBusy("rendering");
-      const genRes = await fetch(`/api/studio/sessions/${data.id}/generate`, { method: "POST" });
-      const genData = await genRes.json();
-      if (!genRes.ok) throw new Error(genData.message ?? "We couldn't create the designs");
-      setConcepts(genData.concepts as Concept[]);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
-    } finally {
       setBusy(null);
+      return;
     }
+    await renderConcepts(newSessionId);
   }
 
   async function handleChoose(index: number) {
@@ -275,6 +303,11 @@ export function RedesignStudio({ categories }: { categories: Category[] }) {
               Creating your designs — this takes about 20 seconds.
             </p>
           )}
+          {!busy && reopened?.stillGenerating && (
+            <p className="text-center text-sm text-muted-foreground">
+              These designs are still being created — refresh in a minute to see them.
+            </p>
+          )}
           {error && <p className="text-center text-sm text-red-600">{error}</p>}
 
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -295,8 +328,17 @@ export function RedesignStudio({ categories }: { categories: Category[] }) {
                     </button>
                   ) : (
                     <div className="flex h-full items-center justify-center text-muted-foreground">
-                      {busy === "rendering" ? <Loader2 size={20} className="animate-spin" /> : <span className="text-xs">Couldn&apos;t create this one</span>}
+                      {busy === "rendering" ? (
+                        <Loader2 size={20} className="animate-spin" />
+                      ) : (
+                        <span className="text-xs">{reopened?.stillGenerating ? "Still being created…" : "Couldn't create this one"}</span>
+                      )}
                     </div>
+                  )}
+                  {chosenIndex === i && (
+                    <span className="pointer-events-none absolute left-2 top-2 rounded-full bg-brand-600 px-2 py-0.5 text-[11px] font-medium text-white">
+                      {reopened?.status === "POSTED" ? "Posted as a job" : "You chose this"}
+                    </span>
                   )}
                 </div>
                 <div className="flex flex-1 flex-col gap-2 p-4">
@@ -336,7 +378,7 @@ export function RedesignStudio({ categories }: { categories: Category[] }) {
 
           <div className="flex items-center justify-between gap-3 text-sm text-muted-foreground">
             <button type="button" className="hover:text-foreground hover:underline" onClick={() => setStep("upload")}>
-              ← Start over
+              ← {reopened ? "Try again with these photos" : "Start over"}
             </button>
             {remaining !== null && <span>{remaining} free design{remaining === 1 ? "" : "s"} left this month</span>}
           </div>

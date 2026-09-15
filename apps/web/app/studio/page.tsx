@@ -14,11 +14,14 @@ export const metadata: Metadata = {
 export default async function StudioPage() {
   const session = await auth();
 
-  const categories = await prisma.category.findMany({
-    where: { isActive: true },
-    select: { id: true, name: true, parentId: true, slug: true },
-    orderBy: { sortOrder: "asc" },
-  });
+  const [categories, designCount] = await Promise.all([
+    prisma.category.findMany({
+      where: { isActive: true },
+      select: { id: true, name: true, parentId: true, slug: true },
+      orderBy: { sortOrder: "asc" },
+    }),
+    session?.user ? prisma.designStudioSession.count({ where: { customerId: session.user.id } }) : Promise.resolve(0),
+  ]);
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
@@ -28,6 +31,11 @@ export default async function StudioPage() {
           That awkward corner, the loft you only use for storage, a kitchen that needs rethinking — take a photo
           and see it redesigned, with a realistic idea of cost and timescale.
         </p>
+        {designCount > 0 && (
+          <Link href="/studio/designs" className="mt-4 inline-block text-sm font-medium text-brand-600 hover:underline">
+            View my designs ({designCount}) →
+          </Link>
+        )}
       </div>
 
       <div className="mt-8">
