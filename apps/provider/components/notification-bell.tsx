@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Pusher from "pusher-js";
 import { NotificationBell as NotificationBellUI, type NotificationItem, type PushState } from "@asaplocal/ui";
 
-export function NotificationBell({ userId }: { userId: string }) {
+export function NotificationBell({ userId, align }: { userId: string; align?: "left" | "right" }) {
   const router = useRouter();
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -95,6 +95,7 @@ export function NotificationBell({ userId }: { userId: string }) {
       onMarkAllRead={markAllRead}
       pushState={pushState}
       onEnablePush={enablePush}
+      align={align}
     />
   );
 }

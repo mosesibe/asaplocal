@@ -14,7 +14,7 @@ export function WebBottomNav({ session }: { session: Session | null }) {
   return (
     <BottomNavNotched
       as={Link}
-      className="md:hidden"
+      className="lg:hidden"
       items={[
         { icon: Home, label: "Home", href: "/", active: pathname === "/" },
         { icon: Activity, label: "Activity", href: activityHref, active: pathname.startsWith("/activity") },
