@@ -43,10 +43,17 @@ export default function LoginPage() {
 
   return (
     <div className={`${caprasimo.variable} ${figtree.variable} min-h-screen`} style={{ background: "#f5ead8", fontFamily: "var(--font-figtree)" }}>
-      <div className="mx-auto w-full max-w-[420px]">
-        <AuthHeroPhoto headline="Help, booked by this afternoon." photoSrc="/auth-hero.png" />
+      {/* Phone: photo hero with the card lifting over it. lg+: a
+          full-height split — photo fills the left half, the card centres in
+          the right, so a desktop or iPad no longer shows a phone-width strip
+          with empty space beneath. */}
+      <div className="lg:grid lg:min-h-screen lg:grid-cols-2">
+        <div className="mx-auto w-full max-w-[420px] lg:max-w-none">
+          <AuthHeroPhoto headline="Help, booked by this afternoon." photoSrc="/auth-hero.png" />
+        </div>
 
-        <div className="relative z-[2] mx-[18px] rounded-[28px] bg-[#fffdf8] p-6 shadow-[0_12px_32px_rgba(46,43,37,.22)]" style={{ marginTop: -58 }}>
+        <div className="mx-auto w-full max-w-[420px] lg:flex lg:min-h-screen lg:max-w-[500px] lg:flex-col lg:justify-center lg:px-10 lg:py-12">
+          <div className="relative z-[2] mx-[18px] -mt-[58px] rounded-[28px] bg-[#fffdf8] p-6 shadow-[0_12px_32px_rgba(46,43,37,.22)] lg:mx-0 lg:mt-0">
           {!done ? (
             <form onSubmit={onSubmit} className="flex flex-col gap-3">
               <input
@@ -147,6 +154,7 @@ export default function LoginPage() {
             Create an account
           </Link>
         </p>
+        </div>
       </div>
     </div>
   );

@@ -6,8 +6,8 @@ import { LogoMark } from "@asaplocal/ui";
  */
 export function AuthHero() {
   return (
-    <div className="relative h-[290px] overflow-hidden" style={{ background: "#1b1a20" }}>
-      <svg viewBox="0 0 420 290" width="100%" height="290" className="absolute inset-0" preserveAspectRatio="xMidYMid slice">
+    <div className="relative h-[290px] overflow-hidden lg:flex lg:h-full lg:min-h-screen lg:flex-col lg:justify-center" style={{ background: "#1b1a20" }}>
+      <svg viewBox="0 0 420 290" width="100%" height="100%" className="absolute inset-0 h-full w-full" preserveAspectRatio="xMidYMid slice">
         <rect width="420" height="290" fill="#1b1a20" />
         <g stroke="#2b2a33" strokeWidth="16" strokeLinecap="round">
           <path d="M-20 96 H440" />
@@ -63,6 +63,9 @@ export function AuthHero() {
         </span>
       </div>
 
+      {/* Map furniture is positioned against the 420x290 artwork, so it keeps
+          that box and centres within the full-height panel on lg. */}
+      <div className="relative h-[290px] w-full lg:mx-auto lg:max-w-[420px]">
       <div
         className="absolute h-14 w-14 animate-ping rounded-full"
         style={{ left: "calc(50% - 20px)", top: 118, background: "rgba(198,113,57,.5)" }}
@@ -80,6 +83,7 @@ export function AuthHero() {
       >
         <span className="h-1.5 w-1.5 rounded-full" style={{ background: "#8fa073" }} />
         4 new jobs nearby
+      </div>
       </div>
     </div>
   );
