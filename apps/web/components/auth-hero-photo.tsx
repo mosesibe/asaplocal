@@ -9,7 +9,7 @@ import { LogoMark } from "@asaplocal/ui";
  */
 export function AuthHeroPhoto({ headline, photoSrc }: { headline: string; photoSrc?: string }) {
   return (
-    <div className="relative h-[360px] flex-none">
+    <div className="relative h-[360px] flex-none lg:h-full lg:min-h-screen">
       {photoSrc ? (
         // eslint-disable-next-line @next/next/no-img-element -- static local hero photo, not a Next/Image candidate
         <img src={photoSrc} alt="" className="h-full w-full object-cover" />

@@ -73,10 +73,15 @@ export default function RegisterPage() {
       className={`${caprasimo.variable} ${figtree.variable} min-h-screen`}
       style={{ background: "#17161a", fontFamily: "var(--font-figtree)" }}
     >
-      <div className="mx-auto w-full max-w-[420px]">
-        <AuthHero />
+      {/* Phone: hero banner with the form below. lg+: a full-height split —
+          hero fills the left half, form centres in the right, so a desktop or
+          iPad no longer shows a phone-width strip with empty space beneath. */}
+      <div className="lg:grid lg:min-h-screen lg:grid-cols-2">
+        <div className="mx-auto w-full max-w-[420px] lg:max-w-none">
+          <AuthHero />
+        </div>
 
-        <div className="px-6 pb-10" style={{ marginTop: -26, position: "relative" }}>
+        <div className="relative mx-auto -mt-[26px] w-full max-w-[420px] px-6 pb-10 lg:mt-0 lg:flex lg:min-h-screen lg:max-w-[480px] lg:flex-col lg:justify-center lg:px-12 lg:pb-0">
           {phase === "confirm-existing" ? (
             <>
               <h1 style={{ fontFamily: "var(--font-caprasimo)", fontSize: 32, lineHeight: 1.08, margin: "0 0 6px", color: "#f9f4ed" }}>

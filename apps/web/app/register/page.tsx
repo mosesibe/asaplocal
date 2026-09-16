@@ -49,10 +49,17 @@ export default function RegisterPage() {
 
   return (
     <div className={`${caprasimo.variable} ${figtree.variable} min-h-screen`} style={{ background: "#f5ead8", fontFamily: "var(--font-figtree)" }}>
-      <div className="mx-auto w-full max-w-[420px]">
-        <AuthHeroPhoto headline="Get help, booked in minutes." photoSrc="/auth-hero.png" />
+      {/* Phone: photo hero with the card lifting over it. lg+: a
+          full-height split — photo fills the left half, the card centres in
+          the right, so a desktop or iPad no longer shows a phone-width strip
+          with empty space beneath. */}
+      <div className="lg:grid lg:min-h-screen lg:grid-cols-2">
+        <div className="mx-auto w-full max-w-[420px] lg:max-w-none">
+          <AuthHeroPhoto headline="Get help, booked in minutes." photoSrc="/auth-hero.png" />
+        </div>
 
-        <div className="relative z-[2] mx-[18px] rounded-[28px] bg-[#fffdf8] p-6 shadow-[0_12px_32px_rgba(46,43,37,.22)]" style={{ marginTop: -58 }}>
+        <div className="mx-auto w-full max-w-[420px] lg:flex lg:min-h-screen lg:max-w-[500px] lg:flex-col lg:justify-center lg:px-10 lg:py-12">
+          <div className="relative z-[2] mx-[18px] -mt-[58px] rounded-[28px] bg-[#fffdf8] p-6 shadow-[0_12px_32px_rgba(46,43,37,.22)] lg:mx-0 lg:mt-0">
           {done ? (
             <div className="flex items-center gap-3.5 py-2">
               <span className="flex h-12 w-12 flex-none items-center justify-center rounded-full" style={{ background: "#7a8a5e" }}>
@@ -215,6 +222,7 @@ export default function RegisterPage() {
           <p className="pb-[30px] text-[12.5px] leading-[1.35]" style={{ color: "rgba(32,30,29,.62)" }}>
             Vetted, reviewed and paid securely through AsapLocal.
           </p>
+        </div>
         </div>
       </div>
     </div>
