@@ -62,7 +62,6 @@ export function ProviderShell({ children, account }: { children: React.ReactNode
           <div className="flex flex-col items-center gap-1 lg:flex-row">
             {/* Sidebar sits on the left edge, so the panel opens rightwards over the page. */}
             <NotificationBell userId={account.userId} align="left" />
-            <ThemeToggle />
           </div>
         </div>
 
@@ -135,18 +134,27 @@ export function ProviderShell({ children, account }: { children: React.ReactNode
           })}
         </nav>
 
-        <div className="mt-8 hidden lg:block">
-          <SignOutButton />
+        {/* Theme sits with sign-out rather than in the header: at lg the header
+            row (logo + wordmark + "Business" + bell + toggle) outgrew the
+            256px sidebar and pushed the toggle out over the page. */}
+        <div className="mt-8 hidden items-center gap-2 lg:flex">
+          <div className="flex-1">
+            <SignOutButton />
+          </div>
+          <ThemeToggle />
         </div>
-        <button
-          type="button"
-          onClick={() => signOut({ callbackUrl: "/login" })}
-          title="Sign out"
-          aria-label="Sign out"
-          className="mt-6 flex justify-center rounded-lg px-3 py-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground lg:hidden"
-        >
-          <LogOut size={18} />
-        </button>
+        <div className="mt-6 flex flex-col items-center gap-1 lg:hidden">
+          <ThemeToggle />
+          <button
+            type="button"
+            onClick={() => signOut({ callbackUrl: "/login" })}
+            title="Sign out"
+            aria-label="Sign out"
+            className="flex justify-center rounded-lg px-3 py-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          >
+            <LogOut size={18} />
+          </button>
+        </div>
       </aside>
       <div className="min-w-0 flex-1">
         <main className="mx-auto max-w-6xl px-4 py-8 pb-20 sm:px-6 md:pb-8">
