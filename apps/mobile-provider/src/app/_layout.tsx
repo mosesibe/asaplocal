@@ -14,6 +14,7 @@ import { AnimatedSplashOverlay } from '@/components/animated-icon';
 import { ProviderTopBar } from '@/components/ProviderTopBar';
 import { FloatingBottomNav } from '@/components/FloatingBottomNav';
 import { SessionProvider, useSession } from '@/lib/session';
+import { ThemePreferenceProvider, useThemePreference } from '@/lib/theme-preference';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -112,8 +113,29 @@ function RootNavigator() {
   );
 }
 
+// Mirrors apps/mobile-customer/src/app/_layout.tsx: the stored preference
+// drives both the app's own palette and react-navigation's, with "system"
+// falling back to the device scheme.
+function ThemedApp({ fontsLoaded }: { fontsLoaded: boolean }) {
+  const systemScheme = useColorScheme();
+  const { preference } = useThemePreference();
+  const effectiveDark = preference === 'system' ? systemScheme === 'dark' : preference === 'dark';
+
+  return (
+    <UiNativeThemeProvider app="provider" schemeOverride={preference}>
+      <NavThemeProvider value={effectiveDark ? DarkTheme : DefaultTheme}>
+        <AnimatedSplashOverlay />
+        {fontsLoaded && (
+          <SessionProvider>
+            <RootNavigator />
+          </SessionProvider>
+        )}
+      </NavThemeProvider>
+    </UiNativeThemeProvider>
+  );
+}
+
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
   const [fontsLoaded] = useFonts({
     Inter_400Regular,
     Inter_500Medium,
@@ -127,16 +149,9 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
-      <UiNativeThemeProvider app="provider">
-        <NavThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-          <AnimatedSplashOverlay />
-          {fontsLoaded && (
-            <SessionProvider>
-              <RootNavigator />
-            </SessionProvider>
-          )}
-        </NavThemeProvider>
-      </UiNativeThemeProvider>
+      <ThemePreferenceProvider>
+        <ThemedApp fontsLoaded={fontsLoaded} />
+      </ThemePreferenceProvider>
     </SafeAreaProvider>
   );
 }
