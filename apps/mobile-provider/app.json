@@ -66,7 +66,7 @@
           "locationWhenInUsePermission": "AsapLocal Business uses your location to fill in your business address and service area.",
           "locationAlwaysAndWhenInUsePermission": false,
           "locationAlwaysPermission": false,
-          "motionUsagePermission": false
+          "motionUsagePermission": "AsapLocal Business does not track your motion or fitness activity. This permission is only declared because the location library it uses to fill in your business address supports motion-based location updates."
         }
       ],
       [
