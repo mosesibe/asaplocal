@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
-import { prisma } from "@asaplocal/db";
+import { prisma, Prisma } from "@asaplocal/db";
 import { checkRateLimit, createAndSendVerificationEmail, recordReferral, TERMS_VERSION } from "@asaplocal/core";
 
 const schema = z.object({
@@ -32,28 +32,51 @@ export async function POST(req: NextRequest) {
   }
 
   const parsed = schema.safeParse(await req.json().catch(() => null));
-  if (!parsed.success) return NextResponse.json({ message: "Invalid input", issues: parsed.error.flatten() }, { status: 422 });
+  if (!parsed.success) {
+    return NextResponse.json(
+      { message: parsed.error.issues[0]?.message ?? "Invalid input", issues: parsed.error.flatten() },
+      { status: 422 }
+    );
+  }
 
   const existing = await prisma.user.findUnique({ where: { email: parsed.data.email } });
   if (existing) return NextResponse.json({ message: "An account with this email already exists" }, { status: 409 });
 
+  const phoneOwner = await prisma.user.findUnique({ where: { phone: parsed.data.phone } });
+  if (phoneOwner) {
+    return NextResponse.json({ message: "That phone number is already registered to another account." }, { status: 409 });
+  }
+
   const passwordHash = await bcrypt.hash(parsed.data.password, 12);
-  const user = await prisma.user.create({
-    data: {
-      email: parsed.data.email,
-      phone: parsed.data.phone,
-      passwordHash,
-      role: "CUSTOMER",
-      status: "PENDING_VERIFICATION",
-      termsAcceptedAt: new Date(),
-      termsVersion: TERMS_VERSION,
-      marketingEmail: parsed.data.marketingEmail,
-      ...(parsed.data.marketingEmail
-        ? { marketingConsentAt: new Date(), marketingConsentSource: "registration" }
-        : {}),
-      profile: { create: { firstName: parsed.data.firstName, lastName: parsed.data.lastName } },
-    },
-  });
+  let user;
+  try {
+    user = await prisma.user.create({
+      data: {
+        email: parsed.data.email,
+        phone: parsed.data.phone,
+        passwordHash,
+        role: "CUSTOMER",
+        status: "PENDING_VERIFICATION",
+        termsAcceptedAt: new Date(),
+        termsVersion: TERMS_VERSION,
+        marketingEmail: parsed.data.marketingEmail,
+        ...(parsed.data.marketingEmail
+          ? { marketingConsentAt: new Date(), marketingConsentSource: "registration" }
+          : {}),
+        profile: { create: { firstName: parsed.data.firstName, lastName: parsed.data.lastName } },
+      },
+    });
+  } catch (e) {
+    // Two signups racing past the checks above still hit the unique index.
+    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
+      const target = String((e.meta?.target as string[] | string | undefined) ?? "");
+      const message = target.includes("phone")
+        ? "That phone number is already registered to another account."
+        : "An account with this email already exists";
+      return NextResponse.json({ message }, { status: 409 });
+    }
+    throw e;
+  }
 
   if (parsed.data.ref) await recordReferral(user.id, parsed.data.ref).catch(() => {});
 
