@@ -5,6 +5,7 @@ import { Screen, Card, Text, Button, TextField, useAppTheme, useBottomNavInset }
 
 import { useSession } from '@/lib/session';
 import { api } from '@/lib/api';
+import { DeleteAccountSection } from '@/components/DeleteAccountSection';
 
 // Presets for the env switcher below — only ever shown in dev/preview
 // builds (__DEV__), never in a production release.
@@ -59,6 +60,7 @@ export default function AccountScreen() {
           <Button variant="destructive" onPress={logout}>
             Log out
           </Button>
+          <DeleteAccountSection />
 
           {__DEV__ && (
             <Card style={styles.card}>

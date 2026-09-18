@@ -45,19 +45,28 @@
           "imageWidth": 140
         }
       ],
-      "expo-secure-store",
+      [
+        "expo-secure-store",
+        {
+          "faceIDPermission": false
+        }
+      ],
       "expo-font",
       [
         "expo-image-picker",
         {
           "photosPermission": "AsapLocal uses your photos to attach pictures of the space or job to your requests.",
-          "cameraPermission": "AsapLocal uses your camera so you can take a photo directly to attach to your request."
+          "cameraPermission": "AsapLocal uses your camera so you can take a photo directly to attach to your request.",
+          "microphonePermission": false
         }
       ],
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "AsapLocal uses your location to find local pros and fill in your address."
+          "locationWhenInUsePermission": "AsapLocal uses your location to find local pros and fill in your address.",
+          "locationAlwaysAndWhenInUsePermission": false,
+          "locationAlwaysPermission": false,
+          "motionUsagePermission": "AsapLocal does not track your motion or fitness activity. This permission is only declared because the location library it uses to find your address supports motion-based location updates."
         }
       ],
       [

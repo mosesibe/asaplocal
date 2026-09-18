@@ -22,7 +22,6 @@
       },
       "predictiveBackGestureEnabled": false,
       "permissions": [
-        "android.permission.RECORD_AUDIO",
         "android.permission.ACCESS_COARSE_LOCATION",
         "android.permission.ACCESS_FINE_LOCATION"
       ],
@@ -46,19 +45,28 @@
           "imageWidth": 140
         }
       ],
-      "expo-secure-store",
+      [
+        "expo-secure-store",
+        {
+          "faceIDPermission": false
+        }
+      ],
       "expo-font",
       [
         "expo-image-picker",
         {
           "photosPermission": "AsapLocal Business uses your photos for job-sheet entries, staff verification, portfolio, and profile images.",
-          "cameraPermission": "AsapLocal Business uses your camera so you can take a photo directly for job sheets, verification, portfolio, and profile images."
+          "cameraPermission": "AsapLocal Business uses your camera so you can take a photo directly for job sheets, verification, portfolio, and profile images.",
+          "microphonePermission": false
         }
       ],
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "AsapLocal Business uses your location to fill in your business address and service area."
+          "locationWhenInUsePermission": "AsapLocal Business uses your location to fill in your business address and service area.",
+          "locationAlwaysAndWhenInUsePermission": false,
+          "locationAlwaysPermission": false,
+          "motionUsagePermission": "AsapLocal Business does not track your motion or fitness activity. This permission is only declared because the location library it uses to fill in your business address supports motion-based location updates."
         }
       ],
       [
