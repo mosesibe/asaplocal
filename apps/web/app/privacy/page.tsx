@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { LegalDocNav } from "@/components/legal-doc-nav";
 
 export const metadata = { title: "Privacy Policy — ASAP Local" };
@@ -296,7 +297,7 @@ export default function PrivacyPage() {
         </ul>
         <p>
           Non-essential cookies will be managed in accordance with applicable law and our{" "}
-          <a href="/cookies">Cookie Policy</a>.
+          <Link href="/cookies">Cookie Policy</Link>.
         </p>
 
         <h2>13. Marketing</h2>

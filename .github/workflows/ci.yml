@@ -71,7 +71,9 @@ jobs:
       - uses: actions/checkout@v4
       - name: Check for committed secrets
         run: |
-          if git grep -nE "(sk_live_|whsec_|AKIA[0-9A-Z]{16})" -- . ':!*.md'; then
+          # Require real key bodies so placeholders like whsec_xxx don't trip it,
+          # and skip workflow files (this pattern would match itself).
+          if git grep -nE "(sk_live_[0-9A-Za-z]{20,}|rk_live_[0-9A-Za-z]{20,}|whsec_[0-9A-Za-z]{20,}|AKIA[0-9A-Z]{16})" -- . ':!*.md' ':!.github/workflows'; then
             echo "Potential secret committed — failing build." && exit 1
           fi
           echo "No obvious secrets found."

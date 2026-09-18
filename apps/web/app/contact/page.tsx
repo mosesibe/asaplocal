@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { LegalDocNav } from "@/components/legal-doc-nav";
 
 export const metadata = { title: "Contact & Complaints — ASAP Local" };
@@ -26,13 +27,13 @@ export default function ContactPage() {
         <p>
           For help with your account, a booking, or general questions, contact{" "}
           <a href="mailto:support@asaplocal.pro">support@asaplocal.pro</a> or use the{" "}
-          <a href="/help">Help Center</a>.
+          <Link href="/help">Help Center</Link>.
         </p>
 
         <h2>3. Privacy requests</h2>
         <p>
           For questions about your personal information, or to exercise a right described in our{" "}
-          <a href="/privacy">Privacy Policy</a>, contact <a href="mailto:privacy@asaplocal.pro">privacy@asaplocal.pro</a>.
+          <Link href="/privacy">Privacy Policy</Link>, contact <a href="mailto:privacy@asaplocal.pro">privacy@asaplocal.pro</a>.
         </p>
 
         <h2>4. Making a complaint</h2>
@@ -53,7 +54,7 @@ export default function ContactPage() {
         </p>
         <p>
           Complaints about conduct, safety or fraud can also be raised under our{" "}
-          <a href="/community">Community, Reviews &amp; Safety Policy</a>.
+          <Link href="/community">Community, Reviews &amp; Safety Policy</Link>.
         </p>
 
         <h2>5. If you&rsquo;re not satisfied</h2>
