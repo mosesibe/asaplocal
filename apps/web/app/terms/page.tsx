@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { LegalDocNav } from "@/components/legal-doc-nav";
 
 export const metadata = { title: "Terms & Conditions — ASAP Local" };
@@ -58,7 +59,7 @@ export default function TermsPage() {
         <h2>5. Professionals</h2>
         <p>
           Professionals must comply with the separate ASAP Local{" "}
-          <a href="/terms/professionals">Professional Terms</a>. Those Terms form part of the agreement between ASAP
+          <Link href="/terms/professionals">Professional Terms</Link>. Those Terms form part of the agreement between ASAP
           Local and the Professional.
         </p>
 
@@ -163,7 +164,7 @@ export default function TermsPage() {
         </ul>
         <p>
           ASAP Local may moderate or remove content that breaches the{" "}
-          <a href="/community">Community, Reviews &amp; Safety Policy</a>. The UK&rsquo;s current consumer-protection
+          <Link href="/community">Community, Reviews &amp; Safety Policy</Link>. The UK&rsquo;s current consumer-protection
           regime specifically addresses fake reviews and review manipulation (GOV.UK).
         </p>
 
