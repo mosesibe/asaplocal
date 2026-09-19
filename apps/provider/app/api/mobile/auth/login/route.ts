@@ -28,6 +28,6 @@ export async function POST(req: NextRequest) {
   const user = await verifyCredentials(parsed.data.email, parsed.data.password);
   if (!user) return NextResponse.json({ message: "Incorrect email or password." }, { status: 401 });
 
-  const tokens = await createMobileSession(user, parsed.data.deviceInfo);
+  const tokens = await createMobileSession(user, parsed.data.deviceInfo, "credentials");
   return NextResponse.json({ ...tokens, user });
 }

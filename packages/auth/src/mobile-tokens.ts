@@ -1,6 +1,7 @@
 import { encode, decode } from "next-auth/jwt";
 import { randomBytes, createHash } from "crypto";
 import { prisma } from "@asaplocal/db";
+import { recordLogin } from "./login-events";
 import type { Role, UserStatus } from "@prisma/client";
 
 // Bearer-token auth for the native mobile apps (Expo), which can't rely on
@@ -112,7 +113,15 @@ export interface MobileSessionTokens {
   expiresIn: number;
 }
 
-export async function createMobileSession(user: MobileTokenUser, deviceInfo?: string): Promise<MobileSessionTokens> {
+/** A fresh mobile sign-in: issues tokens and records the login. */
+export async function createMobileSession(user: MobileTokenUser, deviceInfo?: string, method?: string): Promise<MobileSessionTokens> {
+  const tokens = await issueMobileSession(user, deviceInfo);
+  await recordLogin(user.id, { channel: "mobile", method, deviceInfo });
+  return tokens;
+}
+
+// Shared by sign-in and refresh-token rotation; only the former is a login.
+async function issueMobileSession(user: MobileTokenUser, deviceInfo?: string): Promise<MobileSessionTokens> {
   const accessToken = await mintAccessToken(user);
   const refreshToken = randomBytes(32).toString("hex");
   await prisma.mobileSession.create({
@@ -136,7 +145,7 @@ export async function rotateMobileSession(refreshToken: string): Promise<MobileS
   if (!tokenUser) return null;
 
   await prisma.mobileSession.update({ where: { id: existing.id }, data: { revokedAt: new Date() } });
-  return createMobileSession(tokenUser, existing.deviceInfo ?? undefined);
+  return issueMobileSession(tokenUser, existing.deviceInfo ?? undefined);
 }
 
 export async function revokeMobileSession(refreshToken: string): Promise<void> {

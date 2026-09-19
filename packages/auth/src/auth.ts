@@ -5,6 +5,7 @@ import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@asaplocal/db";
 import { authConfig } from "./auth.config";
 import { getAppleClientSecret } from "./apple-secret";
+import { recordLogin } from "./login-events";
 
 // Apple sign-in needs four env vars (see apple-secret.ts) that aren't set in
 // every environment yet (e.g. local dev before Apple credentials exist) — so
@@ -55,10 +56,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     },
   },
   events: {
-    async signIn({ user }) {
-      if (user.id) {
-        await prisma.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } }).catch(() => {});
-      }
+    async signIn({ user, account }) {
+      if (user.id) await recordLogin(user.id, { channel: "web", method: account?.provider });
     },
   },
 });

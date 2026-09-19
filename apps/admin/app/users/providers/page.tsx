@@ -139,6 +139,7 @@ export default async function ProvidersPage({
         sort={sort}
         dir={dir}
         showBusinessColumns
+        detailBasePath="/users/providers"
       />
     </div>
   );

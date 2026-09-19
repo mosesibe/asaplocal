@@ -63,6 +63,7 @@ export function UserTable({
   sort,
   dir = "asc",
   showBusinessColumns = false,
+  detailBasePath,
 }: {
   users: UserTableRow[];
   /** Enables sortable column headers when provided — the page path to link back to. */
@@ -72,6 +73,8 @@ export function UserTable({
   sort?: string;
   dir?: "asc" | "desc";
   showBusinessColumns?: boolean;
+  /** When set, each name links to `${detailBasePath}/${id}`. */
+  detailBasePath?: string;
 }) {
   function sortHref(column: string) {
     if (!basePath) return "#";
@@ -127,7 +130,15 @@ export function UserTable({
         <tbody className="divide-y divide-border">
           {users.map((u) => (
             <tr key={u.id} className="hover:bg-muted/30">
-              <td className="whitespace-nowrap px-4 py-3 font-medium">{u.name}</td>
+              <td className="whitespace-nowrap px-4 py-3 font-medium">
+                {detailBasePath ? (
+                  <Link href={`${detailBasePath}/${u.id}`} className="text-brand-700 hover:underline">
+                    {u.name}
+                  </Link>
+                ) : (
+                  u.name
+                )}
+              </td>
               <td className="whitespace-nowrap px-4 py-3 text-muted-foreground">{u.email}</td>
               <td className="whitespace-nowrap px-4 py-3 text-muted-foreground">{u.phone ?? "—"}</td>
               {showBusinessColumns ? (

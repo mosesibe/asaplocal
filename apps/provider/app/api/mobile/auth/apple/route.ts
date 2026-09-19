@@ -41,6 +41,6 @@ export async function POST(req: NextRequest) {
   const user = await loadMobileTokenUser(account.id);
   if (!user) return NextResponse.json({ message: "Account is suspended." }, { status: 403 });
 
-  const tokens = await createMobileSession(user, parsed.data.deviceInfo);
+  const tokens = await createMobileSession(user, parsed.data.deviceInfo, "apple");
   return NextResponse.json({ ...tokens, user });
 }
