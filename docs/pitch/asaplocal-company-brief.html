@@ -369,6 +369,18 @@
   ul.plain li { margin-bottom: 0.45rem; font-size: 0.94rem; }
   ul.plain li::marker { color: var(--brand); }
 
+  .sub { margin-top: 2rem; padding-top: 1.5rem; border-top: 1px dashed var(--rule-strong); }
+  .sub h3 { font-size: 1.12rem; letter-spacing: -0.015em; margin-bottom: 0.5rem; }
+  .sub .tag {
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--brand);
+    display: block;
+    margin-bottom: 0.4rem;
+  }
+
   footer {
     margin-top: 4rem;
     padding-top: 1.25rem;
@@ -422,14 +434,17 @@
     <h1>Trust,<br />engineered.</h1>
     <p class="lede">
       Every local-services marketplace says its tradespeople are vetted.
-      We are the one that can prove it — continuously, in code, and on a
-      ladder a provider cannot type their way up.
+      We are the one that can prove it — continuously, in code. A homeowner
+      goes from "something's wrong" to a verified local pro in one
+      conversation, and a tradesperson in their first year competes on the
+      same terms as a firm in its thirtieth.
     </p>
     <div class="metaline">
       <span><b>United Kingdom</b>Market</span>
-      <span><b>10 trades</b>Categories live</span>
+      <span><b>11 trades</b>Categories live</span>
       <span><b>4 tiers</b>Verification ladder</span>
       <span><b>5 lines</b>Revenue model</span>
+      <span><b>2 AI tools</b>AI Buddy · Redesign Studio</span>
     </div>
   </header>
 
@@ -447,7 +462,11 @@
         <div class="panel">
           <span class="tag">Homeowner's problem</span>
           <p>
-            A "verified" badge usually means a form was completed once, at
+            They rarely know what the problem is called, which trade fixes it,
+            or what it should cost — so every job starts with guesswork.
+          </p>
+          <p>
+            And a "verified" badge usually means a form was completed once, at
             sign-up, possibly years ago. Insurance certificates are collected
             as a PDF and never looked at again.
           </p>
@@ -459,6 +478,10 @@
             They buy introductions, not outcomes. A single job is resold to as
             many buyers as the platform can find, so the same work gets quoted
             into the ground.
+          </p>
+          <p>
+            Visibility goes to the biggest advertising budget and the longest
+            review history, so a skilled newcomer can't get a foot in the door.
           </p>
           <p><strong>Bad leads — wrong area, wrong trade, no answer — are treated as the operator's cost, not the platform's.</strong></p>
         </div>
@@ -483,7 +506,8 @@
       <p>
         A provider does not apply for a badge and wait for a human to agree.
         Their standing is a function of what can actually be checked: a
-        government-ID match, a live Companies House record, an insurance
+        government-ID match, a live Companies House record or reviewed trading
+        documents, an insurance
         policy with a real expiry date, a trade qualification in a regulated
         category. Change any input and the standing recalculates.
       </p>
@@ -491,22 +515,94 @@
         This is the difference between a directory that <em>lists</em> vetted
         tradespeople and a platform that <em>maintains</em> them.
       </p>
+      <p>
+        The same rule cuts the other way. Because standing comes from checks
+        rather than tenure or ad spend, an established firm cannot
+        <em>buy</em> its way past a newcomer who has earned the same badge.
+      </p>
     </div>
   </section>
 
   <!-- ═══════════════ 03 ═══════════════ -->
   <section class="row">
-    <div class="rail"><b>03</b>System</div>
+    <div class="rail"><b>03</b>Front door</div>
+    <div>
+      <h2>Start with a sentence or a photo. Not a category.</h2>
+      <p>
+        Most platforms open with a trade picker, which assumes the homeowner
+        already knows who they need. Ours opens with three doors, and all
+        three lead to a job post that is already filled in — nobody explains
+        their problem twice.
+      </p>
+      <div class="duo">
+        <div class="panel">
+          <span class="tag">Post a job</span>
+          <p>Describe it in your own words. AI cross-checks the category, address lookup does the rest, and every relevant local pro hears about it.</p>
+        </div>
+        <div class="panel">
+          <span class="tag">Ask AI Buddy</span>
+          <p>Not sure what's wrong? A free, safety-checked answer on whether it's a DIY fix or a job for a pro. No account needed.</p>
+        </div>
+        <div class="panel">
+          <span class="tag">Redesign a space</span>
+          <p>Photograph a room, loft or garden and see what it could become, with realistic UK costs and timescales attached.</p>
+        </div>
+      </div>
+
+      <div class="sub">
+        <span class="tag">AI Buddy</span>
+        <h3>A free first opinion, before anyone spends a penny.</h3>
+        <p>
+          The homeowner describes what's going wrong in plain English. AI
+          Buddy decides whether it is safe for an ordinary homeowner to fix,
+          and if it is, replies with a short toolkit and step-by-step plan. If
+          detail is missing it asks one clarifying question rather than
+          guessing.
+        </p>
+        <ul class="plain">
+          <li><strong>Safe by rule.</strong> Gas, mains electrics beyond a like-for-like swap, structural work, roofing and work at height are always routed to a qualified professional — with the reason, and never with a step-by-step.</li>
+          <li><strong>One tap from advice to a pro.</strong> The conversation becomes the job post, marked as pre-triaged, so the provider receives a problem that has already been described and narrowed down.</li>
+          <li><strong>Earlier than anyone selling leads.</strong> A directory starts at "choose a trade". AI Buddy starts at "something's wrong", and the conversation is kept if the homeowner leaves and comes back.</li>
+        </ul>
+      </div>
+
+      <div class="sub">
+        <span class="tag">AI Redesign Studio</span>
+        <h3>See it before you build it.</h3>
+        <p>
+          The homeowner uploads up to five photos of a kitchen, bathroom, loft,
+          garden or home office. The Studio proposes three distinct redesign
+          directions and renders each onto their own photo, with the scope of
+          work, a UK cost range and a typical duration.
+        </p>
+        <div class="flow">
+          <i class="own">Photo of the space</i><u>→</u>
+          <i class="own">3 design directions</i><u>→</u>
+          <i class="own">Cost + timescale</i><u>→</u>
+          <i class="own">Quotes from local pros</i>
+        </div>
+        <ul class="plain" style="margin-top:1rem">
+          <li><strong>A scoped job, not an enquiry.</strong> Choosing a design posts a job with the photos, the render, the right category and a budget range already attached.</li>
+          <li><strong>Free to try.</strong> Three designs a month at no cost, saved to "My designs" to revisit or get quoted later.</li>
+          <li><strong>Demand for the biggest jobs.</strong> It turns "I'd love to redo this someday" into a budgeted job today — the planned, high-value work that sits behind every emergency call-out.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ 04 ═══════════════ -->
+  <section class="row">
+    <div class="rail"><b>04</b>System</div>
     <div>
       <h2>Three surfaces, one spine.</h2>
       <div class="duo">
         <div class="panel">
           <span class="tag">Customer app</span>
-          <p>Post a job in minutes with address autocomplete and AI category matching. Compare quotes, book, pay a deposit, sign off the work, leave a review.</p>
+          <p>Post a job in plain English, ask AI Buddy, or redesign a space in the Studio. Compare quotes, book, pay a deposit, sign off the work, leave a review.</p>
         </div>
         <div class="panel">
           <span class="tag">Provider app</span>
-          <p>A business tool, not a lead inbox: lead marketplace, calendar, job sheets, staff management, portfolio, verification centre, earnings and lead-ROI analytics.</p>
+          <p>A business tool, not a lead inbox: lead marketplace, calendar, job sheets, staff management, portfolio, verification centre, earnings and lead-ROI analytics, plus AI-drafted quotes and message replies.</p>
         </div>
         <div class="panel">
           <span class="tag">Operations console</span>
@@ -514,9 +610,12 @@
         </div>
       </div>
       <p style="margin-top:1.75rem">
-        Critically, we own the entire job — not the introduction:
+        Customers and providers each have a web app and a native mobile app,
+        all on the same backend. Critically, we own the entire job — not the
+        introduction — and we start earlier than anyone else:
       </p>
       <div class="flow">
+        <i class="own">Ask / Design</i><u>→</u>
         <i class="own">Post</i><u>→</u>
         <i class="own">Match</i><u>→</u>
         <i class="own">Quote</i><u>→</u>
@@ -528,16 +627,17 @@
         <i class="own">Payout</i>
       </div>
       <p style="margin-top:1.25rem">
-        Most of the category stops after <em>Match</em>. Everything downstream
-        of that is where the data, the retention and the second revenue line
-        actually live.
+        Most of the category starts at <em>Post</em> and stops after
+        <em>Match</em>. AI Buddy and the Studio capture intent before it
+        becomes a search; everything after Match is where the data, the
+        retention and the second revenue line actually live.
       </p>
     </div>
   </section>
 
-  <!-- ═══════════════ 04 ═══════════════ -->
+  <!-- ═══════════════ 05 ═══════════════ -->
   <section class="row">
-    <div class="rail"><b>04</b>Trust ladder</div>
+    <div class="rail"><b>05</b>Trust ladder</div>
     <div>
       <h2>Four rungs. Every one of them externally sourced.</h2>
       <p>
@@ -554,8 +654,8 @@
         <div class="rung">
           <div class="tier t2"><span class="chip"></span>Silver</div>
           <div>
-            <p><strong>Verified.</strong> Identity confirmed against government ID, business confirmed against the public company register, and public-liability cover confirmed as genuine and in date.</p>
-            <div class="req">Stripe Identity · Companies House record + director match · verified PL policy, expiry in future</div>
+            <p><strong>Verified.</strong> Identity confirmed against government ID, the business confirmed as genuinely trading, and public-liability cover confirmed as genuine and in date.</p>
+            <div class="req">Stripe Identity · Companies House + director match (limited companies) or reviewed trading documents (sole traders) · verified PL policy, expiry in future</div>
           </div>
         </div>
         <div class="rung">
@@ -581,9 +681,35 @@
     </div>
   </section>
 
-  <!-- ═══════════════ 05 ═══════════════ -->
+  <!-- ═══════════════ 06 ═══════════════ -->
   <section class="row">
-    <div class="rail"><b>05</b>Lead economics</div>
+    <div class="rail"><b>06</b>Fair start</div>
+    <div>
+      <h2>A first-year trader competes on the same terms as a thirty-year firm.</h2>
+      <p class="lede">
+        On most platforms, the work flows to whoever has the biggest budget
+        and the longest review history. We built the lead marketplace so that
+        new and up-and-coming tradespeople compete on their work instead.
+      </p>
+      <ul class="plain">
+        <li><strong>Same moment, same price.</strong> When a job is posted, every eligible provider in that trade and service area is alerted at once. The lead price is set by the size of the job — never by an auction, and never by plan tier.</li>
+        <li><strong>Five seats, not fifty.</strong> At most five providers can hold a job, so a newcomer's quote is actually read.</li>
+        <li><strong>Trust earned by checks, not seniority.</strong> Nothing on the ladder depends on review count or years trading. A sole trader with ID, trading documents and in-date insurance reaches Silver in their first week — and Silver is what opens gated, high-value categories like Builders &amp; Renovation, which require verified insurance rather than a limited company.</li>
+        <li><strong>Start at £0.</strong> A free plan, pay-per-lead from £5, and refunds on bad leads. Pro and Premium are there when the work justifies them, not before.</li>
+        <li><strong>AI that levels the paperwork.</strong> Quote templates are drafted from the job details and replies suggested in chat, so a sole trader's first quote reads like an established firm's.</li>
+        <li><strong>Clearer jobs from day one.</strong> Posts that start in AI Buddy or the Studio arrive carrying the diagnosis or the design brief, so less of a newcomer's time goes on decoding vague enquiries.</li>
+      </ul>
+      <div class="note">
+        <b>Where the line is drawn:</b> featured placement is a paid position
+        in browse search, and it stays that way. The lead marketplace — where
+        posted jobs are distributed — is not for sale.
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ 07 ═══════════════ -->
+  <section class="row">
+    <div class="rail"><b>07</b>Lead economics</div>
     <div>
       <h2>Deliberately scarce, priced to the job, refundable.</h2>
       <p>
@@ -611,15 +737,33 @@
     </div>
   </section>
 
-  <!-- ═══════════════ 06 ═══════════════ -->
+  <!-- ═══════════════ 08 ═══════════════ -->
   <section class="row">
-    <div class="rail"><b>06</b>Our edge</div>
+    <div class="rail"><b>08</b>Our edge</div>
     <div>
-      <h2>Six places we win, and why they are hard to answer.</h2>
+      <h2>Eight places we win, and why they are hard to answer.</h2>
       <div class="edges">
 
         <div class="edge">
           <div class="n">01</div>
+          <div>
+            <h3>AI at the front door</h3>
+            <p>AI Buddy and the Redesign Studio meet the homeowner before they know which trade they need, then hand over a job that is already described, triaged or scoped.</p>
+            <span class="vs"><b>Why it's hard to copy</b>An honest "this is a 20-minute DIY fix" costs a lead reseller a sale. A platform paid on lead volume is structurally discouraged from building the tool that sometimes tells a homeowner they don't need one.</span>
+          </div>
+        </div>
+
+        <div class="edge">
+          <div class="n">02</div>
+          <div>
+            <h3>A fair start for new trades</h3>
+            <p>Same alert, same price, five seats, and a trust tier earned by checks rather than seniority. The supply the incumbents price out is the supply we sign up.</p>
+            <span class="vs"><b>Why it's hard to copy</b>Incumbents sell visibility — ranking by spend is the product. Distributing jobs equally removes a revenue line they depend on.</span>
+          </div>
+        </div>
+
+        <div class="edge">
+          <div class="n">03</div>
           <div>
             <h3>Verification is computed, not claimed</h3>
             <p>Identity, company record and insurance all come from external systems of record, and tier recalculates when any of them change.</p>
@@ -628,7 +772,7 @@
         </div>
 
         <div class="edge">
-          <div class="n">02</div>
+          <div class="n">04</div>
           <div>
             <h3>Insurance that is still valid today</h3>
             <p>Policies are stored as structured records with type, status and expiry — not a scanned certificate in a folder — with automated renewal reminders.</p>
@@ -637,7 +781,7 @@
         </div>
 
         <div class="edge">
-          <div class="n">03</div>
+          <div class="n">05</div>
           <div>
             <h3>Scarcity by design</h3>
             <p>Five buyers maximum, priced to job value, with a real refund path. Providers can calculate their return instead of guessing.</p>
@@ -646,7 +790,7 @@
         </div>
 
         <div class="edge">
-          <div class="n">04</div>
+          <div class="n">06</div>
           <div>
             <h3>Privacy before purchase</h3>
             <p>Customer location is blurred until a provider commits, so posting a job never exposes an address to casual browsing.</p>
@@ -655,7 +799,7 @@
         </div>
 
         <div class="edge">
-          <div class="n">05</div>
+          <div class="n">07</div>
           <div>
             <h3>We own the whole job</h3>
             <p>Quote, booking, deposit, an itemised work log the customer signs off, review, and payout to the provider's connected account.</p>
@@ -664,7 +808,7 @@
         </div>
 
         <div class="edge">
-          <div class="n">06</div>
+          <div class="n">08</div>
           <div>
             <h3>An operator layer, not just a listing</h3>
             <p>Dispatch console, approval workflow for sensitive actions, and an audit log across the platform — so we can run managed and assisted jobs, not only passive matching.</p>
@@ -676,9 +820,9 @@
     </div>
   </section>
 
-  <!-- ═══════════════ 07 ═══════════════ -->
+  <!-- ═══════════════ 09 ═══════════════ -->
   <section class="row">
-    <div class="rail"><b>07</b>Model</div>
+    <div class="rail"><b>09</b>Model</div>
     <div>
       <h2>Five revenue lines, deliberately not one.</h2>
       <p>
@@ -692,8 +836,8 @@
           </thead>
           <tbody>
             <tr><td>Lead sales</td><td class="num">£5–£20 per lead, capped at 5 buyers</td><td>Provider</td></tr>
-            <tr><td>Subscriptions</td><td>Free · Pro (15 leads/mo) · Premium (40/mo) · Enterprise</td><td>Provider</td></tr>
-            <tr><td>Credit packs</td><td>Prepaid lead credits, small and large bundles</td><td>Provider</td></tr>
+            <tr><td>Subscriptions</td><td>Free · Pro £29/mo (15 leads) · Premium £79/mo (40 leads) · Enterprise</td><td>Provider</td></tr>
+            <tr><td>Credit packs</td><td>Prepaid packs of 5 or 20 lead credits</td><td>Provider</td></tr>
             <tr><td>Booking rail</td><td class="num">20% deposit taken at acceptance, payouts via connected accounts</td><td>Customer</td></tr>
             <tr><td>Featured placement</td><td>Time-boxed promoted position in search</td><td>Provider</td></tr>
           </tbody>
@@ -702,19 +846,22 @@
       <p style="margin-top:1.25rem">
         Subscriptions and the booking rail are the durable lines. Lead sales
         are the acquisition wedge that gets a provider to their first paid
-        outcome quickly.
+        outcome quickly. AI Buddy and the Studio are free on purpose: they
+        are demand acquisition, and both end in the job post where every line
+        above begins.
       </p>
     </div>
   </section>
 
-  <!-- ═══════════════ 08 ═══════════════ -->
+  <!-- ═══════════════ 10 ═══════════════ -->
   <section class="row">
-    <div class="rail"><b>08</b>Wedge</div>
+    <div class="rail"><b>10</b>Wedge</div>
     <div>
       <h2>Emergency work first, then everything around it.</h2>
       <p>
-        Ten categories are live — cleaning, plumbing, electrical, gardening,
-        handyman, painting, removals, tutoring, beauty and pet services — but
+        Eleven categories are live — cleaning, plumbing, electrical, builders
+        and renovation, gardening, handyman, painting, removals, tutoring,
+        beauty and pet services — but
         the entry point is narrower than that on purpose.
       </p>
       <p>
@@ -726,16 +873,23 @@
         insured and qualified.</strong>
       </p>
       <p>
-        That is precisely where a computed trust ladder converts best. We win
-        the highest-anxiety job first, then hold the household for the
-        scheduled, lower-margin work that follows.
+        That is precisely where a computed trust ladder converts best — and
+        where AI Buddy earns its place, answering "is this serious?" and
+        routing the dangerous ones straight to a qualified pro.
+      </p>
+      <p>
+        Behind the emergency sits the planned work: kitchens, bathrooms,
+        lofts, gardens. The Redesign Studio is how we reach it, turning a
+        household we helped once into a scoped, budgeted renovation job. We
+        win the highest-anxiety job first, then hold the household for the
+        scheduled work that follows.
       </p>
     </div>
   </section>
 
-  <!-- ═══════════════ 09 ═══════════════ -->
+  <!-- ═══════════════ 11 ═══════════════ -->
   <section class="row">
-    <div class="rail"><b>09</b>Traction</div>
+    <div class="rail"><b>11</b>Traction</div>
     <div>
       <h2>Where we are.</h2>
       <div class="note" style="margin-top:0">
@@ -761,13 +915,15 @@
         <li><strong>Lead refund rate</strong> — proof lead quality is genuinely better, stated against our own published standard.</li>
         <li><strong>Quote-to-booking conversion</strong> — proof the five-buyer cap produces real work rather than a race to the bottom.</li>
         <li><strong>Provider month-3 retention</strong> — the number that decides whether this is a marketplace or a churn treadmill.</li>
+        <li><strong>AI Buddy and Studio sessions that become job posts</strong> — proof the front door creates demand, not just engagement.</li>
+        <li><strong>Days to first won job for a new provider</strong> — proof the fair start is real for someone with no reviews yet.</li>
       </ul>
     </div>
   </section>
 
-  <!-- ═══════════════ 10 ═══════════════ -->
+  <!-- ═══════════════ 12 ═══════════════ -->
   <section class="row">
-    <div class="rail"><b>10</b>Ask</div>
+    <div class="rail"><b>12</b>Ask</div>
     <div>
       <h2>What we are raising, and what it buys.</h2>
       <p>
@@ -790,8 +946,8 @@
       </div>
       <p style="margin-top:1.75rem" class="lede">
         The category's incumbents have distribution. What they do not have is
-        a trust model that survives contact with the truth. That is the one
-        thing we built first.
+        a trust model that survives contact with the truth. We built that
+        first — then made it effortless to use, and fair to join.
       </p>
     </div>
   </section>

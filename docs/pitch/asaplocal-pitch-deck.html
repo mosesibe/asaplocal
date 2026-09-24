@@ -351,6 +351,145 @@
     z-index: 10;
   }
 
+  /* ── Split: demo left, argument right ─────────────────── */
+  .split {
+    display: grid;
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+    gap: clamp(1.25rem, 3.5vw, 3.25rem);
+    align-items: start;
+  }
+  @media (max-width: 760px) { .split { grid-template-columns: minmax(0, 1fr); } }
+
+  .caption {
+    display: block;
+    font-family: var(--mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin-top: 0.6rem;
+  }
+
+  /* ── Points: unordered claims, no numbering ───────────── */
+  .pts { display: flex; flex-direction: column; }
+  .pt {
+    padding: clamp(0.7rem, 1.4vw, 1rem) 0;
+    border-top: 1px solid var(--rule);
+  }
+  .pt:last-child { border-bottom: 1px solid var(--rule); }
+  .pt h3, .card h3 {
+    margin: 0 0 0.25rem;
+    font-size: clamp(0.98rem, 1.45vw, 1.15rem);
+    letter-spacing: -0.015em;
+    font-weight: 700;
+  }
+  .pt p { margin: 0; font-size: clamp(0.86rem, 1.15vw, 0.98rem); max-width: 52ch; }
+
+  /* ── AI Buddy chat mock ───────────────────────────────── */
+  .chat {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    padding: clamp(0.9rem, 1.6vw, 1.2rem);
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+  }
+  .chat-head {
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--mono);
+    font-size: 0.64rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    padding-bottom: 0.6rem;
+    border-bottom: 1px solid var(--rule);
+  }
+  .msg {
+    font-size: clamp(0.84rem, 1.1vw, 0.95rem);
+    line-height: 1.45;
+    padding: 0.6rem 0.8rem;
+    max-width: 88%;
+    color: var(--ink);
+  }
+  .msg.me {
+    align-self: flex-end;
+    background: var(--brand-wash);
+    border: 1px solid var(--brand);
+    color: var(--brand-ink);
+  }
+  .msg.bot { align-self: flex-start; background: var(--surface-2); }
+  .msg .lbl {
+    display: block;
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin: 0.65rem 0 0.35rem;
+  }
+  .kit { display: flex; flex-wrap: wrap; gap: 0.3rem; }
+  .kit span {
+    font-family: var(--mono);
+    font-size: 0.66rem;
+    letter-spacing: 0.04em;
+    border: 1px solid var(--rule-strong);
+    background: var(--surface);
+    color: var(--ink-2);
+    padding: 0.2rem 0.45rem;
+  }
+  .msg ol { margin: 0; padding-left: 1.15rem; color: var(--ink-2); }
+  .msg li { margin: 0.1rem 0; }
+  .handoff {
+    align-self: flex-start;
+    font-family: var(--mono);
+    font-size: 0.66rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    border: 1px solid var(--brand);
+    color: var(--brand-ink);
+    padding: 0.45rem 0.75rem;
+  }
+
+  /* ── Studio concept strip ─────────────────────────────── */
+  .concepts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(13.5rem, 1fr));
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+    margin-top: 1.5rem;
+  }
+  .concept {
+    background: var(--surface);
+    padding: clamp(0.9rem, 1.7vw, 1.3rem);
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+  }
+  .concept .tag {
+    font-family: var(--mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+  .concept h3 { margin: 0; font-size: clamp(1rem, 1.5vw, 1.15rem); letter-spacing: -0.015em; }
+  .concept p { margin: 0; font-size: clamp(0.84rem, 1.1vw, 0.94rem); max-width: none; }
+  .concept .cost {
+    margin-top: auto;
+    padding-top: 0.6rem;
+    border-top: 1px solid var(--rule);
+    display: flex;
+    justify-content: space-between;
+    gap: 0.5rem;
+    font-family: var(--mono);
+    font-size: clamp(0.78rem, 1.1vw, 0.9rem);
+    font-variant-numeric: tabular-nums;
+  }
+  .concept .cost b { color: var(--brand); }
+  .concept .cost span { color: var(--ink-3); }
+
   /* ── Print: every slide its own landscape page ────────── */
   @page { size: A4 landscape; margin: 12mm; }
 
@@ -402,8 +541,9 @@
       <p class="kicker">AsapLocal · UK Local Services</p>
       <h1>Trust,<br />engineered.</h1>
       <p class="big" style="margin-top:1.75rem">
-        Every marketplace says its tradespeople are vetted. We are the one
-        that can prove it — continuously, in code.
+        A homeowner goes from "something's wrong" to a verified local pro in
+        one conversation. A tradesperson in their first year competes on the
+        same terms as a firm in its thirtieth.
       </p>
     </div>
   </section>
@@ -416,13 +556,13 @@
       <div class="cols">
         <div class="card">
           <span class="tag">Homeowner</span>
-          <p>"Verified" usually means a form was filled in once, years ago. Insurance is collected as a PDF and never checked again.</p>
-          <p><strong>They carry a risk they were told was handled.</strong></p>
+          <p>They don't know what the problem is called, which trade fixes it, or what it should cost. And "verified" usually means a form was filled in once, years ago.</p>
+          <p><strong>Every job starts with guesswork, and ends with a risk they were told was handled.</strong></p>
         </div>
         <div class="card">
           <span class="tag">Tradesperson</span>
-          <p>They buy introductions, not outcomes. One job is resold to as many buyers as the platform can find.</p>
-          <p><strong>Bad leads are treated as their cost, not the platform's.</strong></p>
+          <p>They buy introductions, not outcomes, resold to as many buyers as the platform can find. Visibility goes to the biggest budget and the longest review history.</p>
+          <p><strong>A good new trader can't get a foot in the door.</strong></p>
         </div>
       </div>
     </div>
@@ -449,12 +589,123 @@
         date, a trade qualification in a regulated category.
       </p>
       <p class="big" style="margin-top:1.5rem">
-        A provider cannot <em>type</em> their way to a badge.
+        A provider cannot <em>type</em> their way to a badge. Nor can they
+        <em>buy</em> their way past a newcomer who has earned one.
       </p>
     </div>
   </section>
 
-  <!-- 5 ─ System -->
+  <!-- 5 ─ Front door -->
+  <section class="slide">
+    <div class="inner">
+      <p class="kicker">Ease of use</p>
+      <h2>Start with a sentence or a photo. Not a category.</h2>
+      <div class="cols">
+        <div class="card">
+          <span class="tag">Post a job</span>
+          <p>Describe it in your own words. AI picks the right category, address lookup does the rest, and every relevant local pro hears about it.</p>
+        </div>
+        <div class="card">
+          <span class="tag">Ask AI Buddy</span>
+          <p>Not sure what's wrong? Get a free, safety-checked answer on whether it's a DIY fix or a job for a pro — no account needed.</p>
+        </div>
+        <div class="card">
+          <span class="tag">Redesign a space</span>
+          <p>Photograph a room, loft or garden and see what it could become, with realistic UK costs and timescales attached.</p>
+        </div>
+      </div>
+      <p style="margin-top:1.5rem">
+        All three doors lead to the same place: a job post that is
+        <strong>already filled in</strong>. Nobody explains their problem twice.
+        On the web and in native customer and provider apps.
+      </p>
+    </div>
+  </section>
+
+  <!-- 6 ─ AI Buddy -->
+  <section class="slide">
+    <div class="inner">
+      <p class="kicker">AI Buddy</p>
+      <h2>A free first opinion, before anyone spends a penny.</h2>
+      <div class="split">
+        <div>
+          <div class="chat" aria-label="Example AI Buddy conversation">
+            <div class="chat-head"><span>AI Buddy</span><span>Free · no sign-up</span></div>
+            <div class="msg me">Kitchen sink is draining really slowly and smells a bit.</div>
+            <div class="msg bot">
+              Sounds like a build-up in the trap under the sink — a safe job you can do in about 20 minutes.
+              <span class="lbl">Toolkit</span>
+              <div class="kit"><span>Bucket</span><span>Rubber gloves</span><span>Old towel</span><span>Bottle brush</span></div>
+              <span class="lbl">Steps</span>
+              <ol>
+                <li>Put the bucket under the U-bend and lay the towel down.</li>
+                <li>Unscrew both collars by hand and lower the trap.</li>
+                <li>Clear and rinse it, then refit hand-tight.</li>
+                <li>Run the tap for a minute and check for drips.</li>
+              </ol>
+            </div>
+            <span class="handoff">Still stuck? Get quotes from a pro →</span>
+          </div>
+          <span class="caption">Illustrative conversation</span>
+        </div>
+        <div class="pts">
+          <div class="pt">
+            <h3>Safe by rule, not by luck</h3>
+            <p>Gas, mains electrics, structural work, roofing and work at height are always routed to a qualified pro — with the reason why. No step-by-step is ever given for them.</p>
+          </div>
+          <div class="pt">
+            <h3>One tap from advice to a pro</h3>
+            <p>The conversation becomes the job post. The provider receives a job that has already been described, narrowed down and triaged.</p>
+          </div>
+          <div class="pt">
+            <h3>We meet the homeowner first</h3>
+            <p>A directory starts at "choose a trade". AI Buddy starts at "something's wrong" — earlier in the journey than anyone selling leads.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7 ─ Redesign Studio -->
+  <section class="slide">
+    <div class="inner">
+      <p class="kicker">AI Redesign Studio</p>
+      <h2>See it before you build it.</h2>
+      <div class="flow">
+        <i>Photo of the space</i><u>→</u><i>3 design directions</i><u>→</u><i>Cost + timescale</i><u>→</u><i>Quotes from local pros</i>
+      </div>
+      <div class="concepts" aria-label="Example Studio output for a kitchen">
+        <div class="concept">
+          <span class="tag">Direction A</span>
+          <h3>Warm Shaker refresh</h3>
+          <p>Painted units, oak worktop, new lighting. Keeps the existing layout.</p>
+          <div class="cost"><b>£4,500–£7,000</b><span>8 days</span></div>
+        </div>
+        <div class="concept">
+          <span class="tag">Direction B</span>
+          <h3>Handleless modern</h3>
+          <p>Full refit with quartz worktops, integrated appliances and a tall larder bank.</p>
+          <div class="cost"><b>£14,000–£19,000</b><span>4 weeks</span></div>
+        </div>
+        <div class="concept">
+          <span class="tag">Direction C</span>
+          <h3>Open-plan social</h3>
+          <p>Wall opened to the dining room, island seating for four, new flooring throughout.</p>
+          <div class="cost"><b>£22,000–£30,000</b><span>6 weeks</span></div>
+        </div>
+      </div>
+      <span class="caption">Illustrative output · each direction is rendered onto the customer's own photo</span>
+      <p style="margin-top:1.4rem">
+        Pick one and it posts as a job with the photos, the render, the right
+        category and a budget range <strong>already attached</strong>. Three
+        free designs a month, saved to "My designs". It creates demand for the
+        biggest planned jobs — kitchens, lofts, bathrooms, gardens — and hands
+        them over already scoped.
+      </p>
+    </div>
+  </section>
+
+  <!-- 8 ─ System -->
   <section class="slide">
     <div class="inner">
       <p class="kicker">The system</p>
@@ -462,11 +713,11 @@
       <div class="cols">
         <div class="card">
           <span class="tag">Customer app</span>
-          <p>Post a job with address lookup and AI category matching. Compare quotes, book, pay, sign off, review.</p>
+          <p>Post in plain English, ask AI Buddy, or redesign a space in the Studio. Compare quotes, book, pay, sign off, review.</p>
         </div>
         <div class="card">
           <span class="tag">Provider app</span>
-          <p>A business tool, not a lead inbox — marketplace, calendar, job sheets, staff, portfolio, verification, ROI analytics.</p>
+          <p>A business tool, not a lead inbox — marketplace, calendar, job sheets, staff, portfolio, verification, ROI analytics, AI-drafted quotes and replies.</p>
         </div>
         <div class="card">
           <span class="tag">Operations console</span>
@@ -476,24 +727,63 @@
     </div>
   </section>
 
-  <!-- 6 ─ Own the job -->
+  <!-- 9 ─ Own the job -->
   <section class="slide">
     <div class="inner">
       <p class="kicker">Coverage</p>
-      <h2>We own the whole job — not the introduction.</h2>
+      <h2>We start earlier and finish later.</h2>
       <div class="flow">
-        <i>Post</i><u>→</u><i>Match</i><u>→</u><i>Quote</i><u>→</u><i>Book</i><u>→</u>
+        <i>Ask / Design</i><u>→</u><i>Post</i><u>→</u><i>Match</i><u>→</u><i>Quote</i><u>→</u><i>Book</i><u>→</u>
         <i>Deposit</i><u>→</u><i>Work log</i><u>→</u><i>Sign-off</i><u>→</u><i>Review</i><u>→</u><i>Payout</i>
       </div>
       <p style="margin-top:1.75rem">
-        Most of the category stops after <strong>Match</strong>. Everything
-        downstream is where the data, the retention and the second revenue
-        line actually live.
+        Most of the category starts at <strong>Post</strong> and stops after
+        <strong>Match</strong>. AI Buddy and the Studio capture intent before
+        it becomes a search. Everything after Match is where the data, the
+        retention and the second revenue line actually live.
       </p>
     </div>
   </section>
 
-  <!-- 7 ─ Ladder -->
+  <!-- 10 ─ Fair start -->
+  <section class="slide">
+    <div class="inner">
+      <p class="kicker">A fair start for new trades</p>
+      <h2 style="max-width:24ch">A first-year trader competes on the same terms as a thirty-year firm.</h2>
+      <div class="cols">
+        <div class="pts">
+          <div class="pt">
+            <h3>Same moment, same price</h3>
+            <p>Every eligible pro in the trade and area is alerted at once. The lead price is set by the size of the job, never by an auction.</p>
+          </div>
+          <div class="pt">
+            <h3>Five seats, not fifty</h3>
+            <p>At most five buyers per job, so a newcomer's quote is actually read.</p>
+          </div>
+          <div class="pt">
+            <h3>Trust earned by checks, not seniority</h3>
+            <p>Silver needs ID, a business check and in-date insurance — no review count, no years trading. Reachable in week one.</p>
+          </div>
+        </div>
+        <div class="pts">
+          <div class="pt">
+            <h3>Start at £0</h3>
+            <p>Free plan, pay per lead from £5, refunds on bad leads. Move to Pro or Premium when the work justifies it.</p>
+          </div>
+          <div class="pt">
+            <h3>AI that levels the paperwork</h3>
+            <p>Quote templates drafted from the job details, reply suggestions in chat. A sole trader's first quote reads like an established firm's.</p>
+          </div>
+          <div class="pt">
+            <h3>Clearer jobs from day one</h3>
+            <p>Posts that start in AI Buddy or the Studio carry the diagnosis or the design brief, so less time goes on decoding vague enquiries.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 11 ─ Ladder -->
   <section class="slide">
     <div class="inner">
       <p class="kicker">The trust ladder</p>
@@ -505,7 +795,7 @@
         </div>
         <div class="rung">
           <div class="tier t2"><span class="chip"></span>Silver</div>
-          <p><strong>Verified.</strong> Government-ID identity check, company register match, and public-liability cover confirmed genuine <em>and in date</em>.</p>
+          <p><strong>Verified.</strong> Government-ID identity check, business verification, and public-liability cover confirmed genuine <em>and in date</em>.</p>
         </div>
         <div class="rung">
           <div class="tier t3"><span class="chip"></span>Gold</div>
@@ -516,10 +806,14 @@
           <p><strong>Partner.</strong> Manual override — businesses we have worked with directly and stand behind ourselves.</p>
         </div>
       </div>
+      <p style="margin-top:1.4rem">
+        Nothing on the ladder depends on how long a business has traded or how
+        many reviews it has. That is what makes it fair to a newcomer.
+      </p>
     </div>
   </section>
 
-  <!-- 8 ─ Insurance -->
+  <!-- 12 ─ Insurance -->
   <section class="slide">
     <div class="inner">
       <p class="kicker">The part that is hard to copy</p>
@@ -535,7 +829,7 @@
     </div>
   </section>
 
-  <!-- 9 ─ Lead economics -->
+  <!-- 13 ─ Lead economics -->
   <section class="slide">
     <div class="inner">
       <p class="kicker">Lead economics</p>
@@ -554,7 +848,7 @@
     </div>
   </section>
 
-  <!-- 10 ─ Scarcity as strategy -->
+  <!-- 14 ─ Scarcity as strategy -->
   <section class="slide">
     <div class="inner">
       <p class="kicker">Why the cap matters</p>
@@ -570,7 +864,7 @@
     </div>
   </section>
 
-  <!-- 11 ─ Edge 1-3 -->
+  <!-- 15 ─ Edge 1-4 -->
   <section class="slide">
     <div class="inner">
       <p class="kicker">Our edge · 1 of 2</p>
@@ -578,48 +872,62 @@
       <div class="edge">
         <div class="n">01</div>
         <div>
-          <h3>Verification is computed, not claimed</h3>
-          <p>Identity, company record and insurance come from external systems of record. Tier recalculates when any of them change.</p>
+          <h3>AI at the front door</h3>
+          <p>AI Buddy and the Redesign Studio meet the homeowner before they know which trade they need, then hand over a job that is already described.</p>
         </div>
       </div>
       <div class="edge">
         <div class="n">02</div>
+        <div>
+          <h3>Verification is computed, not claimed</h3>
+          <p>Identity, business record and insurance come from external systems of record. Tier recalculates when any of them change.</p>
+        </div>
+      </div>
+      <div class="edge">
+        <div class="n">03</div>
         <div>
           <h3>Insurance that is still valid today</h3>
           <p>Structured policy records with type, status and expiry — plus automated renewal reminders. An ongoing commitment, not a feature ship.</p>
         </div>
       </div>
       <div class="edge">
-        <div class="n">03</div>
+        <div class="n">04</div>
         <div>
-          <h3>Scarcity by design</h3>
-          <p>Five buyers maximum, priced to job value, with a real refund path. Providers can calculate their return instead of guessing.</p>
+          <h3>A fair start for new trades</h3>
+          <p>Same alert, same price, five seats, and a trust tier earned by checks rather than seniority. The supply incumbents price out, we sign up.</p>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- 12 ─ Edge 4-6 -->
+  <!-- 16 ─ Edge 5-8 -->
   <section class="slide">
     <div class="inner">
       <p class="kicker">Our edge · 2 of 2</p>
       <h2>Where we win.</h2>
       <div class="edge">
-        <div class="n">04</div>
+        <div class="n">05</div>
+        <div>
+          <h3>Scarcity by design</h3>
+          <p>Five buyers maximum, priced to job value, with a real refund path. Providers can calculate their return instead of guessing.</p>
+        </div>
+      </div>
+      <div class="edge">
+        <div class="n">06</div>
         <div>
           <h3>Privacy before purchase</h3>
           <p>Customer location is blurred until a provider commits, so posting a job never exposes an address to casual browsing.</p>
         </div>
       </div>
       <div class="edge">
-        <div class="n">05</div>
+        <div class="n">07</div>
         <div>
           <h3>We own the whole job</h3>
           <p>Owning completion is what makes reviews trustworthy and payouts possible. A referral-only competitor has nothing to attach either to.</p>
         </div>
       </div>
       <div class="edge">
-        <div class="n">06</div>
+        <div class="n">08</div>
         <div>
           <h3>An operator layer, not just a listing</h3>
           <p>Dispatch, approvals and audit let us run managed jobs — the wedge into commercial, insurance and property-management contracts.</p>
@@ -628,7 +936,7 @@
     </div>
   </section>
 
-  <!-- 13 ─ Model -->
+  <!-- 17 ─ Model -->
   <section class="slide">
     <div class="inner">
       <p class="kicker">Business model</p>
@@ -638,35 +946,38 @@
           <thead><tr><th>Line</th><th>Mechanism</th><th>Paid by</th></tr></thead>
           <tbody>
             <tr><td>Lead sales</td><td class="num">£5–£20 per lead, capped at 5 buyers</td><td>Provider</td></tr>
-            <tr><td>Subscriptions</td><td>Free · Pro 15/mo · Premium 40/mo · Enterprise</td><td>Provider</td></tr>
-            <tr><td>Credit packs</td><td>Prepaid lead credits</td><td>Provider</td></tr>
+            <tr><td>Subscriptions</td><td>Free · Pro £29/mo (15 leads) · Premium £79/mo (40 leads) · Enterprise</td><td>Provider</td></tr>
+            <tr><td>Credit packs</td><td>Prepaid packs of 5 or 20 lead credits</td><td>Provider</td></tr>
             <tr><td>Booking rail</td><td class="num">20% deposit at acceptance, then payout</td><td>Customer</td></tr>
             <tr><td>Featured placement</td><td>Time-boxed promoted search position</td><td>Provider</td></tr>
           </tbody>
         </table>
       </div>
       <p style="margin-top:1.5rem">
-        Subscriptions and the booking rail are the durable lines. Lead sales
-        are the wedge that gets a provider to their first paid outcome fast.
+        Subscriptions and the booking rail are the durable lines. AI Buddy and
+        the Studio are free on purpose — they are acquisition, and both end in
+        the job post where every line above begins.
       </p>
     </div>
   </section>
 
-  <!-- 14 ─ Wedge -->
+  <!-- 18 ─ Wedge -->
   <section class="slide">
     <div class="inner">
       <p class="kicker">Go-to-market</p>
-      <h2>Emergency work first.</h2>
-      <p>
-        Ten categories are live, but the entry point is narrower on purpose.
-        Emergency jobs — leaks, drains, boiler faults, emergency electrical —
-        are tagged distinctly across the taxonomy.
-      </p>
-      <p class="big" style="margin-top:1.5rem">
-        Urgent, high-intent, price-insensitive — and the exact moment a
-        homeowner cares most whether the person arriving is
-        <em>real, insured and qualified</em>.
-      </p>
+      <h2>Emergency first. Planned work right behind.</h2>
+      <div class="cols">
+        <div class="card">
+          <span class="tag">The wedge · emergency</span>
+          <p>Leaks, drains, boiler faults, emergency electrical — tagged distinctly across the taxonomy. Urgent, high-intent, and the moment a homeowner cares most whether the person arriving is <em>real, insured and qualified</em>.</p>
+          <p>AI Buddy catches the "is this serious?" moment and routes the dangerous ones straight to a pro.</p>
+        </div>
+        <div class="card">
+          <span class="tag">The follow-on · planned work</span>
+          <p>Kitchens, bathrooms, lofts, gardens — the highest-value jobs on the platform.</p>
+          <p>The Redesign Studio turns "I'd love to redo this someday" into a scoped, budgeted job post today.</p>
+        </div>
+      </div>
       <p style="margin-top:1.5rem">
         Win the highest-anxiety job first, then hold the household for the
         scheduled work that follows.
@@ -674,7 +985,7 @@
     </div>
   </section>
 
-  <!-- 15 ─ Traction -->
+  <!-- 19 ─ Traction -->
   <section class="slide">
     <div class="inner">
       <p class="kicker">Traction · complete before presenting</p>
@@ -688,13 +999,15 @@
       <p style="margin-top:1.75rem">
         Lead with <strong>share of supply at Silver or above</strong>,
         <strong>lead refund rate</strong>, <strong>quote-to-booking
-        conversion</strong> and <strong>provider month-3 retention</strong> —
-        the four numbers that prove this thesis rather than describe it.
+        conversion</strong> and <strong>provider month-3 retention</strong>.
+        Then prove the front door: <strong>AI Buddy chats that become job
+        posts</strong>, <strong>Studio designs that become job posts</strong>,
+        and <strong>days to first won job for a new provider</strong>.
       </p>
     </div>
   </section>
 
-  <!-- 16 ─ Ask -->
+  <!-- 20 ─ Ask -->
   <section class="slide">
     <div class="inner">
       <p class="kicker">The ask</p>
@@ -716,12 +1029,12 @@
     </div>
   </section>
 
-  <!-- 17 ─ Close -->
+  <!-- 21 ─ Close -->
   <section class="slide">
     <div class="inner">
       <p class="kicker">In one line</p>
       <h2 style="max-width:22ch">The incumbents have distribution. They do not have a trust model that survives contact with the truth.</h2>
-      <p class="big">That is the one thing we built first.</p>
+      <p class="big">We built that first — then made it effortless to use, and fair to join.</p>
     </div>
   </section>
 
@@ -730,7 +1043,7 @@
 <div class="chrome">
   <span class="brand">AsapLocal</span>
   <span class="spacer"></span>
-  <span class="count"><span id="cur">1</span> / <span id="tot">17</span></span>
+  <span class="count"><span id="cur">1</span> / <span id="tot">21</span></span>
   <span class="nav">
     <button type="button" id="prev" aria-label="Previous slide">Prev</button>
     <button type="button" id="next" aria-label="Next slide">Next</button>

@@ -5,8 +5,8 @@ calls — open either file directly in a browser.
 
 | File | What it is | Use it for |
 |---|---|---|
-| `asaplocal-company-brief.html` | Long-form printable brief, 10 numbered sections | Reading, emailing, printing / saving to PDF as a leave-behind |
-| `asaplocal-pitch-deck.html` | 17-slide presentation, keyboard-navigable | Presenting live or over screen share |
+| `asaplocal-company-brief.html` | Long-form printable brief, 12 numbered sections | Reading, emailing, printing / saving to PDF as a leave-behind |
+| `asaplocal-pitch-deck.html` | 21-slide presentation, keyboard-navigable | Presenting live or over screen share |
 
 ## Printing to PDF
 
@@ -30,7 +30,7 @@ tier chips and panel fills come through.
 | `Home` / `End` | First / last slide |
 
 Swipe works on touch devices. The URL hash tracks the slide number, so
-`…#7` opens directly on slide 7 — handy for jumping back to the trust ladder
+`…#11` opens directly on slide 11 — handy for jumping back to the trust ladder
 during Q&A.
 
 ## Before you circulate these
@@ -41,8 +41,8 @@ verified data. Nothing was estimated or inferred.
 
 Placeholders live in:
 
-- Brief — section `09 Traction` and section `10 Ask`
-- Deck — slides 15 (Traction) and 16 (The ask)
+- Brief — section `11 Traction` and section `12 Ask`
+- Deck — slides 19 (Traction) and 20 (The ask)
 
 **Also worth a second pass before external use:**
 
@@ -69,6 +69,10 @@ not a roadmap item:
 | Dispatch, approvals, audit trail | `apps/admin/app/dispatch/**`, `apps/admin/app/approvals/**`, `packages/core/src/audit.ts` |
 | Plans and allowances | `packages/core/src/stripe.ts` (`PLAN_LEAD_ALLOWANCE`) |
 | Categories and emergency tagging | `packages/db/prisma/seed.ts` |
+| AI Buddy (DIY-vs-pro triage, safety rules, handoff to job post) | `packages/core/src/ai.ts` (`askAiBuddy`), `apps/web/components/ai-buddy.tsx` |
+| AI Redesign Studio (3 directions, costs, timescales, 3 free/month) | `packages/core/src/ai-images.ts`, `apps/web/components/redesign-studio.tsx`, `apps/web/app/api/studio/sessions/route.ts` |
+| Provider AI quote templates and reply drafts | `packages/core/src/ai.ts` (`generateQuoteTemplate`), `apps/provider/app/messages/[id]/chat-thread.tsx` |
+| Plan prices (£29 / £79) | `apps/provider/app/earnings/subscription/page.tsx` |
 
 If the product changes, update the brief — the strength of this pitch is that
 it describes what runs today.
