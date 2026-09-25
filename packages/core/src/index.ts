@@ -23,6 +23,7 @@ export * from "./studio-category";
 export * from "./category-access";
 export * from "./csrf";
 export * from "./sms";
+export * from "./phone";
 export * from "./phone-verification";
 export * from "./password-reset";
 export * from "./trust-tier";

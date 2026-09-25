@@ -1,4 +1,5 @@
 import twilio from "twilio";
+import { toE164 } from "./phone";
 
 function createClient() {
   const accountSid = process.env.TWILIO_ACCOUNT_SID;
@@ -29,12 +30,15 @@ function sender() {
 }
 
 export async function sendSms(opts: { to: string; body: string }) {
+  // Must be E.164: a Messaging Service send has no `From` for Twilio to infer
+  // the country from, so a national-format number is rejected outright.
+  const to = toE164(opts.to);
   const via = sender();
   if (!client || !via) {
     console.warn(
-      `[sms:dev] Skipping send (no TWILIO_ACCOUNT_SID/AUTH_TOKEN, and no TWILIO_MESSAGING_SERVICE_SID or TWILIO_FROM_NUMBER). To=${opts.to} Body=${opts.body}`
+      `[sms:dev] Skipping send (no TWILIO_ACCOUNT_SID/AUTH_TOKEN, and no TWILIO_MESSAGING_SERVICE_SID or TWILIO_FROM_NUMBER). To=${to} Body=${opts.body}`
     );
     return;
   }
-  await client.messages.create({ to: opts.to, body: opts.body, ...via });
+  await client.messages.create({ to, body: opts.body, ...via });
 }
