@@ -1,4 +1,4 @@
-import { LayoutDashboard, Target, CalendarDays, MessageSquare, CreditCard, Store, BarChart3, Star, ShieldCheck, Settings, HelpCircle, SlidersHorizontal, Users, Wrench, Package, Gift, Wallet, Receipt, Coins } from "lucide-react";
+import { LayoutDashboard, UserCog, Target, CalendarDays, MessageSquare, CreditCard, Store, BarChart3, Star, ShieldCheck, Settings, HelpCircle, SlidersHorizontal, Users, Wrench, Package, Gift, Wallet, Receipt, Coins } from "lucide-react";
 
 export interface NavItem {
   href: string;
@@ -7,8 +7,12 @@ export interface NavItem {
   children?: NavItem[];
 }
 
+const HOME: NavItem = { href: "/dashboard", label: "Home", icon: LayoutDashboard };
+const ACCOUNT: NavItem = { href: "/account", label: "Account", icon: UserCog };
+
+/** The four destinations in the bottom bar on small screens — keep it to four. */
 export const PRIMARY_NAV: NavItem[] = [
-  { href: "/dashboard", label: "Home", icon: LayoutDashboard },
+  HOME,
   { href: "/leads", label: "Lead marketplace", icon: Target },
   { href: "/calendar", label: "Calendar", icon: CalendarDays },
   { href: "/messages", label: "Messages", icon: MessageSquare },
@@ -87,5 +91,12 @@ export const ACCOUNT_DRAWER_SECTIONS: { title: string; items: (DrawerLinkItem | 
   },
 ];
 
+/**
+ * The sidebar's own order: Account sits directly under Home. Deliberately not
+ * folded into PRIMARY_NAV, which the bottom bar renders in full — a fifth item
+ * there would crowd it on a phone.
+ */
+export const SIDEBAR_NAV: NavItem[] = [HOME, ACCOUNT, ...PRIMARY_NAV.slice(1), ...SECONDARY_NAV];
+
 /** Flattened for title lookup — children need to resolve too. */
-export const ALL_NAV_ITEMS: NavItem[] = [...PRIMARY_NAV, ...SECONDARY_NAV].flatMap((i) => [i, ...(i.children ?? [])]);
+export const ALL_NAV_ITEMS: NavItem[] = SIDEBAR_NAV.flatMap((i) => [i, ...(i.children ?? [])]);

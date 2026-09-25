@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { LogOut } from "lucide-react";
 import { Avatar, Badge, cn, Logo, LogoMark, ThemeToggle } from "@asaplocal/ui";
-import { PRIMARY_NAV, SECONDARY_NAV } from "@/lib/nav";
+import { SIDEBAR_NAV } from "@/lib/nav";
 import { VerificationStatusBadge } from "@/lib/verification-badge";
 import { SignOutButton } from "./sign-out-button";
 import { ProviderBottomNav } from "./provider-bottom-nav";
@@ -43,7 +43,7 @@ interface AccountSummary {
  */
 export function ProviderShell({ children, account }: { children: React.ReactNode; account: AccountSummary }) {
   const pathname = usePathname();
-  const NAV = [...PRIMARY_NAV, ...SECONDARY_NAV].filter((item) => account.canHaveStaff || item.href !== "/staff");
+  const NAV = SIDEBAR_NAV.filter((item) => account.canHaveStaff || item.href !== "/staff");
 
   return (
     <div className="flex min-h-screen">
