@@ -13,6 +13,7 @@ export type UploadPurpose =
   | 'staff-profile-photo'
   | 'staff-id-front'
   | 'staff-id-back'
+  | 'user-avatar'
   | 'supply-image'
   | 'dispute-photo';
 

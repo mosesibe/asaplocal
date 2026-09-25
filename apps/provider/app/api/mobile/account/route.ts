@@ -19,11 +19,16 @@ export async function GET() {
       where: { ownerId: session.user.id },
       select: { name: true, city: true, verificationStatus: true, trustTier: true, businessType: true },
     }),
-    prisma.user.findUnique({ where: { id: session.user.id }, select: { phone: true } }),
+    prisma.user.findUnique({ where: { id: session.user.id }, select: { phone: true, createdAt: true } }),
   ]);
 
   return NextResponse.json({
     name: profile ? `${profile.firstName} ${profile.lastName}` : (business?.name ?? session.user.email ?? ""),
+    // The account screen edits the photo, and PATCH /api/account/profile
+    // validates the names alongside it, so it needs them separately too.
+    firstName: profile?.firstName ?? "",
+    lastName: profile?.lastName ?? "",
+    memberSince: user?.createdAt ?? null,
     email: session.user.email ?? "",
     phone: user?.phone ?? null,
     avatarUrl: profile?.avatarUrl ?? null,
