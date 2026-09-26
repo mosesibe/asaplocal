@@ -21,8 +21,6 @@ interface AccountSummary {
   name: string;
   email: string;
   phone: string | null;
-  firstName: string;
-  lastName: string;
   avatarUrl?: string | null;
   city: string;
   verificationStatus: string;

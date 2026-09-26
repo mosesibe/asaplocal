@@ -7,7 +7,6 @@ import { Avatar, Badge, Card, Logo, Sheet, SheetContent, SheetClose, ThemeToggle
 import { ACCOUNT_DRAWER_SECTIONS, DrawerPanelId } from "@/lib/nav";
 import { VerificationStatusBadge } from "@/lib/verification-badge";
 import { SignOutButton } from "./sign-out-button";
-import { AccountSettingsPanel } from "./account-settings-panel";
 import { MarketingPreferences } from "./marketing-preferences";
 
 interface AccountDrawerProps {
@@ -16,8 +15,6 @@ interface AccountDrawerProps {
   name: string;
   email: string;
   phone: string | null;
-  firstName: string;
-  lastName: string;
   avatarUrl?: string | null;
   city: string;
   verificationStatus: string;
@@ -30,7 +27,6 @@ interface AccountDrawerProps {
 }
 
 const PANEL_TITLES: Record<DrawerPanelId, string> = {
-  "account-settings": "Account settings",
   "help-center": "Help center",
   preferences: "Preferences",
 };
@@ -48,8 +44,6 @@ export function AccountDrawer({
   name,
   email,
   phone,
-  firstName,
-  lastName,
   avatarUrl,
   city,
   verificationStatus,
@@ -163,12 +157,6 @@ export function AccountDrawer({
               <SignOutButton />
             </div>
           </>
-        )}
-
-        {panel === "account-settings" && (
-          <div className="flex-1 overflow-y-auto">
-            <AccountSettingsPanel firstName={firstName} lastName={lastName} email={email} avatarUrl={avatarUrl} />
-          </div>
         )}
 
         {panel === "help-center" && (

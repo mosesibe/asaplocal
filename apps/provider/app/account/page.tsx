@@ -3,8 +3,6 @@ import { auth } from "@asaplocal/auth";
 import { prisma } from "@asaplocal/db";
 import { AccountIdentityCard } from "@/components/account-identity-card";
 import { DeleteAccountSection } from "@/components/delete-account-section";
-// TEMPORARY — SMS sender-ID testing; remove with the component (see its header).
-import { PhoneReverifySection } from "@/components/phone-reverify-section";
 
 export default async function AccountSettingsPage() {
   const session = await auth();
@@ -31,8 +29,6 @@ export default async function AccountSettingsPage() {
         phoneVerified={!!user.phoneVerifiedAt}
         memberSince={user.createdAt.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}
       />
-
-      <PhoneReverifySection phone={user.phone} />
 
       <DeleteAccountSection />
     </div>

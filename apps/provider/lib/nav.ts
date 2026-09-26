@@ -40,7 +40,7 @@ export const SECONDARY_NAV: NavItem[] = [
   { href: "/verification", label: "Verification Center", icon: ShieldCheck },
 ];
 
-export type DrawerPanelId = "account-settings" | "help-center" | "preferences";
+export type DrawerPanelId = "help-center" | "preferences";
 
 interface DrawerLinkItem {
   href: string;
@@ -59,7 +59,7 @@ export const ACCOUNT_DRAWER_SECTIONS: { title: string; items: (DrawerLinkItem | 
   {
     title: "Account",
     items: [
-      { id: "account-settings", label: "Account settings", icon: Settings },
+      { href: "/account", label: "Account settings", icon: Settings },
       { id: "help-center", label: "Help center", subtitle: "FAQ", icon: HelpCircle },
       { id: "preferences", label: "Preferences", subtitle: "Contents", icon: SlidersHorizontal },
     ],

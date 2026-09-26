@@ -51,6 +51,10 @@ export default function AccountScreen() {
   const [uploading, setUploading] = useState(false);
   const [photoError, setPhotoError] = useState<string | null>(null);
 
+  const [editingName, setEditingName] = useState(false);
+  const [draft, setDraft] = useState({ firstName: '', lastName: '' });
+  const [savingName, setSavingName] = useState(false);
+
   const [currentUrl, setCurrentUrl] = useState('');
   const [draftUrl, setDraftUrl] = useState('');
   const [saving, setSaving] = useState(false);
@@ -70,6 +74,34 @@ export default function AccountScreen() {
     });
   }, [load]);
 
+  async function saveProfile(next: { firstName: string; lastName: string; avatarUrl: string | null }) {
+    await api.request('/api/account/profile', {
+      method: 'PATCH',
+      body: JSON.stringify({ ...next, avatarUrl: next.avatarUrl ?? undefined }),
+    });
+  }
+
+  function startEditingName() {
+    if (!account) return;
+    setDraft({ firstName: account.firstName, lastName: account.lastName });
+    setEditingName(true);
+  }
+
+  async function onSaveName() {
+    if (!account) return;
+    setSavingName(true);
+    setPhotoError(null);
+    try {
+      await saveProfile({ ...draft, avatarUrl: account.avatarUrl });
+      setAccount({ ...account, ...draft, name: `${draft.firstName} ${draft.lastName}`.trim() });
+      setEditingName(false);
+    } catch (err) {
+      setPhotoError(err instanceof Error ? err.message : "Couldn't save your changes");
+    } finally {
+      setSavingName(false);
+    }
+  }
+
   async function onChangePhoto() {
     const assets = await pick({ allowsEditing: true, aspect: [1, 1], quality: 0.8 });
     const asset = assets[0];
@@ -78,12 +110,7 @@ export default function AccountScreen() {
     setPhotoError(null);
     try {
       const url = await uploadImage(asset.uri, 'user-avatar', asset.mimeType ?? 'image/jpeg');
-      // PATCH validates the whole profile object, so the existing names go
-      // back with it — this only ever changes the photo.
-      await api.request('/api/account/profile', {
-        method: 'PATCH',
-        body: JSON.stringify({ firstName: account.firstName, lastName: account.lastName, avatarUrl: url }),
-      });
+      await saveProfile({ firstName: account.firstName, lastName: account.lastName, avatarUrl: url });
       setAccount({ ...account, avatarUrl: url });
     } catch (err) {
       setPhotoError(err instanceof Error ? err.message : 'Photo upload failed');
@@ -146,13 +173,31 @@ export default function AccountScreen() {
               </View>
             </View>
 
-            <View style={[styles.row, { borderBottomColor: colors.border }]}>
-              <View style={styles.rowText}>
-                <Text variant="small" color="muted">
-                  Name
-                </Text>
-                <Text variant="bodyMedium">{account?.name || '—'}</Text>
-              </View>
+            <View style={[styles.nameRow, { borderBottomColor: colors.border }]}>
+              <Text variant="small" color="muted">
+                Name
+              </Text>
+              {editingName ? (
+                <>
+                  <TextField value={draft.firstName} onChangeText={(v) => setDraft({ ...draft, firstName: v })} placeholder="First name" />
+                  <TextField value={draft.lastName} onChangeText={(v) => setDraft({ ...draft, lastName: v })} placeholder="Last name" />
+                  <View style={styles.nameActions}>
+                    <Button size="sm" onPress={onSaveName} loading={savingName} disabled={!draft.firstName.trim() || !draft.lastName.trim()}>
+                      Save
+                    </Button>
+                    <Button size="sm" variant="outline" onPress={() => setEditingName(false)} disabled={savingName}>
+                      Cancel
+                    </Button>
+                  </View>
+                </>
+              ) : (
+                <View style={styles.nameDisplay}>
+                  <Text variant="bodyMedium">{account?.name || '—'}</Text>
+                  <Button size="sm" variant="outline" onPress={startEditingName} disabled={!account}>
+                    Edit
+                  </Button>
+                </View>
+              )}
             </View>
 
             <View style={[styles.row, { borderBottomColor: colors.border }]}>
@@ -234,4 +279,7 @@ const styles = StyleSheet.create({
   // Matches the error colour other screens use (reviews, referrals) —
   // the native palette has no destructive token.
   errorText: { color: '#dc2626' },
+  nameRow: { gap: 8, padding: 16, borderBottomWidth: StyleSheet.hairlineWidth },
+  nameDisplay: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
+  nameActions: { flexDirection: 'row', gap: 8 },
 });

@@ -34,8 +34,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       name: profile ? `${profile.firstName} ${profile.lastName}` : (business?.name ?? session.user.email ?? ""),
       email: session.user.email ?? "",
       phone: user?.phone ?? null,
-      firstName: profile?.firstName ?? "",
-      lastName: profile?.lastName ?? "",
       avatarUrl: profile?.avatarUrl ?? session.user.image,
       city: business?.city ?? profile?.city ?? "",
       verificationStatus: business?.verificationStatus ?? "UNVERIFIED",
